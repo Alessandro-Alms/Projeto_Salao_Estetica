@@ -30,7 +30,7 @@ class UserController extends Controller
         return redirect()->route('dashboard')->with('error', 'Acesso negado.');
     }
 
-    return view('admin.usuario.index', compact('usuarios'));
+    return view('admin.usuarios.index', compact('usuarios'));
     }
 
     public function create()

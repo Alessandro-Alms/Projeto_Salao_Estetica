@@ -65,6 +65,12 @@ class ServicoController extends Controller
      */
     public function destroy(Servico $servico)
     {
-        //
+        if (auth()->user()->cargo !== 'gerente') {
+            return redirect()->route('admin.servicos.index')->with('error', 'Sem permissão.');
+        }
+
+        $servico->delete();
+
+        return redirect()->route('admin.servicos.index')->with('success', 'Serviço removido!');
     }
 }

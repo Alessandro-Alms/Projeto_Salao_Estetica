@@ -32,7 +32,10 @@ Route::middleware(['auth', 'gerente_ou_recepcionista'])->prefix('admin')->name('
         'usuarios' => 'user'
     ])->except(['show']);
 
-    Route::resource('servicos', ServicoController::class)->names([
+
+});
+Route::middleware(['auth', 'gerente'])->prefix('admin')->name('admin.')->group(function () {
+   Route::resource('servicos', ServicoController::class)->names([
         'index'   => 'servicos.index',
         'create'  => 'servicos.criar',
         'store'   => 'servicos.salvar',
@@ -42,8 +45,7 @@ Route::middleware(['auth', 'gerente_ou_recepcionista'])->prefix('admin')->name('
     ])->parameters([
         'servicos' => 'servico'
     ])->except(['show']);
-
 });
 
-
 require __DIR__.'/auth.php';
+ 

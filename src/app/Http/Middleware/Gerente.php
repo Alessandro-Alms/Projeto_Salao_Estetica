@@ -6,19 +6,19 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class CheckAdminOuRecepcionista
+class Gerente
 {
     /**
      * Handle an incoming request.
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle($request, $next)
+    public function handle(Request $request, Closure $next): Response
     {
-        $cargo = auth()->user()->cargo;
-        if ($cargo === 'gerente' || $cargo === 'recepcionista') {
-            return $next($request);
-        }
-        return redirect()->route('dashboard');
-}
+        if (auth()->user()->cargo === 'gerente') {
+        return $next($request);
+    }
+    // Se for recepcionista ou outro, ele barra
+    abort(403, 'Acesso restrito ao Administrador.');
+    }
 }
