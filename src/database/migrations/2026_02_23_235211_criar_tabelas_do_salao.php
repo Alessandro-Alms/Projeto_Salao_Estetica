@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         // 1. Tabela de Usuários Unificada (Admins, Profissionais e Clientes)
@@ -20,11 +17,7 @@ return new class extends Migration
             $table->string('password');
             $table->char('cpf', 11)->unique();
             $table->char('telefone', 11);
-            
-            // Cargo define o nível de acesso e o tipo de usuário
             $table->enum('cargo', ['gerente', 'recepcionista', 'profissional', 'cliente'])->default('cliente');
-            
-            // Campos adicionais (nullable para não obrigar funcionários a terem dados de clientes)
             $table->string('endereco', 255)->nullable();
             $table->date('d_nasc')->nullable();
             $table->integer('faltas')->default(0);
@@ -41,7 +34,7 @@ return new class extends Migration
             $table->string('nome', 100);
             $table->text('descricao')->nullable();
             $table->decimal('preco', 10, 2);
-            $table->integer('duracao'); // em minutos
+            $table->integer('duracao'); 
             $table->timestamps();
         });
 
@@ -92,9 +85,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('vendas');

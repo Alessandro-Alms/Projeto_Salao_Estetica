@@ -56,13 +56,13 @@
                                                     Editar
                                                 </a>
 
-                                                <form action="{{ route('admin.usuarios.deletar', $usuario->id) }}" method="POST" onsubmit="return confirm('Tem certeza que deseja excluir {{ $usuario->name }}?')">
+                                            @if(auth()->user()->cargo === 'gerente')
+                                                <form action="{{ route('admin.usuarios.deletar', $usuario->id) }}" method="POST" onsubmit="return confirm('Tem certeza?')">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="text-red-600 hover:text-red-900 font-bold">
-                                                        Excluir
-                                                    </button>
+                                                    <button type="submit" class="text-red-600">Excluir</button>
                                                 </form>
+                                            @endif
                                             </div>
                                         </td>
                                     </tr>

@@ -8,7 +8,7 @@
     {{ __("Você está logado!") }}
 
     {{-- Atalhos para o Recepcionista --}}
-        @if(auth()->user()->cargo === 'recepcionista' || auth()->user()->cargo === 'gerente')
+        @if(auth()->user()->cargo === 'recepcionista')
             <div class="mt-6 flex flex-wrap gap-4">
                 <a href="{{ route('admin.usuarios.criar') }}" 
                 class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:border-indigo-900 focus:ring ring-indigo-300 disabled:opacity-25 transition ease-in-out duration-150">

@@ -30,7 +30,7 @@ class UserController extends Controller
         return redirect()->route('dashboard')->with('error', 'Acesso negado.');
     }
 
-    return view('admin.usuarios.index', compact('usuarios'));
+    return view('admin.usuario.index', compact('usuarios'));
     }
 
     public function create()
@@ -53,7 +53,7 @@ class UserController extends Controller
         'password' => ['required', 'min:8'],
         ], 
         [
-        // Mensagens personalizadas (opcional)
+
         'cpf.size' => 'O CPF deve ter exatamente 11 números (você enviou ' . strlen($request->cpf) . ').',
         'cpf.unique' => 'Este CPF já está cadastrado.',
         'email.unique' => 'Este e-mail já está em uso.',
