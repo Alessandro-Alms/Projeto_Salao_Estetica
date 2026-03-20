@@ -34,6 +34,7 @@ Route::middleware(['auth', 'gerente_ou_recepcionista'])->prefix('admin')->name('
 
 
 });
+
 Route::middleware(['auth', 'gerente'])->prefix('admin')->name('admin.')->group(function () {
    Route::resource('servicos', ServicoController::class)->names([
         'index'   => 'servicos.index',
@@ -47,5 +48,9 @@ Route::middleware(['auth', 'gerente'])->prefix('admin')->name('admin.')->group(f
     ])->except(['show']);
 });
 
+// ✅ COLOQUEI AQUI - página de agendamento
+Route::get('/agendar', function () {
+    return view('agendar');
+})->name('agendar');
+
 require __DIR__.'/auth.php';
- 

@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cheias de Charme — Salão de Beleza</title>
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Playfair+Display:wght@700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
         
@@ -13,10 +15,8 @@
         .font-body { font-family: 'Space Grotesk', sans-serif; }
         html { scroll-behavior: smooth; }
         
-        ::-webkit-scrollbar { width: 10px; background: linear-gradient(180deg, #FFF0F9 0%, #F8F0FF 50%, #FFF0F9 100%); }
-        ::-webkit-scrollbar-track { background: rgba(255, 214, 244, 0.1); }
-        ::-webkit-scrollbar-thumb { background: linear-gradient(135deg, #7B19E5, #FF2EB6); border-radius: 20px; border: 2px solid rgba(255, 255, 255, 0.3); }
-        ::-webkit-scrollbar-thumb:hover { background: linear-gradient(135deg, #FF2EB6, #7B19E5); }
+        ::-webkit-scrollbar { width: 8px; background: #f8f0ff; }
+            ::-webkit-scrollbar-thumb { background: linear-gradient(135deg, #7B19E5, #FF2EB6); border-radius: 10px; }
         
         .marquee {
             display: flex;
@@ -47,10 +47,21 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .delay-1 { animation-delay: 0.1s; } .delay-2 { animation-delay: 0.2s; } .delay-3 { animation-delay: 0.3s; }
         
-        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px); border: 1px solid rgba(255, 214, 244, 0.3); }
-        header.bg-white { background: rgba(255, 255, 255, 0.98) !important; backdrop-filter: blur(8px); box-shadow: 0 2px 20px rgba(0,0,0,0.05); }
+        .glass-card { 
+            background: rgba(255, 255, 255, 0.7); 
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(123, 25, 229, 0.1);
+        }
         
-        .title-glow { text-shadow: 0 2px 10px rgba(123, 25, 229, 0.1); }
+        header.bg-white { 
+            background: rgba(255, 255, 255, 0.9) !important; 
+            backdrop-filter: blur(8px); 
+            box-shadow: 0 2px 20px rgba(0,0,0,0.05); 
+        }
+        
+        .title-glow { text-shadow: 0 2px 10px rgba(123, 25, 229, 0.2); }
         
         img { opacity: 0; transition: opacity 0.5s ease; }
         img.loaded { opacity: 1; }
@@ -58,8 +69,7 @@
         .servicos img, .hero img:not(.logo-colorida), section:not(.hero) img:not(header img) { filter: grayscale(100%); }
         header img, .hero .logo-colorida { filter: grayscale(0%) !important; }
         
-        section:not(#contato) { position: relative; z-index: 1; }
-        section:not(#contato)::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(4px); z-index: -1; }
+        section { position: relative; z-index: 1; }
         
         .btn-primary.bg-white { background: white !important; color: #7B19E5 !important; border: 2px solid rgba(123, 25, 229, 0.2); box-shadow: 0 10px 25px -5px rgba(123, 25, 229, 0.3); }
         .btn-primary.bg-\[\#7B19E5\] { background: #7B19E5 !important; color: white !important; border: 2px solid rgba(255, 255, 255, 0.2); box-shadow: 0 10px 25px -5px rgba(123, 25, 229, 0.4); }
@@ -68,12 +78,19 @@
         .hero .border-2 { background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(8px); border: 2px solid white !important; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2); }
         
         #contato { background: linear-gradient(to bottom right, #7B19E5, #FF2EB6) !important; }
-        #contato::before { display: none; }
         
         nav a { font-weight: 600; text-shadow: 0 1px 2px rgba(255,255,255,0.5); }
     </style>
 </head>
-<body class="font-body antialiased">
+<body class="font-body antialiased relative">
+
+    <div class="fixed inset-0 -z-10 overflow-hidden">
+        <div class="absolute top-0 -left-20 w-[600px] h-[600px] bg-[#7B19E5]/20 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-0 -right-20 w-[700px] h-[700px] bg-[#FF2EB6]/20 rounded-full blur-3xl"></div>
+        <div class="absolute top-1/3 left-1/3 w-[400px] h-[400px] bg-[#A955D3]/15 rounded-full blur-3xl"></div>
+        <div class="absolute inset-0 bg-gradient-to-br from-[#7B19E5]/5 via-white/30 to-[#FF2EB6]/5"></div>
+    </div>
+
     <!-- Top Marquee -->
     <div class="bg-gradient-to-r from-[#7B19E5] via-[#FF2EB6] to-[#A955D3] text-white py-2.5 overflow-hidden relative z-20 shadow-md">
         <div class="marquee text-xs tracking-[0.25em] font-medium">
@@ -103,7 +120,7 @@
     </div>
 
     <!-- Header -->
-    <header class="border-b border-[#FFD6F4] bg-white/90 sticky top-0 z-30 backdrop-blur-sm shadow-sm">
+    <header class="border-b border-[#FFD6F4] bg-white/80 sticky top-0 z-30 backdrop-blur-md shadow-sm">
         <div class="container mx-auto px-6 py-4">
             <div class="flex items-center justify-between">
                 <div class="w-48">
@@ -111,21 +128,12 @@
                 </div>
                 
                 <nav class="hidden md:flex items-center gap-10" aria-label="Navegação principal">
-                    <a href="#servicos" class="text-[#1A002B] text-sm hover:text-[#FF2EB6] transition-colors relative group font-semibold">
-                        SERVIÇOS
-                        <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-[#FF2EB6] to-[#7B19E5] transition-all group-hover:w-full"></span>
-                    </a>
-                    <a href="#depoimentos" class="text-[#1A002B] text-sm hover:text-[#FF2EB6] transition-colors relative group font-semibold">
-                        DEPOIMENTOS
-                        <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-[#FF2EB6] to-[#7B19E5] transition-all group-hover:w-full"></span>
-                    </a>
-                    <a href="#contato" class="text-[#1A002B] text-sm hover:text-[#FF2EB6] transition-colors relative group font-semibold">
-                        CONTATO
-                        <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-[#FF2EB6] to-[#7B19E5] transition-all group-hover:w-full"></span>
-                    </a>
+                    <a href="#servicos" class="text-[#1A002B] text-sm hover:text-[#7B19E5] transition-colors font-semibold"> SERVIÇOS </a>
+                    <a href="#depoimentos" class="text-[#1A002B] text-sm hover:text-[#7B19E5] transition-colors font-semibold"> DEPOIMENTOS </a>
+                   <a href="#contato" class="text-[#1A002B] text-sm hover:text-[#7B19E5] transition-colors font-semibold"> CONTATO </a>
                 </nav>
                 
-                <a href="/login" class="bg-[#7B19E5] text-white px-6 py-2.5 text-sm rounded-full btn-primary shadow-lg" aria-label="Agendar horário">
+                <a href="/agendar" class="bg-[#7B19E5] text-white px-6 py-2.5 text-sm rounded-full btn-primary shadow-lg" aria-label="Agendar horário">
                     AGENDAR
                 </a>
             </div>
@@ -162,7 +170,7 @@
     </section>
 
     <!-- Sobre -->
-    <section class="py-24 relative z-10">
+    <section class="py-24 relative">
         <div class="container mx-auto px-6">
             <div class="text-center mb-16 fade-in">
                 <span class="text-[#7B19E5] text-sm tracking-[0.25em] mb-3 block font-medium">SOBRE NÓS</span>
@@ -173,7 +181,7 @@
             </div>
             
             <div class="grid md:grid-cols-3 gap-8">
-                <div class="glass-card p-8 rounded-2xl shadow-xl hover-lift border border-[#FFD6F4] fade-in delay-1">
+                <div class="glass-card p-8 rounded-2xl shadow-xl hover-lift border border-white/40 fade-in delay-1">
                     <div class="text-5xl mb-5 text-[#7B19E5]">✦</div>
                     <h3 class="text-2xl font-title text-[#4A00B9] mb-4">Nossa história</h3>
                     <p class="text-[#1A002B] leading-relaxed font-body">
@@ -182,7 +190,7 @@
                     </p>
                 </div>
                 
-                <div class="glass-card p-8 rounded-2xl shadow-xl hover-lift border border-[#FFD6F4] fade-in delay-2">
+                <div class="glass-card p-8 rounded-2xl shadow-xl hover-lift border border-white/40 fade-in delay-2">
                     <div class="text-5xl mb-5 text-[#FF2EB6]">✧</div>
                     <h3 class="text-2xl font-title text-[#4A00B9] mb-4">Nossa missão</h3>
                     <p class="text-[#1A002B] leading-relaxed font-body">
@@ -191,7 +199,7 @@
                     </p>
                 </div>
                 
-                <div class="glass-card p-8 rounded-2xl shadow-xl hover-lift border border-[#FFD6F4] fade-in delay-3">
+                <div class="glass-card p-8 rounded-2xl shadow-xl hover-lift border border-white/40 fade-in delay-3">
                     <div class="text-5xl mb-5 text-[#A955D3]">✦</div>
                     <h3 class="text-2xl font-title text-[#4A00B9] mb-4">Nossos valores</h3>
                     <p class="text-[#1A002B] leading-relaxed font-body">
@@ -219,7 +227,7 @@
     </section>
 
     <!-- Serviços -->
-    <section id="servicos" class="py-24 relative z-10 servicos">
+    <section id="servicos" class="py-24 relative servicos">
         <div class="container mx-auto px-6">
             <div class="text-center mb-16 fade-in">
                 <span class="text-[#7B19E5] text-sm tracking-[0.25em] mb-3 block font-medium">SERVIÇOS</span>
@@ -229,7 +237,7 @@
             
             <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <!-- Cabelo -->
-                <div class="glass-card rounded-2xl overflow-hidden shadow-xl hover-lift border border-[#FFD6F4]">
+                <div class="glass-card rounded-2xl overflow-hidden shadow-xl hover-lift border border-white/40">
                     <div class="image-zoom h-48 overflow-hidden">
                         <img src="https://images.unsplash.com/photo-1580618672591-eb180b1a973f?w=500&auto=format&fit=crop" 
                              alt="Serviços de cabelo" 
@@ -247,7 +255,7 @@
                 </div>
                 
                 <!-- Unhas -->
-                <div class="glass-card rounded-2xl overflow-hidden shadow-xl hover-lift border border-[#FFD6F4]">
+                <div class="glass-card rounded-2xl overflow-hidden shadow-xl hover-lift border border-white/40">
                     <div class="image-zoom h-48 overflow-hidden">
                         <img src="https://images.unsplash.com/photo-1632345031435-8727f6897d53?w=500&auto=format&fit=crop" 
                              alt="Serviços de unhas" 
@@ -267,7 +275,7 @@
                 </div>
                 
                 <!-- Maquiagem -->
-                <div class="glass-card rounded-2xl overflow-hidden shadow-xl hover-lift border border-[#FFD6F4]">
+                <div class="glass-card rounded-2xl overflow-hidden shadow-xl hover-lift border border-white/40">
                     <div class="image-zoom h-48 overflow-hidden">
                         <img src="https://images.unsplash.com/photo-1613966802194-d46a163af70d?q=80&w=870&auto=format&fit=crop" 
                              alt="Serviços de maquiagem" 
@@ -287,7 +295,7 @@
                 </div>
                 
                 <!-- Sobrancelhas -->
-                <div class="glass-card rounded-2xl overflow-hidden shadow-xl hover-lift border border-[#FFD6F4]">
+                <div class="glass-card rounded-2xl overflow-hidden shadow-xl hover-lift border border-white/40">
                     <div class="image-zoom h-48 overflow-hidden">
                         <img src="https://images.unsplash.com/photo-1519415387722-a1c3bbef716c?w=500&auto=format&fit=crop" 
                              alt="Serviços de sobrancelhas" 
@@ -310,7 +318,7 @@
             <!-- Segunda linha -->
             <div class="grid md:grid-cols-3 gap-6 mt-6">
                 <!-- Tratamentos -->
-                <div class="glass-card rounded-2xl overflow-hidden shadow-xl hover-lift border border-[#FFD6F4]">
+                <div class="glass-card rounded-2xl overflow-hidden shadow-xl hover-lift border border-white/40">
                     <div class="image-zoom h-40 overflow-hidden">
                         <img src="https://images.unsplash.com/photo-1634449571010-02389ed0f9b0?w=500&auto=format&fit=crop" 
                              alt="Tratamentos capilares" 
@@ -325,7 +333,7 @@
                 </div>
                 
                 <!-- Coloração -->
-                <div class="glass-card rounded-2xl overflow-hidden shadow-xl hover-lift border border-[#FFD6F4]">
+                <div class="glass-card rounded-2xl overflow-hidden shadow-xl hover-lift border border-white/40">
                     <div class="image-zoom h-40 overflow-hidden">
                         <img src="https://images.unsplash.com/photo-1707812343087-c9ff9e5abb43?w=500&auto=format&fit=crop" 
                              alt="Coloração e mechas" 
@@ -340,7 +348,7 @@
                 </div>
                 
                 <!-- Penteados -->
-                <div class="glass-card rounded-2xl overflow-hidden shadow-xl hover-lift border border-[#FFD6F4]">
+                <div class="glass-card rounded-2xl overflow-hidden shadow-xl hover-lift border border-white/40">
                     <div class="image-zoom h-40 overflow-hidden">
                         <img src="https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?q=80&w=2069&auto=format&fit=crop" 
                              alt="Penteados para eventos" 
@@ -364,7 +372,7 @@
     </section>
 
     <!-- Depoimentos -->
-    <section id="depoimentos" class="py-24 relative z-10">
+    <section id="depoimentos" class="py-24 relative">
         <div class="container mx-auto px-6">
             <div class="text-center mb-16 fade-in">
                 <span class="text-[#FF2EB6] text-sm tracking-[0.25em] mb-3 block font-medium">DEPOIMENTOS</span>
@@ -373,19 +381,19 @@
             </div>
             
             <div class="grid md:grid-cols-3 gap-8">
-                <div class="glass-card p-8 rounded-2xl shadow-xl hover-lift border border-[#FFD6F4]">
+                <div class="glass-card p-8 rounded-2xl shadow-xl hover-lift border border-white/40">
                     <div class="flex gap-1 text-[#FF2EB6] mb-4 text-2xl">★★★★★</div>
                     <p class="text-[#1A002B] mb-6 font-body leading-relaxed">"Simplesmente amei! Fiz mechas e hidratação, meu cabelo ficou perfeito. Ambiente lindo e meninas super talentosas."</p>
                     <div><h4 class="font-medium text-[#4A00B9] font-title">Aghata Nunes</h4><span class="text-sm text-[#7B19E5] font-body">@Aghatanunes</span></div>
                 </div>
                 
-                <div class="glass-card p-8 rounded-2xl shadow-xl hover-lift border border-[#FFD6F4]">
+                <div class="glass-card p-8 rounded-2xl shadow-xl hover-lift border border-white/40">
                     <div class="flex gap-1 text-[#FF2EB6] mb-4 text-2xl">★★★★★</div>
                     <p class="text-[#1A002B] mb-6 font-body leading-relaxed">"Fiz unhas de fibra pela primeira vez e amei! Duração incrível e as meninas são super atenciosas."</p>
                     <div><h4 class="font-medium text-[#4A00B9] font-title">Ygona Moura</h4><span class="text-sm text-[#7B19E5] font-body">@Ygonarainha</span></div>
                 </div>
                 
-                <div class="glass-card p-8 rounded-2xl shadow-xl hover-lift border border-[#FFD6F4]">
+                <div class="glass-card p-8 rounded-2xl shadow-xl hover-lift border border-white/40">
                     <div class="flex gap-1 text-[#FF2EB6] mb-4 text-2xl">★★★★★</div>
                     <p class="text-[#1A002B] mb-6 font-body leading-relaxed">"Maquiagem pra formatura ficou PERFEITA! Duração ótima, durou a festa inteira. Profissionais muito talentosas."</p>
                     <div><h4 class="font-medium text-[#4A00B9] font-title">Patixa Teló</h4><span class="text-sm text-[#7B19E5] font-body">@Eupatixa</span></div>
@@ -401,7 +409,7 @@
     </section>
 
     <!-- Contato -->
-    <section id="contato" class="py-24 bg-gradient-to-br from-[#7B19E5] to-[#FF2EB6] text-white relative z-10">
+    <section id="contato" class="py-24 bg-gradient-to-br from-[#7B19E5] to-[#FF2EB6] text-white relative">
         <div class="container mx-auto px-6 max-w-3xl">
             <div class="text-center mb-12 fade-in">
                 <span class="text-white/90 text-sm tracking-[0.25em] mb-3 block font-medium">CONTATO</span>
@@ -413,13 +421,16 @@
                 @csrf
                 <div class="grid md:grid-cols-2 gap-6">
                     <input type="text" name="nome" placeholder="Seu nome completo" required
-                           class="w-full px-4 py-3.5 bg-white/20 backdrop-blur-sm border border-white/30 text-white placeholder:text-white/70 rounded-lg focus:outline-none focus:border-white focus:ring-2 focus:ring-white/30 transition-all hover:bg-white/30 font-body">
+                         class="w-full px-4 py-3.5 bg-white/10 backdrop-blur-sm border border-white/30 text-white placeholder:text-white/70 rounded-lg focus:outline-none focus:border-white focus:ring-2 focus:ring-white/30 focus:bg-white/10 hover:bg-white/20 font-body 
+                        [&:-webkit-autofill]:bg-transparent [&:-webkit-autofill]:text-white [&:-webkit-autofill]:[transition:background-color_0s_600000s] [&:-webkit-autofill]:[box-shadow:0_0_0_100px_transparent_inset] [&:-webkit-autofill]:[-webkit-text-fill-color:white]">
                     <input type="email" name="email" placeholder="seu@email.com" required
-                           class="w-full px-4 py-3.5 bg-white/20 backdrop-blur-sm border border-white/30 text-white placeholder:text-white/70 rounded-lg focus:outline-none focus:border-white focus:ring-2 focus:ring-white/30 transition-all hover:bg-white/30 font-body">
+                         class="w-full px-4 py-3.5 bg-white/10 backdrop-blur-sm border border-white/30 text-white placeholder:text-white/70 rounded-lg focus:outline-none focus:border-white focus:ring-2 focus:ring-white/30 focus:bg-white/10 hover:bg-white/20 font-body 
+                        [&:-webkit-autofill]:bg-transparent [&:-webkit-autofill]:text-white [&:-webkit-autofill]:[transition:background-color_0s_600000s] [&:-webkit-autofill]:[box-shadow:0_0_0_100px_transparent_inset] [&:-webkit-autofill]:[-webkit-text-fill-color:white]">
                 </div>
                 
                 <input type="text" name="assunto" placeholder="Assunto da mensagem" required
-                       class="w-full px-4 py-3.5 bg-white/20 backdrop-blur-sm border border-white/30 text-white placeholder:text-white/70 rounded-lg focus:outline-none focus:border-white focus:ring-2 focus:ring-white/30 transition-all hover:bg-white/30 font-body">
+                         class="w-full px-4 py-3.5 bg-white/10 backdrop-blur-sm border border-white/30 text-white placeholder:text-white/70 rounded-lg focus:outline-none focus:border-white focus:ring-2 focus:ring-white/30 focus:bg-white/10 hover:bg-white/20 font-body 
+                        [&:-webkit-autofill]:bg-transparent [&:-webkit-autofill]:text-white [&:-webkit-autofill]:[transition:background-color_0s_600000s] [&:-webkit-autofill]:[box-shadow:0_0_0_100px_transparent_inset] [&:-webkit-autofill]:[-webkit-text-fill-color:white]">
                 
                 <textarea rows="4" name="mensagem" placeholder="Escreva sua mensagem aqui..." required
                           class="w-full px-4 py-3.5 bg-white/20 backdrop-blur-sm border border-white/30 text-white placeholder:text-white/70 rounded-lg focus:outline-none focus:border-white focus:ring-2 focus:ring-white/30 transition-all hover:bg-white/30 font-body resize-none"></textarea>
@@ -433,7 +444,7 @@
             
             <div class="flex flex-wrap justify-center gap-8 mt-12 pt-8 border-t border-white/20">
                 <div class="flex items-center gap-2 font-body"><span class="text-white/90">(85) 98765-4321</span></div>
-                <div class="flex items-center gap-2 font-body"><span class="text-white/90">hello@cheiasdecharme.com</span></div>
+                <div class="flex items-center gap-2 font-body"><span class="text-white/90">cheiasdecharme@gmail.com</span></div>
                 <div class="flex items-center gap-2 font-body"><span class="text-white/90">Fortaleza, Ceará</span></div>
             </div>
         </div>
@@ -442,14 +453,12 @@
     <!-- Bottom Marquee -->
     <div class="bg-gradient-to-r from-[#FF2EB6] via-[#7B19E5] to-[#A955D3] text-white py-2.5 overflow-hidden relative z-20 shadow-md">
         <div class="marquee text-xs tracking-[0.25em] font-medium">
-            <!-- Primeira cópia -->
             <span class="mx-8"> SIGA A GENTE @CHEIASDECHARME</span>
             <span class="mx-8">✦</span>
             <span class="mx-8"> AGENDE SEU HORÁRIO</span>
             <span class="mx-8">✦</span>
             <span class="mx-8"> BELEZA COM ATITUDE</span>
             <span class="mx-8">✦</span>
-            <!-- Segunda cópia -->
             <span class="mx-8"> SIGA A GENTE @CHEIASDECHARME</span>
             <span class="mx-8">✦</span>
             <span class="mx-8"> AGENDE SEU HORÁRIO</span>
@@ -460,7 +469,7 @@
     </div>
 
     <!-- Footer -->
-    <footer class="bg-white/98 backdrop-blur-sm py-6 border-t border-[#FFD6F4] relative z-20 shadow-sm">
+    <footer class="bg-white/80 backdrop-blur-md py-6 border-t border-[#FFD6F4] relative z-20 shadow-sm">
         <div class="container mx-auto px-6">
             <div class="flex flex-col md:flex-row justify-between items-center gap-4">
                 <div class="text-sm text-[#4A00B9] font-body">{{ date('Y') }} Cheias de Charme — feito com ❤️</div>
