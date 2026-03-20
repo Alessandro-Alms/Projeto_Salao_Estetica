@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\ServicoController;
+use App\Http\Controllers\ProdutoController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -35,7 +36,7 @@ Route::middleware(['auth', 'gerente_ou_recepcionista'])->prefix('admin')->name('
 
 });
 Route::middleware(['auth', 'gerente'])->prefix('admin')->name('admin.')->group(function () {
-   Route::resource('servicos', ServicoController::class)->names([
+    Route::resource('servicos', ServicoController::class)->names([
         'index'   => 'servicos.index',
         'create'  => 'servicos.criar',
         'store'   => 'servicos.salvar',
@@ -44,6 +45,19 @@ Route::middleware(['auth', 'gerente'])->prefix('admin')->name('admin.')->group(f
         'destroy' => 'servicos.deletar',
     ])->parameters([
         'servicos' => 'servico'
+    ])->except(['show']);
+});
+
+Route::middleware(['auth', 'gerente'])->prefix('admin')->name('admin.')->group(function () {
+    Route::resource('produtos', ProdutoController::class)->names([
+        'index'   => 'produtos.index',
+        'create'  => 'produtos.criar',
+        'store'   => 'produtos.salvar',
+        'edit'    => 'produtos.editar',
+        'update'  => 'produtos.atualizar',
+        'destroy' => 'produtos.deletar',
+    ])->parameters([
+        'produtos' => 'produto'
     ])->except(['show']);
 });
 
