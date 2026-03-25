@@ -8,11 +8,25 @@
                 </a>
             </div>
 
-            <!-- Navigation Links -->
+            <!-- Navigation Links (Desktop) -->
             <div class="hidden sm:flex sm:items-center sm:ml-6">
-                <a href="{{ route('dashboard') }}" class="text-sm text-[#1A002B] hover:text-[#FF2EB6] transition-colors {{ request()->routeIs('dashboard') ? 'text-[#FF2EB6]' : '' }}">
-                    Dashboard
-                </a>
+                <div class="flex space-x-4">
+                    <a href="{{ route('dashboard') }}" class="text-sm text-[#1A002B] hover:text-[#FF2EB6] transition-colors {{ request()->routeIs('dashboard') ? 'text-[#FF2EB6]' : '' }}">
+                        Dashboard
+                    </a>
+                    
+                    @if(auth()->user()->cargo === 'gerente')
+                        <a href="{{ route('admin.usuarios.index') }}" class="text-sm text-[#1A002B] hover:text-[#FF2EB6] transition-colors {{ request()->routeIs('admin.usuarios.*') ? 'text-[#FF2EB6]' : '' }}">
+                            Usuários
+                        </a>
+                        <a href="{{ route('admin.servicos.index') }}" class="text-sm text-[#1A002B] hover:text-[#FF2EB6] transition-colors {{ request()->routeIs('admin.servicos.*') ? 'text-[#FF2EB6]' : '' }}">
+                            Serviços
+                        </a>
+                        <a href="{{ route('admin.produtos.index') }}" class="text-sm text-[#1A002B] hover:text-[#FF2EB6] transition-colors {{ request()->routeIs('admin.produtos.*') ? 'text-[#FF2EB6]' : '' }}">
+                            Produtos
+                        </a>
+                    @endif
+                </div>
             </div>
 
             <!-- Dropdown do usuário -->
@@ -57,6 +71,18 @@
             <a href="{{ route('dashboard') }}" class="block px-3 py-2 text-base text-[#1A002B] hover:text-[#FF2EB6] hover:bg-[#FFD6F4] rounded-md">
                 Dashboard
             </a>
+            
+            @if(auth()->user()->cargo === 'gerente')
+                <a href="{{ route('admin.usuarios.index') }}" class="block px-3 py-2 text-base text-[#1A002B] hover:text-[#FF2EB6] hover:bg-[#FFD6F4] rounded-md">
+                    Usuários
+                </a>
+                <a href="{{ route('admin.servicos.index') }}" class="block px-3 py-2 text-base text-[#1A002B] hover:text-[#FF2EB6] hover:bg-[#FFD6F4] rounded-md">
+                    Serviços
+                </a>
+                <a href="{{ route('admin.produtos.index') }}" class="block px-3 py-2 text-base text-[#1A002B] hover:text-[#FF2EB6] hover:bg-[#FFD6F4] rounded-md">
+                    Produtos
+                </a>
+            @endif
         </div>
         <div class="pt-4 pb-3 border-t border-[#FFD6F4]">
             <div class="px-4 py-2 text-sm text-[#1A002B]">{{ Auth::user()->name }}</div>

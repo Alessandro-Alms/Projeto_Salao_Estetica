@@ -22,6 +22,38 @@
                 </div>
             @endif
 
+            <!-- Filtro de Busca -->
+            <div class="glass-card rounded-2xl shadow-xl overflow-hidden mb-6">
+                <div class="p-4 bg-white/70 backdrop-blur-sm border border-white/40">
+                    <form action="{{ route('admin.usuarios.index') }}" method="GET" class="flex flex-col md:flex-row gap-4">
+                        <div class="flex-1">
+                            <input type="text" name="search" placeholder="Buscar por nome, e-mail ou CPF..." value="{{ request('search') }}"
+                                class="w-full px-4 py-2.5 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all" />
+                        </div>
+                        <div class="w-full md:w-48">
+                            <select name="cargo" 
+                                class="w-full px-4 py-2.5 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
+                                <option value="">Todos os Cargos</option>
+                                <option value="cliente" {{ request('cargo') == 'cliente' ? 'selected' : '' }}>Cliente</option>
+                                <option value="profissional" {{ request('cargo') == 'profissional' ? 'selected' : '' }}>Profissional</option>
+                                <option value="recepcionista" {{ request('cargo') == 'recepcionista' ? 'selected' : '' }}>Recepcionista</option>
+                                <option value="gerente" {{ request('cargo') == 'gerente' ? 'selected' : '' }}>Gerente</option>
+                            </select>
+                        </div>
+                        <div class="flex gap-2">
+                            <button type="submit" class="bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white px-6 py-2 text-sm rounded-full font-medium btn-primary shadow-md hover:shadow-lg transition-all">
+                                Filtrar
+                            </button>
+                            @if(request('search') || request('cargo'))
+                                <a href="{{ route('admin.usuarios.index') }}" class="px-4 py-2 text-sm text-gray-500 hover:text-[#7B19E5] transition-colors">
+                                    Limpar
+                                </a>
+                            @endif
+                        </div>
+                    </form>
+                </div>
+            </div>
+
             <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
                 <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
                     <div class="overflow-x-auto">
@@ -32,7 +64,7 @@
                                     <th class="px-6 py-4 text-left text-xs font-medium text-[#4A00B9] uppercase tracking-wider">Cargo</th>
                                     <th class="px-6 py-4 text-left text-xs font-medium text-[#4A00B9] uppercase tracking-wider">Contato</th>
                                     <th class="px-6 py-4 text-right text-xs font-medium text-[#4A00B9] uppercase tracking-wider">Ações</th>
-                                 </tr>
+                                  </tr>
                             </thead>
                             <tbody class="divide-y divide-[#FFD6F4]">
                                 @forelse ($usuarios as $usuario)
@@ -79,7 +111,12 @@
                                 @empty
                                     <tr>
                                         <td colspan="4" class="px-6 py-8 text-center text-gray-500">
-                                            ✧ Nenhum usuário cadastrado ainda. Clique em "Novo Usuário" para começar.
+                                            ✧ Nenhum usuário encontrado.
+                                            @if(request('search') || request('cargo'))
+                                                <br><span class="text-xs">Tente outra busca ou <a href="{{ route('admin.usuarios.index') }}" class="text-[#7B19E5]">limpe o filtro</a></span>
+                                            @else
+                                                <br><span class="text-xs">Clique em "Novo Usuário" para começar</span>
+                                            @endif
                                         </td>
                                     </tr>
                                 @endforelse
@@ -101,6 +138,9 @@
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Playfair+Display:wght@700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
     
+    ::-webkit-scrollbar { width: 8px; background: #f8f0ff; }
+    ::-webkit-scrollbar-thumb { background: linear-gradient(135deg, #7B19E5, #FF2EB6); border-radius: 10px; }
+
     .font-title {
         font-family: 'Playfair Display', serif;
         font-weight: 700;
@@ -143,4 +183,18 @@
     .btn-primary:hover {
         transform: translateY(-2px);
     }
+
+
+select:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(123, 25, 229, 0.3);
+    border-color: #7B19E5;
+}
+
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(123, 25, 229, 0.3);
+    border-color: #7B19E5;
+}
+
 </style>

@@ -138,6 +138,9 @@
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Playfair+Display:wght@700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
     
+ ::-webkit-scrollbar { width: 8px; background: #f8f0ff; }
+            ::-webkit-scrollbar-thumb { background: linear-gradient(135deg, #7B19E5, #FF2EB6); border-radius: 10px; }
+
     .font-title {
         font-family: 'Playfair Display', serif;
         font-weight: 700;

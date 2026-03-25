@@ -17,6 +17,29 @@
 
     <div class="py-12 relative">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            
+            <!-- Filtro de Busca -->
+            <div class="glass-card rounded-2xl shadow-xl overflow-hidden mb-6">
+                <div class="p-4 bg-white/70 backdrop-blur-sm border border-white/40">
+                    <form action="{{ route('admin.servicos.index') }}" method="GET" class="flex flex-col md:flex-row gap-4">
+                        <div class="flex-1">
+                            <input type="text" name="search" placeholder="Buscar serviço..." value="{{ request('search') }}"
+                                class="w-full px-4 py-2.5 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all" />
+                        </div>
+                        <div class="flex gap-2">
+                            <button type="submit" class="bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white px-6 py-2 text-sm rounded-full font-medium btn-primary shadow-md hover:shadow-lg transition-all">
+                                Filtrar
+                            </button>
+                            @if(request('search'))
+                                <a href="{{ route('admin.servicos.index') }}" class="px-4 py-2 text-sm text-gray-500 hover:text-[#7B19E5] transition-colors">
+                                    Limpar
+                                </a>
+                            @endif
+                        </div>
+                    </form>
+                </div>
+            </div>
+
             <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
                 <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
                     <div class="overflow-x-auto">
@@ -27,7 +50,7 @@
                                     <th class="px-6 py-4 text-left text-xs font-medium text-[#4A00B9] uppercase tracking-wider">Preço</th>
                                     <th class="px-6 py-4 text-left text-xs font-medium text-[#4A00B9] uppercase tracking-wider">Duração</th>
                                     <th class="px-6 py-4 text-right text-xs font-medium text-[#4A00B9] uppercase tracking-wider">Ações</th>
-                                </tr>
+                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-[#FFD6F4]">
                                 @forelse($servicos as $servico)
@@ -54,7 +77,12 @@
                                 @empty
                                     <tr>
                                         <td colspan="4" class="px-6 py-8 text-center text-gray-500">
-                                            ✧ Nenhum serviço cadastrado ainda. Clique em "Novo Serviço" para começar.
+                                            ✧ Nenhum serviço encontrado.
+                                            @if(request('search'))
+                                                <br><span class="text-xs">Tente outra busca ou <a href="{{ route('admin.servicos.index') }}" class="text-[#7B19E5]">limpe o filtro</a></span>
+                                            @else
+                                                <br><span class="text-xs">Clique em "Novo Serviço" para começar</span>
+                                            @endif
                                         </td>
                                     </tr>
                                 @endforelse
@@ -70,8 +98,8 @@
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Playfair+Display:wght@700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
     
- ::-webkit-scrollbar { width: 8px; background: #f8f0ff; }
-            ::-webkit-scrollbar-thumb { background: linear-gradient(135deg, #7B19E5, #FF2EB6); border-radius: 10px; }
+    ::-webkit-scrollbar { width: 8px; background: #f8f0ff; }
+    ::-webkit-scrollbar-thumb { background: linear-gradient(135deg, #7B19E5, #FF2EB6); border-radius: 10px; }
 
     .font-title {
         font-family: 'Playfair Display', serif;
