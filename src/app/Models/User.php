@@ -42,7 +42,7 @@ class User extends Authenticatable
             Servico::class,    
             'profissional_servico', 
             'usuario_id', 
-            'servico_id'
+            'servico_id', 
         )
         ->withPivot('comissao_percentual', 'duracao_customizada')
         ->withTimestamps();

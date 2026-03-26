@@ -8,6 +8,34 @@
                 + Novo Usuário
             </a>
         </div>
+        <div class="mb-4 border-b border-gray-200">
+            <ul class="flex flex-wrap -mb-px text-sm font-medium text-center">
+                <li class="mr-2">
+                    <a href="{{ route('admin.usuarios.index') }}" 
+                    class="inline-block p-4 border-b-2 rounded-t-lg {{ !request('cargo') ? 'text-pink-600 border-pink-600 active' : 'border-transparent hover:text-gray-600 hover:border-gray-300' }}">
+                        Todos os Usuários
+                    </a>
+                </li>
+                <li class="mr-2">
+                    <a href="{{ route('admin.usuarios.index', ['cargo' => 'cliente']) }}" 
+                    class="inline-block p-4 border-b-2 rounded-t-lg {{ request('cargo') === 'cliente' ? 'text-pink-600 border-pink-600 active' : 'border-transparent hover:text-gray-600 hover:border-gray-300' }}">
+                        Clientes
+                    </a>
+                </li>
+                <li class="mr-2">
+                    <a href="{{ route('admin.usuarios.index', ['cargo' => 'profissional']) }}" 
+                    class="inline-block p-4 border-b-2 rounded-t-lg {{ request('cargo') === 'profissional' ? 'text-pink-600 border-pink-600 active' : 'border-transparent hover:text-gray-600 hover:border-gray-300' }}">
+                        Profissionais
+                    </a>
+                </li>
+                <li class="mr-2">
+                    <a href="{{ route('admin.usuarios.index', ['cargo' => 'recepcionista']) }}" 
+                    class="inline-block p-4 border-b-2 rounded-t-lg {{ request('cargo') === 'recepcionista' ? 'text-pink-600 border-pink-600 active' : 'border-transparent hover:text-gray-600 hover:border-gray-300' }}">
+                        Recepcionistas
+                    </a>
+                </li>
+            </ul>
+        </div>
     </x-slot>
 
     <div class="py-12">
@@ -21,6 +49,25 @@
 
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-gray-200">
                 <div class="p-6 text-gray-900">
+                    {{-- Barra de Busca e Filtros --}}
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-6">
+                        <form action="{{ route('admin.usuarios.index') }}" method="GET" class="flex flex-col md:flex-row gap-4">
+                            {{-- Mantém o cargo fixo se vier de um link específico --}}
+                            <input type="hidden" name="cargo" value="{{ request('cargo') }}">
+                            
+                            <div class="flex-1">
+                                <x-text-input name="search" placeholder="Buscar por nome, e-mail ou CPF..." class="w-full" value="{{ request('search') }}" />
+                            </div>
+                            
+                            <x-primary-button class="bg-amber-500 hover:bg-amber-600">
+                                🔍 Buscar
+                            </x-primary-button>
+
+                            @if(request('search') || request('cargo'))
+                                <a href="{{ route('admin.usuarios.index') }}" class="text-sm text-gray-500 flex items-center underline">Limpar Filtros</a>
+                            @endif
+                        </form>
+                    </div>
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
