@@ -52,21 +52,24 @@ return new class extends Migration
         // 4. Tabela de Agendamentos
         Schema::create('agendamentos', function (Blueprint $table) {
             $table->id('id_agendamento');
-            $table->foreignId('id_cliente')->constrained('users')->onDelete('cascade');
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade'); // Profissional
-            $table->foreignId('id_servico')->constrained('servicos', 'id_servico');
-            $table->dateTime('data_hora');
+            $table->foreignId('cliente_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('profissional_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('servico_id')->constrained('servicos', 'id_servico')->onDelete('cascade');
+            $table->dateTime('data_hora_inicio');
+            $table->dateTime('data_hora_fim');
+            $table->decimal('valor_total', 10, 2);
             $table->enum('status', ['confirmado', 'cancelado', 'falta', 'executado'])->default('confirmado');
             $table->text('obs')->nullable();
+            
             $table->timestamps();
         });
 
         // 5. Tabela de Atendimentos (Histórico de serviços realizados)
         Schema::create('atendimentos', function (Blueprint $table) {
             $table->id('id_atendimento');
-            $table->foreignId('id_cliente')->constrained('users')->onDelete('cascade');
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('id_agendamento')->nullable()->constrained('agendamentos', 'id_agendamento');
+            $table->foreignId('cliente_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('profissional_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('agendamento_id')->nullable()->constrained('agendamentos', 'id_agendamento');
             $table->decimal('valor_total', 10, 2);
             $table->integer('avaliacao')->nullable();
             $table->text('descricao_detalhada')->nullable();

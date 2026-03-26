@@ -21,4 +21,8 @@ class Produto extends Model
     {
         return 'R$ ' . number_format($this->valor_unitario, 2, ',', '.');
     }
+    public function vendas()
+    {
+        return $this->hasMany(Venda::class, 'id_produto');
+    }
 }

@@ -133,4 +133,34 @@ class UserController extends Controller
         $user->delete();
         return redirect()->route('admin.usuarios.index')->with('status', 'Usuário removido!');
     }
+    public function clientes(Request $request)
+    {
+        $query = User::where('cargo', 'cliente');
+
+            if ($request->filled('search')) {
+                $searchTerm = $request->input('search');
+                $query->where(function ($q) use ($searchTerm) {
+                    $q->where('name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('email', 'like', '%' . $searchTerm . '%');
+                });
+            }
+
+        $clientes = $query->orderBy('name', 'asc')->paginate(10);
+        return view('admin.usuarios.clientes', compact('clientes'));
+    }
+    public function profissionais(Request $request)
+    {
+        $query = User::where('cargo', 'profissional');
+
+            if ($request->filled('search')) {
+                $searchTerm = $request->input('search');
+                $query->where(function ($q) use ($searchTerm) {
+                    $q->where('name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('email', 'like', '%' . $searchTerm . '%');
+                });
+            }
+
+        $profissionais = $query->orderBy('name', 'asc')->paginate(10);
+        return view('admin.usuarios.profissionais', compact('profissionais'));
+    }
 }

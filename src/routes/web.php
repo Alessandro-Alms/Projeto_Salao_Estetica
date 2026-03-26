@@ -33,6 +33,8 @@ Route::middleware(['auth', 'gerente_ou_recepcionista'])->prefix('admin')->name('
         'usuarios' => 'user'
     ])->except(['show']);
 
+    route::get('clientes', [UserController::class, 'clientes'])->name('usuarios.clientes');
+    route::get('profissionais', [UserController::class, 'profissionais'])->name('usuarios.profissionais');
 
 });
 Route::middleware(['auth', 'gerente'])->prefix('admin')->name('admin.')->group(function () {
