@@ -183,6 +183,8 @@ class UserController extends Controller
                     [
                         'hora_inicio' => $dados['inicio'] ?? '08:00',
                         'hora_fim'    => $dados['fim'] ?? '18:00',
+                        'almoco_inicio' => $dados['almoco_inicio'] ?? '12:00',
+                        'almoco_fim' => $dados['almoco_fim'] ?? '13:00',
                         'trabalha'    => isset($dados['trabalha']) ? 1 : 0
                     ]
                 );

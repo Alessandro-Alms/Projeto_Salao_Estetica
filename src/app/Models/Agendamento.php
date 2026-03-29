@@ -30,6 +30,6 @@ class Agendamento extends Model
 
     // Relacionamento: O agendamento é de um serviço específico
     public function servico() {
-        return $this->belongsTo(Servico::class, 'servico_id');
+        return $this->belongsTo(Servico::class, 'servico_id', 'id_servico');
     }
 }

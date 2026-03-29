@@ -27,7 +27,7 @@ class ProfileController extends Controller
     public function update(Request $request): RedirectResponse
     {
         $request->user()->fill($request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['required','string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email,' . $request->user()->id],
         ]));
 

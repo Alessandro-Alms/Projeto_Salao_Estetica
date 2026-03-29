@@ -66,6 +66,14 @@
                                         <input type="checkbox" name="horarios[{{ $num }}][trabalha]" value="1" {{ ($h->trabalha ?? true) ? 'checked' : '' }} class="rounded text-blue-600">
                                         <span class="ml-2 text-xs font-bold text-gray-500 uppercase">Ativo</span>
                                     </div>
+                                    <div>
+                                        <label class="text-xs text-gray-500">Início Almoço</label>
+                                        <input type="time" name="horarios[{{ $num }}][almoco_inicio]" value="{{ $h->almoco_inicio ?? '12:00' }}" class="text-sm border-gray-200 rounded">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-gray-500">Fim Almoço</label>
+                                        <input type="time" name="horarios[{{ $num }}][almoco_fim]" value="{{ $h->almoco_fim ?? '13:00' }}" class="text-sm border-gray-200 rounded">
+                                    </div>
                                 </div>
                             @endforeach
                         </div>

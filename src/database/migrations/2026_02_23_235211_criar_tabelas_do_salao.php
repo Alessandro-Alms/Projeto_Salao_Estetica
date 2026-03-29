@@ -57,7 +57,7 @@ return new class extends Migration
             $table->foreignId('servico_id')->constrained('servicos', 'id_servico')->onDelete('cascade');
             $table->dateTime('data_hora_inicio');
             $table->dateTime('data_hora_fim');
-            $table->decimal('valor_total', 10, 2);
+            $table->decimal('valor_total', 10, 2)->nullable();
             $table->enum('status', ['confirmado', 'cancelado', 'falta', 'executado'])->default('confirmado');
             $table->text('obs')->nullable();
             

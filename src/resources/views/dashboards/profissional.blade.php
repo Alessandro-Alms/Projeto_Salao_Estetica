@@ -19,3 +19,13 @@
         </a>
     </div>
 </div>
+<div class="bg-white p-6 mt-6 rounded-xl shadow-sm border border-gray-200">
+    <h2 class="text-xl font-bold text-gray-800 mb-4">Próximos Atendimentos</h2>
+    <p class="text-sm text-gray-500">Veja os próximos agendamentos que você tem.</p>
+
+    <div class="mt-4">
+        <a href="{{ route('profissional.agenda') }}" class="text-pink-600 font-bold hover:underline">
+            Ver Minha Agenda Completa
+        </a>
+    </div>
+</div>
