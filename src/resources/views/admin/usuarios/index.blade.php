@@ -4,34 +4,38 @@
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 {{ __('Gerenciar Usuários') }}
             </h2>
-            <a href="{{ route('admin.usuarios.criar') }}" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                + Novo Usuário
+        @if(auth()->user()->cargo === 'recepcionista')
+            <a href="{{ route('admin.usuarios.criar', ['cargo' => 'cliente']) }}" class="bg-slate-800 text-white px-4 py-2 rounded-md font-bold uppercase text-xs">
+                + NOVO CLIENTE
             </a>
+        @else
+            <a href="{{ route('admin.usuarios.criar') }}" class="bg-slate-800 text-white px-4 py-2 rounded-md font-bold uppercase text-xs">
+                + NOVO USUÁRIO
+            </a>
+        @endif
         </div>
         <div class="mb-4 border-b border-gray-200">
             <ul class="flex flex-wrap -mb-px text-sm font-medium text-center">
+ 
                 <li class="mr-2">
-                    <a href="{{ route('admin.usuarios.index') }}" 
-                    class="inline-block p-4 border-b-2 rounded-t-lg {{ !request('cargo') ? 'text-pink-600 border-pink-600 active' : 'border-transparent hover:text-gray-600 hover:border-gray-300' }}">
+
+                @if(auth()->user()->cargo === 'gerente')
+                    <a href="{{ route('admin.usuarios.index') }}"
+                     class="inline-block p-4 border-b-2 rounded-t-lg {{ !request('cargo') ? 'text-pink-600 border-pink-600 active' : 'border-transparent hover:text-gray-600 hover:border-gray-300' }}">
                         Todos os Usuários
                     </a>
-                </li>
-                <li class="mr-2">
+                    <a href="{{ route('admin.usuarios.index', ['cargo' => 'profissional']) }}"
+                     class="inline-block p-4 border-b-2 rounded-t-lg {{ request('cargo') === 'profissional' ? 'text-pink-600 border-pink-600 active' : 'border-transparent hover:text-gray-600 hover:border-gray-300' }}">
+                        Profissionais
+                    </a>
+                    <a href="{{ route('admin.usuarios.index', ['cargo' => 'recepcionista']) }}"
+                     class="inline-block p-4 border-b-2 rounded-t-lg {{ request('cargo') === 'recepcionista' ? 'text-pink-600 border-pink-600 active' : 'border-transparent hover:text-gray-600 hover:border-gray-300' }}">
+                        Recepcionistas
+                    </a>
+                @endif
                     <a href="{{ route('admin.usuarios.index', ['cargo' => 'cliente']) }}" 
                     class="inline-block p-4 border-b-2 rounded-t-lg {{ request('cargo') === 'cliente' ? 'text-pink-600 border-pink-600 active' : 'border-transparent hover:text-gray-600 hover:border-gray-300' }}">
                         Clientes
-                    </a>
-                </li>
-                <li class="mr-2">
-                    <a href="{{ route('admin.usuarios.index', ['cargo' => 'profissional']) }}" 
-                    class="inline-block p-4 border-b-2 rounded-t-lg {{ request('cargo') === 'profissional' ? 'text-pink-600 border-pink-600 active' : 'border-transparent hover:text-gray-600 hover:border-gray-300' }}">
-                        Profissionais
-                    </a>
-                </li>
-                <li class="mr-2">
-                    <a href="{{ route('admin.usuarios.index', ['cargo' => 'recepcionista']) }}" 
-                    class="inline-block p-4 border-b-2 rounded-t-lg {{ request('cargo') === 'recepcionista' ? 'text-pink-600 border-pink-600 active' : 'border-transparent hover:text-gray-600 hover:border-gray-300' }}">
-                        Recepcionistas
                     </a>
                 </li>
             </ul>

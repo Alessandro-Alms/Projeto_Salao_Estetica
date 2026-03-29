@@ -5,7 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-
+use App\Models\Agendamento;
+use App\Models\Atendimento;
+use App\Models\HorarioTrabalho;
+use App\Models\Venda;
+use App\Models\Servico;
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;
@@ -46,6 +50,10 @@ class User extends Authenticatable
         )
         ->withPivot('comissao_percentual', 'duracao_customizada')
         ->withTimestamps();
+    }
+    public function horariosTrabalho()
+    {
+        return $this->hasMany(HorarioTrabalho::class, 'usuario_id');
     }
     public function agendamentos(){
         $foreignKey = $this->cargo === 'profissional' ? 'cliente_id' : 'profissional_id';

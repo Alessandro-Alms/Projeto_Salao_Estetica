@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
+use App\Models\HorarioTrabalho;
 
 class UserController extends Controller
 {
@@ -146,5 +147,48 @@ class UserController extends Controller
 
         $usuario->delete();
         return redirect()->route('admin.usuarios.index')->with('status', 'Usuário removido!');
+    }
+    public function configuracoesservicos()
+    {
+        $usuario = auth()->user();
+        $servicos = \App\Models\Servico::All();
+        return view('profissional.configuracoes', compact('usuario', 'servicos'));
+    }
+    public function atualizarconfiguracoesservicos(Request $request)
+    {
+        $usuario = auth()->user();
+
+        // 1. SALVAR SERVIÇOS
+        if ($request->has('servicos')) {
+            $syncData = [];
+            foreach ($request->servicos as $servicoId => $dados) {
+                if (isset($dados['ativo'])){
+                    $syncData[$servicoId] = [
+                        'comissao_percentual' => $dados['comissao'] ?? 50.00,
+                        'duracao_customizada' => $dados['duracao'] ?? null,
+                    ];
+                }
+            }
+            $usuario->servicos()->sync($syncData);
+        }
+
+        // 2. SALVAR HORÁRIOS (A parte que não estava funcionando)
+        if ($request->has('horarios')) {
+            foreach ($request->horarios as $dia => $dados) {
+                \App\Models\HorarioTrabalho::updateOrCreate(
+                    [
+                        'usuario_id' => $usuario->id,
+                        'dia_semana' => $dia
+                    ],
+                    [
+                        'hora_inicio' => $dados['inicio'] ?? '08:00',
+                        'hora_fim'    => $dados['fim'] ?? '18:00',
+                        'trabalha'    => isset($dados['trabalha']) ? 1 : 0
+                    ]
+                );
+            }
+        }
+
+        return back()->with('sucesso', 'Configurações e horários atualizados com sucesso!');
     }
 }

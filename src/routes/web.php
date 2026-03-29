@@ -59,6 +59,10 @@
             'produtos' => 'produto'
         ])->except(['show']);
     });
+    Route::middleware(['auth', 'profissional'])->prefix('profissional')->name('profissional.')->group(function () {
+        Route::get('/configuracoes', [UserController::class, 'configuracoesservicos'])->name('servicos.editar');
+        Route::put('/configuracoes', [UserController::class, 'atualizarconfiguracoesservicos'])->name('servicos.atualizar');
+    });
 
 
     require __DIR__.'/auth.php';

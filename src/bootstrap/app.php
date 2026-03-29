@@ -16,7 +16,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'gerente' => \App\Http\Middleware\Gerente::class,
         ]);
     })
+        ->withMiddleware(function (Middleware $middleware) {
+    $middleware->alias([
+        'profissional' => \App\Http\Middleware\CheckProfissional::class,
+
+    ]);
+    })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
-    })->create()
-    ;
+    })->create();
