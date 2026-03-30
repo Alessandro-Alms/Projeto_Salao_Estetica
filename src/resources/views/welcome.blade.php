@@ -108,13 +108,13 @@
             <span class="mx-8">✦</span>
             <span class="mx-8"> TRATAMENTOS</span>
             <span class="mx-8">✦</span>
-            <span class="mx-8">✧ CORTE</span>
+            <span class="mx-8"> CORTE</span>
             <span class="mx-8">✦</span>
-            <span class="mx-8">✧ UNHAS</span>
+            <span class="mx-8"> UNHAS</span>
             <span class="mx-8">✦</span>
-            <span class="mx-8">✧ MAQUIAGEM</span>
+            <span class="mx-8"> MAQUIAGEM</span>
             <span class="mx-8">✦</span>
-            <span class="mx-8">✧ SOBRANCELHAS</span>
+            <span class="mx-8"> SOBRANCELHAS</span>
             <span class="mx-8">✦</span>
         </div>
     </div>
@@ -133,9 +133,15 @@
                    <a href="#contato" class="text-[#1A002B] text-sm hover:text-[#7B19E5] transition-colors font-semibold"> CONTATO </a>
                 </nav>
                 
-                <a href="/agendar" class="bg-[#7B19E5] text-white px-6 py-2.5 text-sm rounded-full btn-primary shadow-lg" aria-label="Agendar horário">
-                    AGENDAR
-                </a>
+                <div class="flex items-center gap-2">
+    <a href="/login" class="bg-[#7B19E5] text-white px-6 py-2.5 text-sm rounded-full btn-primary shadow-lg">
+        LOGIN
+    </a>
+
+    <a href="/agendar" class="bg-[#FF2EB6] text-white px-6 py-2.5 text-sm rounded-full btn-primary shadow-lg">
+        AGENDAR
+    </a>
+</div>
             </div>
         </div>
     </header>
