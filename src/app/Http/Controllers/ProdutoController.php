@@ -20,8 +20,9 @@ class ProdutoController extends Controller
         }
 
         $produtos = $query->orderBy('nome', 'asc')->paginate(10)->withQueryString();
+        $estoqueCritico = Produto::where('quantidade_estoque', '<=', 5)->count();
 
-        return view('admin.produtos.index', compact('produtos'));
+        return view('admin.produtos.index', compact('produtos', 'estoqueCritico'));
     }
     public function create()
     {
