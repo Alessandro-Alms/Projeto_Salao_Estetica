@@ -12,26 +12,32 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-        @if($estoqueCritico > 0)
-            <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 shadow-sm animate-pulse" role="alert">
-                <div class="flex items-center">
-                    <svg class="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                    </svg>
-                    <div>
-                        <p class="font-bold">Atenção Gerente!</p>
-                          <p>Existe(m) <strong>{{ $estoqueCritico }}</strong> produto(s) com estoque baixo ou zerado. Verifique a lista abaixo.</p>
+            
+            {{-- BLOCO DE ESTOQUE CRÍTICO --}}
+            @if(isset($estoqueCritico) && $estoqueCritico->count() > 0)
+                <div class="mb-6 p-4 bg-orange-100 border-l-4 border-orange-500 text-orange-700 shadow-sm rounded-r-lg">
+                    <div class="flex items-center">
+                        <span class="text-xl mr-3">⚠️</span>
+                        <div>
+                            <p class="font-bold text-sm text-orange-800 uppercase">Estoque Crítico</p>
+                            <ul class="list-disc ml-5 mt-1 text-xs">
+                                @foreach($estoqueCritico as $item)
+                                    <li>{{ $item->nome }} (Apenas <strong>{{ $item->quantidade_estoque }}</strong> un.)</li>
+                                @endforeach
+                            </ul>
+                        </div>
                     </div>
                 </div>
-            </div>
-        @endif
+            @endif
+
+            {{-- FILTROS --}}
             <div class="bg-white p-6 rounded-t-lg border border-gray-200 shadow-sm mb-4">
                 <form action="{{ route('admin.produtos.index') }}" method="GET" class="flex flex-col md:flex-row gap-4">
                     <div class="flex-1">
                         <x-text-input name="search" placeholder="Buscar produto..." class="w-full" value="{{ request('search') }}" />
                     </div>
                     <div class="w-full md:w-48">
-                        <select name="tipo" class="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm w-full">
+                        <select name="tipo" class="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm w-full text-sm">
                             <option value="">Todos os Tipos</option>
                             <option value="acessorios" {{ request('tipo') == 'acessorios' ? 'selected' : '' }}>Acessórios</option>
                             <option value="kits" {{ request('tipo') == 'kits' ? 'selected' : '' }}>Kits</option>
@@ -43,7 +49,8 @@
                 </form>
             </div>
 
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-gray-200">
+            {{-- TABELA --}}
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-b-lg border border-gray-200 border-t-0">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
@@ -57,16 +64,16 @@
                     <tbody class="bg-white divide-y divide-gray-200">
                         @forelse($produtos as $produto)
                             <tr>
-                                <td class="px-6 py-4 whitespace-nowrap">{{ $produto->nome }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">{{ $produto->nome }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
                                         {{ ucfirst($produto->tipo) }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap font-medium">
+                                <td class="px-6 py-4 whitespace-nowrap font-medium text-sm">
                                     R$ {{ number_format($produto->valor_unitario, 2, ',', '.') }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
                                     <span class="{{ $produto->quantidade_estoque <= 5 ? 'text-red-600 font-bold' : 'text-gray-900' }}">
                                         {{ $produto->quantidade_estoque }} un.
                                     </span>
@@ -77,12 +84,11 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <a href="{{ route('admin.produtos.editar', $produto->id_produto) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">Editar</a>
                                     <form action="{{ route('admin.produtos.deletar', $produto->id_produto) }}" method="POST" onsubmit="return confirm('Tem certeza que deseja excluir este produto?');" class="inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="text-red-600 hover:text-red-900">Excluir</button>
-                                </form>
-                            </td>
-
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="text-red-600 hover:text-red-900">Excluir</button>
+                                    </form>
+                                </td>
                             </tr>
                         @empty
                             <tr>
@@ -91,8 +97,10 @@
                         @endforelse
                     </tbody>
                 </table>
-                <div class="px-6 py-4 border-t">
-                    {{ $produtos->links() }} {{-- Note: aqui use $produtos->links() no seu código --}}
+                
+                {{-- PAGINAÇÃO --}}
+                <div class="px-6 py-4 border-t bg-gray-50">
+                    {{ $produtos->links() }}
                 </div>
             </div>
         </div>

@@ -6,6 +6,7 @@
     use App\Http\Controllers\ServicoController;
     use App\Http\Controllers\ProdutoController;
     use App\Http\Controllers\AgendamentoController;
+    use App\Http\Controllers\FinanceiroController;
 
     Route::get('/', function () {
         return view('welcome');
@@ -24,6 +25,7 @@
         Route::post('/agendar-servico', [AgendamentoController::class, 'storeCliente'])->name('cliente.agendar.salvar');
         Route::get('/meus-agendamentos', [AgendamentoController::class, 'indexCliente'])->name('cliente.index');
         Route::post('/agendamento/{id}/cancelar', [AgendamentoController::class, 'cancelarCliente'])->name('cliente.agendamento.cancelar');
+        Route::post('/agendamentos/{id}/presenca', [AgendamentoController::class, 'confirmarPresenca'])->name('agendamento.presenca');
     });
 
     Route::middleware(['auth', 'gerente_ou_recepcionista'])->prefix('admin')->name('admin.')->group(function () {
@@ -75,7 +77,8 @@
     });
     //rota para listar os agendamentos em formato JSON (para o FullCalendar) 
     Route::get('api/agendamentos', [AgendamentoController::class, 'listarJson'])->name('admin.agenda.json');
-
-
+    // Coloque esta linha LOGO ANTES do final do arquivo, ou dentro do grupo 'gerente'
+    Route::middleware(['auth', 'gerente'])->get('/admin/financeiro/fechamento', [FinanceiroController::class, 'fechamento'])->name('admin.financeiro.fechamento');
+    Route::middleware(['auth', 'gerente'])->get('/admin/financeiro/comissoes', [FinanceiroController::class, 'comissoes'])->name('admin.financeiro.comissoes');
     require __DIR__.'/auth.php';
     

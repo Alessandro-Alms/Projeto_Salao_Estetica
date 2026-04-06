@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use App\Models\HorarioTrabalho;
+use App\Models\Servico;
 
 class UserController extends Controller
 {
@@ -151,7 +152,7 @@ class UserController extends Controller
     public function configuracoesservicos()
     {
         $usuario = auth()->user();
-        $servicos = \App\Models\Servico::All();
+        $servicos = Servico::All();
         return view('profissional.configuracoes', compact('usuario', 'servicos'));
     }
     public function atualizarconfiguracoesservicos(Request $request)
@@ -175,7 +176,7 @@ class UserController extends Controller
         // 2. SALVAR HORÁRIOS (A parte que não estava funcionando)
         if ($request->has('horarios')) {
             foreach ($request->horarios as $dia => $dados) {
-                \App\Models\HorarioTrabalho::updateOrCreate(
+                HorarioTrabalho::updateOrCreate(
                     [
                         'usuario_id' => $usuario->id,
                         'dia_semana' => $dia

@@ -7,6 +7,9 @@ use App\Models\Agendamento;
 use App\Models\Servico;
 use App\Models\User;
 use Carbon\Carbon;
+use App\Models\HorarioTrabalho;
+use App\Models\Produto; 
+use Illuminate\Support\Facades\DB;
 
 class AgendamentoController extends Controller
 {
@@ -18,7 +21,7 @@ class AgendamentoController extends Controller
 
     public function store(Request $request)
     {
-        // 1. Validação Básica dos Campos
+        // 1. Validação Básica
         $request->validate([
             'cliente_id' => 'required|exists:users,id',
             'profissional_id' => 'required|exists:users,id',
@@ -28,21 +31,27 @@ class AgendamentoController extends Controller
             'data_hora.after' => 'O agendamento deve ser para uma data futura.',
         ]);
 
-        // Instanciando os modelos para cálculos
-        $servico = \App\Models\Servico::findOrFail($request->servico_id);
-        $profissional = \App\Models\User::findOrFail($request->profissional_id);
+        $servico = Servico::findOrFail($request->servico_id);
+        $profissional = User::findOrFail($request->profissional_id);
         
-        // 2. Definindo Início e Fim (usando Carbon)
-        $inicio = \Carbon\Carbon::parse($request->data_hora);
-        $diaSemana = $inicio->dayOfWeek; // 0 (dom) a 6 (sab)
+        // 2. Definindo Início e Fim
+        $inicio = Carbon::parse($request->data_hora);
+        $diaSemana = $inicio->dayOfWeek; 
         
-        // Busca a duração personalizada do profissional ou a padrão do serviço
+        // Busca a duração
         $vinculo = $profissional->servicos->find($servico->id_servico);
-        $duracao = $vinculo ? ($vinculo->pivot->duracao_customizada ?? $servico->duracao) : $servico->duracao;
+
+        // --- NOVA VALIDAÇÃO: ESPECIALIDADE ---
+        // 3.1. Verifica se o profissional realmente executa esse serviço
+        if (!$vinculo) {
+            return back()->withErrors(['servico_id' => 'Este profissional não realiza este tipo de serviço.'])->withInput();
+        }
+
+        $duracao = $vinculo->pivot->duracao_customizada ?? $servico->duracao;
         $fim = $inicio->copy()->addMinutes($duracao);
 
         // 3. Validação: Horário de Trabalho e Almoço
-        $escala = \App\Models\HorarioTrabalho::where('usuario_id', $profissional->id)
+        $escala = HorarioTrabalho::where('usuario_id', $profissional->id)
                     ->where('dia_semana', $diaSemana)
                     ->first();
 
@@ -50,20 +59,23 @@ class AgendamentoController extends Controller
             return back()->withErrors(['data_hora' => 'O profissional não trabalha neste dia da semana.'])->withInput();
         }
 
-        $horaFormatada = $inicio->format('H:i:s');
+        $horaInicioFormatada = $inicio->format('H:i:s');
+        $horaFimFormatada = $fim->format('H:i:s');
         
-        // Verifica se está fora do expediente geral
-        if ($horaFormatada < $escala->hora_inicio || $inicio->copy()->addMinutes($duracao)->format('H:i:s') > $escala->hora_fim) {
+        // Verifica expediente geral
+        if ($horaInicioFormatada < $escala->hora_inicio || $horaFimFormatada > $escala->hora_fim) {
             return back()->withErrors(['data_hora' => 'O horário escolhido está fora do expediente do profissional.'])->withInput();
         }
 
-        // Verifica se cai no almoço
-        if ($horaFormatada >= $escala->almoco_inicio && $horaFormatada < $escala->almoco_fim) {
-            return back()->withErrors(['data_hora' => 'Este horário coincide com o intervalo de almoço do profissional.'])->withInput();
+        // --- NOVA VALIDAÇÃO: ALMOÇO MELHORADA ---
+        // 3.2. Verifica se o atendimento invade o almoço (em qualquer ponto)
+        // Se o início for antes do fim do almoço E o fim for depois do início do almoço, há intersecção.
+        if ($horaInicioFormatada < $escala->almoco_fim && $horaFimFormatada > $escala->almoco_inicio) {
+            return back()->withErrors(['data_hora' => 'Este horário coincide ou invade o intervalo de almoço do profissional.'])->withInput();
         }
 
-        // 4. Validação: Conflito com outros Agendamentos (Colisão)
-        $conflito = \App\Models\Agendamento::where('profissional_id', $request->profissional_id)
+        // 4. Validação: Conflito (Colisão) - Seu código original está ótimo aqui
+        $conflito = Agendamento::where('profissional_id', $request->profissional_id)
             ->where('status', '!=', 'cancelado')
             ->where(function ($query) use ($inicio, $fim) {
                 $query->where(function ($q) use ($inicio, $fim) {
@@ -85,7 +97,7 @@ class AgendamentoController extends Controller
         }
 
         // 5. Salvar Agendamento
-        \App\Models\Agendamento::create([
+        Agendamento::create([
             'cliente_id' => $request->cliente_id,
             'profissional_id' => $request->profissional_id,
             'servico_id' => $request->servico_id,
@@ -94,14 +106,15 @@ class AgendamentoController extends Controller
             'status' => 'confirmado',
             'valor_total' => $servico->preco, 
         ]);
+
         if (auth()->user()->cargo === 'cliente') {
-        return redirect()->route('cliente.index')->with('status', 'Agendamento realizado com sucesso!');
+            return redirect()->route('cliente.index')->with('status', 'Agendamento realizado com sucesso!');
         }
         return back()->with('status', 'Agendamento realizado com sucesso!');
     }
     public function listarJson()
     {
-        $agendamentos = \App\Models\Agendamento::with(['cliente', 'servico', 'profissional'])->get();
+        $agendamentos = Agendamento::with(['cliente', 'servico', 'profissional'])->get();
 
         return response()->json($agendamentos->map(function($a) {
             return [
@@ -115,25 +128,24 @@ class AgendamentoController extends Controller
     }
     public function clienteAgendar()
     {
-        $profissionais = \App\Models\User::where('cargo', 'profissional')->get();
-        $servicos = \App\Models\Servico::all();
+        $profissionais = User::where('cargo', 'profissional')->get();
+        $servicos = Servico::all();
         return view('cliente.agendar', compact('profissionais', 'servicos'));
     }
     public function agendaProfissional()
     {
         // Usamos o query builder puro para testar se o Eloquent está bugando
-        $agendamentos = \App\Models\Agendamento::where('profissional_id', auth()->id())
-            ->with(['cliente', 'servico'])
-            ->orderBy('data_hora_inicio', 'asc')
-            ->get();
+        $agendamentos = Agendamento::where('profissional_id', auth()->id())
+                                    ->with(['cliente', 'servico'])
+                                    ->orderBy('data_hora_inicio', 'asc')
+                                    ->get()
+                                    ->groupBy(fn($data) => \Carbon\Carbon::parse($data->data_hora_inicio)->format('d/m/Y'));
 
         // Verificação de segurança: se a lista não estiver vazia, 
         // o Laravel VAI ter que carregar o ID.
-        $agrupados = $agendamentos->groupBy(function($item) {
-            return \Carbon\Carbon::parse($item->data_hora_inicio)->format('d/m/Y');
-        });
+        $produtos = Produto::where('quantidade_estoque', '>', 0)->get();
 
-        return view('profissional.agenda', ['agendamentos' => $agrupados]);
+        return view('profissional.agenda', compact('agendamentos', 'produtos'));
     }
     public function storeCliente(Request $request)
     {
@@ -142,7 +154,7 @@ class AgendamentoController extends Controller
     }
     public function indexCliente()
     {
-        $agendamentos = \App\Models\Agendamento::where('cliente_id', auth()->id())
+        $agendamentos = Agendamento::where('cliente_id', auth()->id())
             ->with(['profissional', 'servico'])
             ->orderBy('data_hora_inicio', 'asc')
             ->get();
@@ -152,7 +164,7 @@ class AgendamentoController extends Controller
     public function cancelarCliente($id_agendamento)
     {
         // Busca o agendamento ou dá erro 404
-        $agendamento = \App\Models\Agendamento::findOrFail($id_agendamento);
+        $agendamento = Agendamento::findOrFail($id_agendamento);
 
         $agora = Carbon::now();
         $datainicio = Carbon::parse($agendamento->data_hora_inicio);
@@ -165,23 +177,72 @@ class AgendamentoController extends Controller
 
         return back()->with('status', 'Agendamento cancelado com sucesso!');
     }
-    public function marcarComoExecutado($agendamento_id)
+    public function marcarComoExecutado(Request $request, $id_agendamento)
     {
-        $agendamento = \App\Models\Agendamento::findOrFail($agendamento_id);
-        $agora = Carbon::now();
-        $horarioagendamento = Carbon::parse($agendamento->data_hora_inicio);
+        $agendamento = Agendamento::findOrFail($id_agendamento);
 
-        if ($agora->diffInMinutes($horarioagendamento, false) < -15) {
-            $agendamento->observacao = "Cliente chegou com mais de 15min de atraso.";
+        // Iniciamos uma transação para garantir que ou faz TUDO ou não faz NADA
+        return DB::transaction(function () use ($request, $agendamento) {
+            
+            // 1. Verificação Prévia de Estoque (Para não dar erro no meio do caminho)
+            if ($request->has('produtos')) {
+                foreach ($request->produtos as $item) {
+                    if (!empty($item['id'])) {
+                        $produto = Produto::find($item['id']);
+                        $qtdPedida = $item['quantidade'] ?? 1;
+
+                        if (!$produto || $produto->quantidade_estoque < $qtdPedida) {
+                            // Se um único produto falhar, paramos tudo aqui
+                            return back()->withErrors([
+                                'estoque' => "Estoque insuficiente para o produto: " . ($produto->nome ?? 'Desconhecido')
+                            ])->withInput();
+                        }
+                    }
+                }
+            }
+
+            // 2. Se chegou aqui, todos os produtos têm estoque ou não há produtos.
+            // Agora sim mudamos o status do agendamento.
+            $agendamento->status = 'executado';
+            $agendamento->obs = $request->input('observacao');
+            $agendamento->save();
+
+            // 3. Registrar as Vendas e Baixar Estoque
+            if ($request->has('produtos')) {
+                foreach ($request->produtos as $item) {
+                    if (!empty($item['id'])) {
+                        $produto = Produto::find($item['id']);
+                        $qtd = $item['quantidade'] ?? 1;
+
+                        // Baixa o estoque
+                        $produto->decrement('quantidade_estoque', $qtd);
+
+                        // Registra a venda (UC007 / UC014)
+                        DB::table('vendas')->insert([
+                            'user_id' => auth()->id(),
+                            'id_produto' => $produto->id_produto,
+                            'quantidade' => $qtd,
+                            'valor_venda' => $produto->valor_unitario * $qtd,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    }
+                }
+            }
+
+            return redirect()->route('profissional.agenda')->with('status', 'Atendimento finalizado com sucesso!');
+        });
+    }
+    public function confirmarPresenca($id)
+    {
+        $agendamento = \App\Models\Agendamento::findOrFail($id);
+
+        // Se o status for 'confirmado', mudamos para 'presente'
+        if ($agendamento->status == 'confirmado') {
+            $agendamento->status = 'presente';
+            $agendamento->save();
         }
 
-        // Verifica se é o profissional certo
-        if ($agendamento->profissional_id !== auth()->id()) {
-            abort(403);
-        }
-        $agendamento->status = 'executado';
-        $agendamento->save();
-
-        return back()->with('status', 'Atendimento finalizado!');
+        return back()->with('status', 'Check-in realizado!');
     }
 }
