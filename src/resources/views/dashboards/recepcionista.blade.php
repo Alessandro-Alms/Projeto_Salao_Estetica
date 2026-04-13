@@ -1,15 +1,25 @@
-
-            <div class="mt-6 flex flex-wrap gap-4">
-                <a href="{{ route('admin.usuarios.criar') }}" 
-                class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:border-indigo-900 focus:ring ring-indigo-300 disabled:opacity-25 transition ease-in-out duration-150">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                    </svg>
-                    Cadastrar Novo Cliente
-                </a>
-
-                <a href="{{ route('admin.usuarios.index') }}" 
-                class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:text-gray-500 focus:outline-none focus:border-blue-300 focus:ring ring-blue-200 active:text-gray-800 active:bg-gray-50 disabled:opacity-25 transition ease-in-out duration-150">
-                    Ver Lista de Clientes
-                </a>
+<div class="glass-card rounded-2xl shadow-xl overflow-hidden mb-6">
+    <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
+        <div class="flex items-center gap-2 mb-5">
+            <span class="text-[#7B19E5] text-xl">✧</span>
+            <h3 class="text-lg font-title text-[#4A00B9]">Recepção</h3>
         </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <a href="{{ route('admin.agenda.index') }}" class="group flex items-center gap-4 p-4 rounded-xl bg-white/50 hover:bg-white/80 transition-all hover:shadow-lg hover:-translate-y-1 border border-[#FFD6F4]">
+                <div class="w-12 h-12 bg-gradient-to-br from-[#7B19E5] to-[#A855F7] rounded-xl flex items-center justify-center"><span class="text-white text-xl">📅</span></div>
+                <div><h4 class="font-title text-[#4A00B9]">Calendário</h4><p class="text-xs text-gray-500">Gerenciar agendamentos</p></div>
+            </a>
+
+            <a href="{{ route('admin.venda.create') }}" class="group flex items-center gap-4 p-4 rounded-xl bg-white/50 hover:bg-white/80 transition-all hover:shadow-lg hover:-translate-y-1 border border-[#FFD6F4]">
+                <div class="w-12 h-12 bg-gradient-to-br from-[#FF2EB6] to-[#FF69B4] rounded-xl flex items-center justify-center"><span class="text-white text-xl">🛒</span></div>
+                <div><h4 class="font-title text-[#4A00B9]">Vender Pacote</h4><p class="text-xs text-gray-500">Vincular pacote a cliente</p></div>
+            </a>
+            
+            <a href="{{ route('admin.usuarios.criar') }}" class="group flex items-center gap-4 p-4 rounded-xl bg-white/50 hover:bg-white/80 transition-all hover:shadow-lg hover:-translate-y-1 border border-[#FFD6F4]">
+                <div class="w-12 h-12 bg-gradient-to-br from-[#3B82F6] to-[#2563EB] rounded-xl flex items-center justify-center"><span class="text-white text-xl">📝</span></div>
+                <div><h4 class="font-title text-[#4A00B9]">Novo Cliente</h4><p class="text-xs text-gray-500">Cadastrar no sistema</p></div>
+            </a>
+        </div>
+    </div>
+</div>

@@ -1,36 +1,25 @@
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-pink-100 flex items-center justify-between">
-        <div>
-            <h3 class="text-lg font-bold text-gray-800">Meus Serviços</h3>
-            <p class="text-sm text-gray-500">Configure o que você faz e suas comissões.</p>
+<div class="glass-card rounded-2xl shadow-xl overflow-hidden mb-6">
+    <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
+        <div class="flex items-center gap-2 mb-5">
+            <span class="text-[#7B19E5] text-xl">✧</span>
+            <h3 class="text-lg font-title text-[#4A00B9]">Minha Área</h3>
         </div>
-        <a href="{{ route('profissional.servicos.editar') }}" class="bg-pink-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-pink-700 transition">
-            Configurar
-        </a>
-    </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <a href="{{ route('profissional.agenda') }}" class="group flex items-center gap-4 p-4 rounded-xl bg-white/50 hover:bg-white/80 transition-all hover:shadow-lg hover:-translate-y-1 border border-[#FFD6F4]">
+                <div class="w-12 h-12 bg-gradient-to-br from-[#7B19E5] to-[#A855F7] rounded-xl flex items-center justify-center"><span class="text-white text-xl">📅</span></div>
+                <div><h4 class="font-title text-[#4A00B9]">Minha Agenda</h4><p class="text-xs text-gray-500">Meus clientes do dia</p></div>
+            </a>
 
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-blue-100 flex items-center justify-between">
-        <div>
-            <h3 class="text-lg font-bold text-gray-800">Minha Agenda</h3>
-            <p class="text-sm text-gray-500">Defina seus horários de trabalho semanais.</p>
+            <a href="{{ route('profissional.extrato') }}" class="group flex items-center gap-4 p-4 rounded-xl bg-white/50 hover:bg-white/80 transition-all hover:shadow-lg hover:-translate-y-1 border border-[#FFD6F4]">
+                <div class="w-12 h-12 bg-gradient-to-br from-[#10B981] to-[#059669] rounded-xl flex items-center justify-center"><span class="text-white text-xl">💰</span></div>
+                <div><h4 class="font-title text-[#4A00B9]">Meu Extrato</h4><p class="text-xs text-gray-500">Ver comissões</p></div>
+            </a>
+
+            <a href="{{ route('profissional.servicos.editar') }}" class="group flex items-center gap-4 p-4 rounded-xl bg-white/50 hover:bg-white/80 transition-all hover:shadow-lg hover:-translate-y-1 border border-[#FFD6F4]">
+                <div class="w-12 h-12 bg-gradient-to-br from-[#3B82F6] to-[#2563EB] rounded-xl flex items-center justify-center"><span class="text-white text-xl">⚙️</span></div>
+                <div><h4 class="font-title text-[#4A00B9]">Configurações</h4><p class="text-xs text-gray-500">Ajustar serviços</p></div>
+            </a>
         </div>
-        <a href="{{ route('profissional.servicos.editar') }}" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-blue-700 transition">
-            Ajustar Horários
-        </a>
-    </div>
-</div>
-<div class="bg-white p-6 mt-6 rounded-xl shadow-sm border border-gray-200">
-    <h2 class="text-xl font-bold text-gray-800 mb-4">Próximos Atendimentos</h2>
-    <p class="text-sm text-gray-500">Veja os próximos agendamentos que você tem.</p>
-
-    <div class="mt-4">
-        <a href="{{ route('profissional.agenda') }}" class="text-pink-600 font-bold hover:underline">
-            Ver Minha Agenda Completa
-        </a>
-    </div>
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-blue-100 flex items-center justify-between">
-        <a href="{{ route('profissional.extrato') }}" class="text-blue-600 font-bold hover:underline">
-            ver comissoes
-        </a>
     </div>
 </div>

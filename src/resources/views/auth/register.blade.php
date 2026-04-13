@@ -1,63 +1,168 @@
-<x-guest-layout>
-    <form method="POST" action="{{ route('register') }}">
-        @csrf
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cheias de Charme — Criar conta</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Playfair+Display:wght@700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+        
+        * { font-family: 'Syne', sans-serif; }
+        .font-title { font-family: 'Playfair Display', serif; font-weight: 700; letter-spacing: -0.02em; }
+        .font-body { font-family: 'Space Grotesk', sans-serif; }
 
-        <!-- Name -->
-        <div>
-            <x-input-label for="name" :value="__('Name')" />
-            <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" />
-            <x-input-error :messages="$errors->get('name')" class="mt-2" />
+        ::-webkit-scrollbar { width: 8px; background: #f8f0ff; }
+            ::-webkit-scrollbar-thumb { background: linear-gradient(135deg, #7B19E5, #FF2EB6); border-radius: 10px; }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(123, 25, 229, 0.1);
+        }
+        
+        .btn-primary {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            z-index: 1;
+        }
+        
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s ease, height 0.6s ease;
+            z-index: -1;
+        }
+        
+        .btn-primary:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+        }
+        
+        input {
+            transition: all 0.3s ease;
+        }
+        
+        input:focus {
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body class="font-body antialiased relative min-h-screen flex items-center justify-center p-4">
+    <!-- Fundo igual ao site principal -->
+    <div class="fixed inset-0 -z-10 overflow-hidden">
+        <div class="absolute top-0 -left-20 w-[600px] h-[600px] bg-[#7B19E5]/20 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-0 -right-20 w-[700px] h-[700px] bg-[#FF2EB6]/20 rounded-full blur-3xl"></div>
+        <div class="absolute top-1/3 left-1/3 w-[400px] h-[400px] bg-[#A955D3]/15 rounded-full blur-3xl"></div>
+        <div class="absolute inset-0 bg-gradient-to-br from-[#7B19E5]/5 via-white/30 to-[#FF2EB6]/5"></div>
+    </div>
+
+    <div class="max-w-md w-full">
+        <!-- Logo -->
+        <div class="text-center mb-8">
+            <img src="{{ asset('img/Prancheta2.png') }}" alt="Cheias de Charme" class="h-20 mx-auto mb-4">
+            <h1 class="text-3xl font-title text-[#1A002B]">Criar conta</h1>
+            <p class="text-[#4A00B9] mt-2">Faça parte do Cheias de Charme ✧</p>
         </div>
 
-        <!-- Email Address -->
-        <div class="mt-4">
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+        <!-- Card de cadastro -->
+        <div class="glass-card rounded-2xl p-8 shadow-xl">
+            <form method="POST" action="{{ route('register') }}">
+                @csrf
+
+                <!-- Nome -->
+                <div class="mb-4">
+                    <label for="name" class="block text-sm font-medium text-[#4A00B9] mb-2">Nome completo</label>
+                    <input id="name" type="text" name="name" value="{{ old('name') }}" required autofocus autocomplete="name"
+                           class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
+                    @error('name')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Email -->
+                <div class="mb-4">
+                    <label for="email" class="block text-sm font-medium text-[#4A00B9] mb-2">E-mail</label>
+                    <input id="email" type="email" name="email" value="{{ old('email') }}" required autocomplete="username"
+                           class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
+                    @error('email')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- CPF -->
+                <div class="mb-4">
+                    <label for="cpf" class="block text-sm font-medium text-[#4A00B9] mb-2">CPF</label>
+                    <input id="cpf" type="text" name="cpf" value="{{ old('cpf') }}" required
+                           class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
+                    @error('cpf')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Telefone -->
+                <div class="mb-4">
+                    <label for="telefone" class="block text-sm font-medium text-[#4A00B9] mb-2">Telefone</label>
+                    <input id="telefone" type="text" name="telefone" value="{{ old('telefone') }}" required
+                           class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
+                    @error('telefone')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Senha -->
+                <div class="mb-4">
+                    <label for="password" class="block text-sm font-medium text-[#4A00B9] mb-2">Senha</label>
+                    <input id="password" type="password" name="password" required autocomplete="new-password"
+                           class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
+                    @error('password')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Confirmar senha -->
+                <div class="mb-6">
+                    <label for="password_confirmation" class="block text-sm font-medium text-[#4A00B9] mb-2">Confirmar senha</label>
+                    <input id="password_confirmation" type="password" name="password_confirmation" required autocomplete="new-password"
+                           class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
+                </div>
+
+                <!-- Botão e link -->
+                <div class="flex flex-col gap-4">
+                    <button type="submit" class="w-full bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white py-3 rounded-full font-medium btn-primary shadow-lg">
+                        CRIAR CONTA
+                    </button>
+
+                    <div class="text-center">
+                        <a href="{{ route('login') }}" class="text-sm text-[#7B19E5] hover:text-[#FF2EB6] transition-colors">
+                            ← Já tenho uma conta
+                        </a>
+                    </div>
+                </div>
+            </form>
         </div>
-        <div class="mt-4">
-    <x-input-label for="cpf" :value="__('CPF')" />
-    <x-text-input id="cpf" class="block mt-1 w-full" type="text" name="cpf" :value="old('cpf')" required />
-    <x-input-error :messages="$errors->get('cpf')" class="mt-2" />
-</div>
 
-<div class="mt-4">
-    <x-input-label for="telefone" :value="__('Telefone')" />
-    <x-text-input id="telefone" class="block mt-1 w-full" type="text" name="telefone" :value="old('telefone')" required />
-    <x-input-error :messages="$errors->get('telefone')" class="mt-2" />
-</div>
-
-        <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
-
-            <x-text-input id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="new-password" />
-
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
-        </div>
-
-        <!-- Confirm Password -->
-        <div class="mt-4">
-            <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
-
-            <x-text-input id="password_confirmation" class="block mt-1 w-full"
-                            type="password"
-                            name="password_confirmation" required autocomplete="new-password" />
-
-            <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
-        </div>
-
-        <div class="flex items-center justify-end mt-4">
-            <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('login') }}">
-                {{ __('Already registered?') }}
+        <!-- Voltar para o site -->
+        <div class="text-center mt-6">
+            <a href="/" class="text-sm text-gray-500 hover:text-[#7B19E5] transition-colors inline-flex items-center gap-1">
+                <i class="fa-solid fa-arrow-left text-xs"></i>
+                Voltar para o site
             </a>
-
-            <x-primary-button class="ms-4">
-                {{ __('Register') }}
-            </x-primary-button>
         </div>
-    </form>
-</x-guest-layout>
+    </div>
+</body>
+</html>

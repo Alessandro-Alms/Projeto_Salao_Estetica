@@ -1,168 +1,258 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Editar Usuário: ') }} {{ $usuario->name }}
-        </h2>
+        <div class="hidden"></div>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-gray-200">
-                <div class="p-6 text-gray-900">
+    <div class="py-12 relative">
+        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+            <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
                     
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-10 h-10 bg-gradient-to-br from-[#7B19E5] to-[#FF2EB6] rounded-xl flex items-center justify-center shadow-md">
+                            <span class="text-white text-lg">✧</span>
+                        </div>
+                        <h2 class="text-xl font-title text-[#4A00B9]">
+                            {{ __('Editar Usuário: ') }} <span class="text-[#FF2EB6]">{{ $usuario->name }}</span>
+                        </h2>
+                    </div>
+
                     <form method="POST" action="{{ route('admin.usuarios.atualizar', $usuario) }}">
                         @csrf
                         @method('PUT')
-                            @if($usuario->cargo === 'recepcionista' || $usuario->cargo === 'gerente')
-                            <div class="mt-6 p-4 bg-amber-50 rounded-lg border border-amber-200 text-amber-700 text-sm">
-                                <strong>Aviso:</strong> Este usuário possui acesso administrativo ao sistema. Certifique-se de manter o e-mail atualizado.
-                            </div>
-                            @endif
-                            @if($usuario->cargo === 'cliente')
-                            <div class="mt-6 p-6 bg-blue-50 rounded-xl border border-blue-200">
-                                <h3 class="text-lg font-bold text-blue-800 mb-4 flex items-center">
-                                    <span class="mr-2">👤</span> Perfil do Cliente
-                                </h3>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div>
-                                        <x-input-label for="d_nasc" :value="__('Data de Nascimento')" />
-                                        <x-text-input id="d_nasc" name="d_nasc" type="date" class="block mt-1 w-full" :value="old('d_nasc', $usuario->d_nasc)" required />
-                                    </div>
-                                    <div>
-                                        <x-input-label for="endereco" :value="__('Endereço')" />
-                                        <x-text-input id="endereco" name="endereco" class="block mt-1 w-full" :value="old('endereco', $usuario->endereco)" />
-                                    </div>
-                                </div>
-                            </div>
-                            @endif
+
+                        @if($usuario->cargo === 'recepcionista' || $usuario->cargo === 'gerente')
+                        <div class="mb-6 p-4 bg-amber-50/80 backdrop-blur-sm rounded-lg border border-amber-200 text-amber-700 text-sm shadow-sm">
+                            <strong>Aviso:</strong> Este usuário possui acesso administrativo ao sistema. Certifique-se de manter o e-mail atualizado.
+                        </div>
+                        @endif
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <x-input-label for="name" :value="__('Nome Completo')" />
-                                <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name', $usuario->name)" required autofocus />
-                                <x-input-error :messages="$errors->get('name')" class="mt-2" />
+                                <label for="name" class="block text-sm font-medium text-[#4A00B9] mb-2">
+                                    {{ __('Nome Completo') }}
+                                </label>
+                                <input id="name" type="text" name="name" value="{{ old('name', $usuario->name) }}" required autofocus
+                                    class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all" />
+                                <x-input-error :messages="$errors->get('name')" class="mt-2 text-red-500 text-xs" />
                             </div>
 
                             <div>
-                                <x-input-label for="email" :value="__('E-mail')" />
-                                <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email', $usuario->email)" required />
-                                <x-input-error :messages="$errors->get('email')" class="mt-2" />
+                                <label for="email" class="block text-sm font-medium text-[#4A00B9] mb-2">
+                                    {{ __('E-mail') }}
+                                </label>
+                                <input id="email" type="email" name="email" value="{{ old('email', $usuario->email) }}" required
+                                    class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all" />
+                                <x-input-error :messages="$errors->get('email')" class="mt-2 text-red-500 text-xs" />
                             </div>
 
                             <div>
-                                <x-input-label for="cpf" :value="__('CPF')" />
-                                <x-text-input id="cpf" class="block mt-1 w-full" type="text" name="cpf" :value="old('cpf', $usuario->cpf)" required />
-                                <x-input-error :messages="$errors->get('cpf')" class="mt-2" />
+                                <label for="cpf" class="block text-sm font-medium text-[#4A00B9] mb-2">
+                                    {{ __('CPF') }}
+                                </label>
+                                <input id="cpf" type="text" name="cpf" value="{{ old('cpf', $usuario->cpf) }}" required
+                                    class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all" />
+                                <x-input-error :messages="$errors->get('cpf')" class="mt-2 text-red-500 text-xs" />
                             </div>
 
                             <div>
-                                <x-input-label for="telefone" :value="__('Telefone')" />
-                                <x-text-input id="telefone" class="block mt-1 w-full" type="text" name="telefone" :value="old('telefone', $usuario->telefone)" required />
-                                <x-input-error :messages="$errors->get('telefone')" class="mt-2" />
+                                <label for="telefone" class="block text-sm font-medium text-[#4A00B9] mb-2">
+                                    {{ __('Telefone') }}
+                                </label>
+                                <input id="telefone" type="text" name="telefone" value="{{ old('telefone', $usuario->telefone) }}" required
+                                    class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all" />
+                                <x-input-error :messages="$errors->get('telefone')" class="mt-2 text-red-500 text-xs" />
                             </div>
 
                             <div>
-                                <x-input-label for="cargo" :value="__('Cargo / Função')" />
+                                <label for="cargo" class="block text-sm font-medium text-[#4A00B9] mb-2">
+                                    {{ __('Cargo / Função') }}
+                                </label>
                                 @if(auth()->user()->cargo === 'gerente')
-                                <select name="cargo" id="cargo" class="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm block mt-1 w-full text-gray-700">
-                                    <option value="cliente" {{ old('cargo', $usuario->cargo) == 'cliente' ? 'selected' : '' }}>Cliente</option>
-                                    <option value="profissional" {{ old('cargo', $usuario->cargo) == 'profissional' ? 'selected' : '' }}>Profissional</option>
-                                    <option value="recepcionista" {{ old('cargo', $usuario->cargo) == 'recepcionista' ? 'selected' : '' }}>Recepcionista</option>
-                                    <option value="gerente" {{ old('cargo', $usuario->cargo) == 'gerente' ? 'selected' : '' }}>Gerente (Admin)</option>
-                                </select>
+                                    <select name="cargo" id="cargo" 
+                                        class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
+                                        <option value="cliente" {{ old('cargo', $usuario->cargo) == 'cliente' ? 'selected' : '' }}>Cliente</option>
+                                        <option value="profissional" {{ old('cargo', $usuario->cargo) == 'profissional' ? 'selected' : '' }}>Profissional</option>
+                                        <option value="recepcionista" {{ old('cargo', $usuario->cargo) == 'recepcionista' ? 'selected' : '' }}>Recepcionista</option>
+                                        <option value="gerente" {{ old('cargo', $usuario->cargo) == 'gerente' ? 'selected' : '' }}>Gerente (Admin)</option>
+                                    </select>
                                 @else
-                                <input type="text" value="Cliente" class="block mt-1 w-full bg-gray-100 border-gray-300 rounded-md text-gray-500" readonly>
-                                <input type="hidden" name="cargo" value="cliente">
+                                    <input type="text" value="Cliente" 
+                                        class="w-full px-4 py-3 bg-gray-50/50 border border-[#FFD6F4] rounded-lg text-gray-500 cursor-not-allowed" readonly />
+                                    <input type="hidden" name="cargo" value="cliente">
                                 @endif  
-                                <x-input-error :messages="$errors->get('cargo')" class="mt-2" />
+                                <x-input-error :messages="$errors->get('cargo')" class="mt-2 text-red-500 text-xs" />
                             </div>
 
                             <div>
-                                <x-input-label for="password" :value="__('Nova Senha')" />
-                                <x-text-input id="password" class="block mt-1 w-full" type="password" name="password" placeholder="Deixe em branco para não alterar" />
-                                <x-input-error :messages="$errors->get('password')" class="mt-2" />
+                                <label for="password" class="block text-sm font-medium text-[#4A00B9] mb-2">
+                                    {{ __('Nova Senha') }}
+                                </label>
+                                <input id="password" type="password" name="password" 
+                                    class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all"
+                                    placeholder="Deixe em branco para não alterar" />
+                                <x-input-error :messages="$errors->get('password')" class="mt-2 text-red-500 text-xs" />
                             </div>
                         </div>
+
+                        @if($usuario->cargo === 'cliente')
+                        <div class="mt-8 p-6 bg-white/40 rounded-xl border border-[#FFD6F4]">
+                            <h3 class="text-lg font-title text-[#4A00B9] mb-4 flex items-center">
+                                <span class="mr-2">👤</span> Perfil do Cliente
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label for="d_nasc" class="block text-sm font-medium text-[#4A00B9] mb-2">
+                                        {{ __('Data de Nascimento') }}
+                                    </label>
+                                    <input id="d_nasc" type="date" name="d_nasc" value="{{ old('d_nasc', $usuario->d_nasc) }}" required
+                                        class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all" />
+                                </div>
+                                <div>
+                                    <label for="endereco" class="block text-sm font-medium text-[#4A00B9] mb-2">
+                                        {{ __('Endereço') }}
+                                    </label>
+                                    <input id="endereco" type="text" name="endereco" value="{{ old('endereco', $usuario->endereco) }}"
+                                        class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all" />
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
                         @if($usuario->cargo === 'profissional')
-                        <div class="mt-8 p-6 bg-pink-50 rounded-xl border border-pink-200">
-                            {{-- Bloco de Horários (Preparação para Demanda 4) --}}
-                            <div class="mt-6 p-6 bg-gray-50 rounded-xl border border-gray-200">
-                                <h3 class="text-lg font-bold text-gray-700 mb-4 flex items-center">
+                        <div class="mt-8 p-6 bg-white/40 rounded-xl border border-[#FFD6F4]">
+                            
+                            {{-- Bloco de Horários --}}
+                            <div class="mb-6 p-5 bg-white/60 rounded-xl border border-[#FFD6F4] shadow-sm">
+                                <h3 class="text-md font-bold text-[#4A00B9] mb-2 flex items-center">
                                     <span class="mr-2">📅</span> Horário de Atendimento
                                 </h3>
-                                <p class="text-sm text-gray-500">O horário padrão é das 08:00 às 18:00. <br>Exceções e turnos específicos serão configurados na próxima etapa.</p>
+                                <p class="text-sm text-gray-600">O horário padrão é das 08:00 às 18:00. <br>Exceções e turnos específicos serão configurados na próxima etapa.</p>
                             </div>
-                            <h3 class="text-lg font-bold text-pink-800 mb-4 flex items-center">
+                            
+                            <h3 class="text-lg font-title text-[#4A00B9] mb-4 flex items-center">
                                 <span class="mr-2">✂️</span> Serviços e Comissões do Profissional
                             </h3>
                             
                             <div class="space-y-3">
                                 @foreach($servicos as $servico)
                                     @php 
-                                        // Busca se já existe o relacionamento no banco
                                         $vinculo = $usuario->servicos->find($servico->id_servico); 
                                     @endphp
-                                    <div class="flex items-center bg-white p-4 rounded-lg shadow-sm border border-gray-100">
-                                        <input type="checkbox" name="servicos[{{ $servico->id_servico }}][ativo]" {{ $vinculo ? 'checked' : '' }} class="rounded text-pink-600 focus:ring-pink-500 h-5 w-5">
+                                    <div class="flex items-center bg-white/70 p-4 rounded-lg shadow-sm border border-[#FFD6F4] transition-all hover:shadow-md">
+                                        <input type="checkbox" name="servicos[{{ $servico->id_servico }}][ativo]" {{ $vinculo ? 'checked' : '' }} 
+                                            class="rounded text-[#FF2EB6] focus:ring-[#FF2EB6] border-[#FFD6F4] h-5 w-5 bg-white">
                                         
                                         <div class="ml-4 flex-1">
-                                            <span class="font-bold text-gray-700">{{ $servico->nome }}</span>
-                                            <span class="text-xs text-gray-400 block">Duração padrão: {{ $servico->duracao }} min</span>
+                                            <span class="font-bold text-[#4A00B9]">{{ $servico->nome }}</span>
+                                            <span class="text-xs text-gray-500 block">Duração padrão: {{ $servico->duracao }} min</span>
                                         </div>
 
                                         <div class="flex gap-4">
                                             <div class="w-28">
-                                                <label class="block text-[10px] uppercase font-bold text-gray-400">Comissão %</label>
+                                                <label class="block text-[10px] uppercase font-bold text-gray-500 mb-1">Comissão %</label>
                                                 <input type="number" step="0.01" 
                                                     name="servicos[{{ $servico->id_servico }}][comissao]" 
-                                                    {{-- ACESSO AO PIVOT AQUI --}}
                                                     value="{{ $vinculo ? $vinculo->pivot->comissao_percentual : '50.00' }}" 
-                                                    class="w-full border-gray-200 rounded text-sm focus:border-pink-500">
+                                                    class="w-full px-2 py-1.5 bg-white/50 border border-[#FFD6F4] rounded focus:outline-none focus:border-[#7B19E5] focus:ring-1 focus:ring-[#7B19E5]/20 text-sm transition-all">
                                             </div>
                                             <div class="w-28">
-                                                <label class="block text-[10px] uppercase font-bold text-gray-400">Tempo (min)</label>
+                                                <label class="block text-[10px] uppercase font-bold text-gray-500 mb-1">Tempo (min)</label>
                                                 <input type="number" 
                                                     name="servicos[{{ $servico->id_servico }}][duracao]" 
-                                                    {{-- ACESSO AO PIVOT AQUI --}}
                                                     value="{{ $vinculo ? $vinculo->pivot->duracao_customizada : $servico->duracao }}" 
-                                                    class="w-full border-gray-200 rounded text-sm focus:border-pink-500">
+                                                    class="w-full px-2 py-1.5 bg-white/50 border border-[#FFD6F4] rounded focus:outline-none focus:border-[#7B19E5] focus:ring-1 focus:ring-[#7B19E5]/20 text-sm transition-all">
                                             </div>
                                         </div>
                                     </div>
                                 @endforeach
                             </div>
                         </div>
-                    @endif
-                        <div class="flex items-center justify-end mt-8 border-t pt-4">
-                            <a href="{{ route('admin.usuarios.index') }}" class="mr-4 text-sm text-gray-600 underline hover:text-gray-900 transition-colors">
-                                {{ __('Cancelar e Voltar') }}
+                        @endif
+
+                        <div class="flex items-center justify-end gap-3 mt-8 pt-4 border-t border-[#FFD6F4]">
+                            <a href="{{ route('admin.usuarios.index') }}" class="px-6 py-2.5 text-sm font-medium text-gray-500 hover:text-[#7B19E5] transition-colors">
+                                {{ __('Cancelar') }}
                             </a>
-                            <x-primary-button>
+                            <button type="submit" class="bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white px-8 py-2.5 text-sm rounded-full font-medium btn-primary shadow-md hover:shadow-lg transition-all">
                                 {{ __('SALVAR ALTERAÇÕES') }}
-                            </x-primary-button>
+                            </button>
                         </div>
                     </form>
-
                 </div>
             </div>
         </div>
     </div>
-        <script src="https://unpkg.com/imask"></script>
+
+    <script src="https://unpkg.com/imask"></script>
     <script>
+        // Máscara CPF
         var cpfMask = IMask(document.getElementById('cpf'), {
             mask: '000.000.000-00'
         });
+        
+        // Máscara Telefone
         var phoneMask = IMask(document.getElementById('telefone'), {
-            mask: [,
-                { mask: '(00) 00000-0000' }
-            ]
+            mask: '(00) 00000-0000'
         });
-        // No seu script da máscara, adicione isso ao evento de submit do formulário:
+        
+        // Remove máscara antes de enviar
         document.querySelector('form').addEventListener('submit', function() {
-            // Remove a máscara antes de enviar para o servidor não ver os pontos
             const cpfInput = document.getElementById('cpf');
-            cpfInput.value = cpfInput.value.replace(/\D/g, ''); // Deixa só números
-
+            if (cpfInput) cpfInput.value = cpfInput.value.replace(/\D/g, '');
+            
             const telInput = document.getElementById('telefone');
-            telInput.value = telInput.value.replace(/\D/g, ''); // Deixa só números
+            if (telInput) telInput.value = telInput.value.replace(/\D/g, '');
         });
     </script>
 </x-app-layout>
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Playfair+Display:wght@700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+    
+    ::-webkit-scrollbar { width: 8px; background: #f8f0ff; }
+    ::-webkit-scrollbar-thumb { background: linear-gradient(135deg, #7B19E5, #FF2EB6); border-radius: 10px; }
+
+    .font-title {
+        font-family: 'Playfair Display', serif;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+    }
+    
+    .glass-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 8px 32px rgba(123, 25, 229, 0.1);
+    }
+    
+    .btn-primary {
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        z-index: 1;
+    }
+    
+    .btn-primary::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s ease, height 0.6s ease;
+        z-index: -1;
+    }
+    
+    .btn-primary:hover::before {
+        width: 300px;
+        height: 300px;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+    }
+</style>
