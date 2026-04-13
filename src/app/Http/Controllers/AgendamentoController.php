@@ -264,7 +264,7 @@ class AgendamentoController extends Controller
     public function marcarFalta($id)
     {
         $agendamento = Agendamento::findOrFail($id);
-        $agendamento->update(['status' => 'faltou']);
+        $agendamento->update(['status' => 'falta']);
 
         $cliente = $agendamento->cliente; 
         $cliente->increment('faltas');

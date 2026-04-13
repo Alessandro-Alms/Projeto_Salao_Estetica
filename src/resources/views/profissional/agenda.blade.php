@@ -45,7 +45,7 @@
                                     
                                     {{-- PASSO 1: Marcar Presença (UC005) --}}
                                     @if($agenda->status == 'confirmado' || $agenda->status == 'pendente')
-                                        <form action="{{ route('agendamentos.falta', $agendamento->id) }}" method="POST">
+                                        <form action="{{ route('agendamentos.falta', $agenda->id_agendamento) }}" method="POST">
                                             @csrf
                                             @method('PATCH')
                                             <button type="submit" class="text-red-600 font-bold">Marcar Falta</button>
