@@ -86,4 +86,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(Venda::class, 'user_id');
     }
+    // Busca os pacotes ativos que o cliente comprou e ainda tem sessão
+    public function pacotesAtivos()
+    {
+        return $this->hasMany(ClientePacote::class, 'cliente_id')
+                    ->where('status', 'ativo')
+                    ->where('sessoes_restantes', '>', 0)
+                    ->whereDate('data_validade', '>=', now());
+    }
 }   

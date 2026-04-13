@@ -11,6 +11,7 @@ use App\Models\HorarioTrabalho;
 use App\Models\Produto; 
 use Illuminate\Support\Facades\DB;
 use App\Models\BloqueioHorario;
+use App\Models\ClientePacote;
 
 class AgendamentoController extends Controller
 {
@@ -175,7 +176,9 @@ class AgendamentoController extends Controller
             ->orderBy('data_hora_inicio', 'asc')
             ->get();
 
-        return view('cliente.index', compact('agendamentos'));
+        $pacotes = auth()->user()->pacotesAtivos()->with('pacote')->get();
+
+        return view('cliente.index', compact('agendamentos', 'pacotes'));
     }
     public function cancelarCliente($id_agendamento)
     {
@@ -215,6 +218,28 @@ class AgendamentoController extends Controller
                             ])->withInput();
                         }
                     }
+                }
+            }
+            // Lógica de Pacotes
+            if ($request->has('usar_pacote') && $request->usar_pacote != null) {
+                $clientePacote = ClientePacote::find($request->usar_pacote);
+
+                if ($clientePacote && $clientePacote->sessoes_restantes > 0) {
+                    // Desconta 1 sessão
+                    $clientePacote->sessoes_restantes -= 1;
+                    
+                    // Se zerou as sessões, finaliza a carteirinha
+                    if ($clientePacote->sessoes_restantes == 0) {
+                        $clientePacote->status = 'finalizado';
+                    }
+                    $clientePacote->save();
+
+                    // Zera o valor para não somar no caixa do salão (já foi pago na compra)
+                    $agendamento->valor_total = 0; 
+                    
+                    // Adiciona um aviso na observação
+                    $obsPacote = " (Abatido 1 sessão do pacote: " . $clientePacote->pacote->nome . ")";
+                    $request->merge(['observacao' => $request->input('observacao') . $obsPacote]);
                 }
             }
 

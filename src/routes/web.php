@@ -8,6 +8,8 @@
     use App\Http\Controllers\AgendamentoController;
     use App\Http\Controllers\FinanceiroController;
     use App\Http\Controllers\BloqueioController;
+    use App\Http\Controllers\PacoteController;
+    use App\Http\Controllers\ClientePacoteController;
 
     Route::get('/', function () {
         return view('welcome');
@@ -28,6 +30,8 @@
         Route::post('/agendamento/{id}/cancelar', [AgendamentoController::class, 'cancelarCliente'])->name('cliente.agendamento.cancelar');
         Route::post('/agendamentos/{id}/presenca', [AgendamentoController::class, 'confirmarPresenca'])->name('agendamento.presenca');
         Route::patch('/agendamentos/{id}/falta', [AgendamentoController::class, 'marcarFalta'])->name('agendamentos.falta');
+        Route::get('/admin/pacotes/venda', [ClientePacoteController::class, 'create'])->name('admin.venda.create');
+        Route::post('/admin/pacotes/venda', [ClientePacoteController::class, 'store'])->name('admin.venda.store');
     });
 
     Route::middleware(['auth', 'gerente_ou_recepcionista'])->prefix('admin')->name('admin.')->group(function () {
@@ -72,16 +76,24 @@
         Route::resource('bloqueios', BloqueioController::class)->except(['show', 'edit', 'update']);
         Route::patch('/usuarios/{id}/status', [UserController::class, 'alterarStatus'])->name('usuarios.status');
     });
-        Route::middleware(['auth', 'profissional'])->prefix('profissional')->name('profissional.')->group(function () {
+    Route::middleware(['auth', 'profissional'])->prefix('profissional')->name('profissional.')->group(function () {
         Route::get('/configuracoes', [UserController::class, 'configuracoesservicos'])->name('servicos.editar');
         Route::put('/configuracoes', [UserController::class, 'atualizarconfiguracoesservicos'])->name('servicos.atualizar');
         Route::post('/agendamento/{id_agendamento}/executado', [AgendamentoController::class, 'marcarComoExecutado'])->name('agendamento.executado');
         Route::get('/minha-agenda', [AgendamentoController::class, 'agendaProfissional'])->name('agenda');
+        Route::get('/comissao', [FinanceiroController::class, 'comissoes'])->name('comissao');
+    });
+    Route::middleware(['auth', 'gerente'])->prefix('admin')->name('admin.')->group(function () {
+        Route::get('/financeiro/fechamento', [FinanceiroController::class, 'fechamento'])->name('financeiro.fechamento');
+        Route::get('/financeiro/comissoes', [FinanceiroController::class, 'comissoes'])->name('financeiro.comissoes');
+        Route::get('/pacotes', [PacoteController::class, 'index'])->name('pacotes.index');
+        Route::post('/pacotes', [PacoteController::class, 'store'])->name('pacotes.store');
+        Route::get('/pacotes/{id}/editar', [PacoteController::class, 'edit'])->name('pacotes.edit');
+Route::put('/pacotes/{id}', [PacoteController::class, 'update'])->name('pacotes.update');
+Route::delete('/pacotes/{id}', [PacoteController::class, 'destroy'])->name('pacotes.destroy');
     });
     //rota para listar os agendamentos em formato JSON (para o FullCalendar) 
     Route::get('api/agendamentos', [AgendamentoController::class, 'listarJson'])->name('admin.agenda.json');
 
-    Route::middleware(['auth', 'gerente'])->get('/admin/financeiro/fechamento', [FinanceiroController::class, 'fechamento'])->name('admin.financeiro.fechamento');
-    Route::middleware(['auth', 'gerente'])->get('/admin/financeiro/comissoes', [FinanceiroController::class, 'comissoes'])->name('admin.financeiro.comissoes');
     require __DIR__.'/auth.php';
     

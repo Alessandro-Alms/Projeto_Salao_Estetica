@@ -26,7 +26,7 @@
                         @foreach($itens as $agenda)
                             <div class="bg-white p-6 shadow rounded-xl border-l-4 border-pink-500">
                                 
-                                {{-- AVISO DE FIDELIDADE (Ajustado para ler do cliente) --}}
+                                {{-- AVISO DE FIDELIDADE --}}
                                 @if($agenda->cliente->contador_fidelidade == 5)
                                     <span class="bg-yellow-100 text-yellow-800 text-xs font-bold px-2 py-1 rounded border border-yellow-300">
                                         🎁 PRÓXIMO SERVIÇO COM 50% OFF!
@@ -103,18 +103,17 @@
                                                 </button>
                                             </div>
 
-                                            {{-- NOVO: Resumo Financeiro --}}
+                                            {{-- Resumo Financeiro --}}
                                             @php
                                                 // Busca a comissão específica deste profissional para ESTE serviço na tabela pivot
                                                 $pivot = \Illuminate\Support\Facades\DB::table('profissional_servico')
                                                             ->where('profissional_id', auth()->id())
-                                                            ->where('servico_id', $agenda->servico_id) // ou $agenda->servico->id_servico
+                                                            ->where('servico_id', $agenda->servico_id)
                                                             ->first();
 
                                                 $porcentagemComissao = $pivot ? $pivot->comissao_percentual : 50; 
                                                 $taxaMatematica = $porcentagemComissao / 100;
                                                 
-                                                // Mude ->preco para ->valor se no seu banco a coluna do serviço se chamar valor
                                                 $valorServico = $agenda->servico->preco ?? 0; 
                                                 $valorReceber = $valorServico * $taxaMatematica;
                                             @endphp
@@ -140,6 +139,32 @@
                                                     *Se adicionar produtos, ganhará mais comissão!
                                                 </p>
                                             </div>
+                                            
+                                            {{-- LÓGICA DO PACOTE VERIFICANDO DINAMICAMENTE PARA ESTE CLIENTE DA LISTA --}}
+                                            @php
+                                                $pacoteDisponivel = $agenda->cliente->pacotesAtivos->firstWhere('pacote.servico_id', $agenda->servico_id);
+                                            @endphp
+
+                                            @if($pacoteDisponivel)
+                                                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded-r shadow-sm">
+                                                    <div class="flex items-center">
+                                                        <svg class="h-6 w-6 text-blue-500 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                        <div>
+                                                            <h3 class="text-lg font-bold text-blue-800">Pacote Disponível!</h3>
+                                                            <p class="text-sm text-blue-700">Este cliente possui <strong>{{ $pacoteDisponivel->sessoes_restantes }} sessões</strong> do pacote "{{ $pacoteDisponivel->pacote->nome }}".</p>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="mt-4 ml-9">
+                                                        <label class="inline-flex items-center cursor-pointer">
+                                                            <input type="checkbox" name="usar_pacote" value="{{ $pacoteDisponivel->id }}" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 h-5 w-5">
+                                                            <span class="ml-2 text-gray-700 font-semibold text-md">Abater 1 sessão deste pacote (O valor do serviço será R$ 0,00)</span>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            @endif
 
                                             <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg transition">
                                                 ✅ Finalizar e Baixar Estoque
