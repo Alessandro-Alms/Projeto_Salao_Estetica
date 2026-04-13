@@ -49,7 +49,7 @@
             </div>
 
             <p class="mt-4 text-sm text-gray-400 text-center italic">
-                * Valores calculados com base em 50% de comissão padrão para serviços e 10% para produtos.
+                * Os valores de comissão refletem a taxa exata configurada para cada profissional no momento do atendimento.
             </p>
         </div>
     </div>

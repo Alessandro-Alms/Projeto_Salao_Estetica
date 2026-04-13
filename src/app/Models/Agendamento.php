@@ -15,7 +15,9 @@ class Agendamento extends Model
         'data_hora_fim', 
         'valor_total', 
         'status', 
-        'obs'
+        'obs',
+        'valor_comissao',
+        'comissao_paga_percentual'
     ];
 
     // Relacionamento: O agendamento pertence a um cliente

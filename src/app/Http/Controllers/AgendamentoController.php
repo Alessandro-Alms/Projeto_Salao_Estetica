@@ -282,10 +282,24 @@ class AgendamentoController extends Controller
                     $mensagem = 'Atendimento concluído com sucesso!';
                 }
             }
+            
+            // Carrega o profissional para buscar a regra de comissão dele
+            $profissional = User::find($agendamento->profissional_id);
+            $vinculo = $profissional->servicos->find($agendamento->servico_id);
+            
+            // Pega a comissão customizada da tabela pivot ou usa 50% como padrão
+            $porcentagemComissao = $vinculo->pivot->comissao_percentual ?? 50; 
+            
+            // Pega o valor cheio do serviço (ignorando descontos de pacote ou fidelidade)
+            // Certifique-se de que a relação ->servico e a coluna ->preco estão corretas com o seu banco
+            $precoBase = $agendamento->servico->preco;
+            $valorComissao = $precoBase * ($porcentagemComissao / 100);
 
             // 3. Se chegou aqui, tudo certo! Mudamos o status do agendamento.
             $agendamento->status = 'executado';
             $agendamento->obs = $request->input('observacao');
+            $agendamento->valor_comissao = $valorComissao; // Armazena o valor da comissão
+            $agendamento->comissao_paga_percentual = $porcentagemComissao; // Armazena a porcentagem da comissão
             $agendamento->save();
 
             // 4. Registrar as Vendas e Baixar Estoque

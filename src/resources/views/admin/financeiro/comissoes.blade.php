@@ -85,7 +85,7 @@
                                     <td class="px-6 py-4 text-sm text-gray-600">{{ $c['data'] }}</td>
                                     <td class="px-6 py-4 text-sm font-bold text-gray-800">{{ $c['descricao'] }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-600">R$ {{ number_format($c['valor_total'], 2, ',', '.') }}</td>
-                                    <td class="px-6 py-4 text-sm text-right font-bold text-green-600">R$ {{ number_format($c['comissao'], 2, ',', '.') }}</td>
+                                    <td class="px-6 py-4 text-sm text-right font-bold text-green-600">R$ {{ number_format($c['valor_comissao'], 2, ',', '.') }}</td>
                                 </tr>
                             @empty
                                 <tr>

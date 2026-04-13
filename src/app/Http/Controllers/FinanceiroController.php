@@ -30,27 +30,9 @@ class FinanceiroController extends Controller
             ->get();
 
         // Variáveis para somar os valores corretamente
-        $totalServicos = 0;
-        $totalComissoesServicos = 0;
-
-        // Loop para calcular a comissão de CADA serviço separadamente
-        foreach ($agendamentos as $agenda) {
-            // $totalServicos recebe o que o cliente de fato pagou na hora (pode ser 0 se usou pacote, ou 50% se usou fidelidade)
-            $totalServicos += $agenda->valor_total;
-
-            // Busca a comissão exata deste profissional para este serviço na tabela pivot
-            $pivot = DB::table('profissional_servico')
-                ->where('profissional_id', $agenda->profissional_id)
-                ->where('servico_id', $agenda->servico_id)
-                ->first();
-
-            $comissaoPercentual = $pivot ? $pivot->comissao_percentual : 50.00; // 50% de segurança
-            $taxa = $comissaoPercentual / 100;
-
-            // REGRA DE OURO: Comissão sempre calculada sobre o preço cheio do serviço!
-            $valorBaseComissao = $agenda->servico->preco;
-            $totalComissoesServicos += ($valorBaseComissao * $taxa);
-        }
+        // Calcula os totais puxando diretamente das colunas do banco de forma ultrarrápida!
+        $totalServicos = $agendamentos->sum('valor_total');
+        $totalComissoesServicos = $agendamentos->sum('valor_comissao');
 
         // Calcula produtos 
         $totalProdutos = DB::table('vendas')->whereDate('created_at', $dataSelecionada)->sum('valor_venda');
@@ -82,7 +64,7 @@ class FinanceiroController extends Controller
         $ano = $request->input('ano', now()->format('Y'));
 
         $comissoes = [];
-        $totalComissao = 0;
+        $totalComissao = 0; // A variável que junta serviços + produtos começa zerada aqui!
 
         if ($profissionalId) {
             
@@ -95,26 +77,16 @@ class FinanceiroController extends Controller
                 ->get();
 
             foreach ($agendamentos as $agenda) {
-                // Busca direta e segura na tabela pivot 
-                $pivot = DB::table('profissional_servico')
-                    ->where('profissional_id', $agenda->profissional_id)
-                    ->where('servico_id', $agenda->servico_id)
-                    ->first();
-
-                // Puxa a comissao_percentual correta
-                $porcentagem = $pivot ? $pivot->comissao_percentual : 50.00; 
-                
-                // REGRA DE OURO: Comissão sobre o valor base do serviço
-                $valorBaseComissao = $agenda->servico->preco;
-                $valorComissao = ($valorBaseComissao * ($porcentagem / 100));
-                
+                // Alimenta o array que vai ser exibido na View (Tabela de extrato do Admin)
                 $comissoes[] = [
                     'data' => $agenda->updated_at->format('d/m/Y'),
-                    'descricao' => 'Serviço: ' . ($agenda->servico->nome ?? 'Serviço não encontrado') . ' (Preço Base: R$ ' . number_format($valorBaseComissao, 2, ',', '.') . ')',
-                    'valor_total' => $agenda->valor_total, // Exibe o que o cliente pagou
-                    'comissao' => $valorComissao
+                    'descricao' => 'Serviço: ' . ($agenda->servico->nome ?? 'Serviço não encontrado') . ' (Preço Base: R$ ' . number_format($agenda->servico->preco ?? 0, 2, ',', '.') . ')',
+                    'valor_total' => $agenda->valor_total, 
+                    'valor_comissao' => $agenda->valor_comissao // Puxa direto do snapshot que salvamos no banco!
                 ];
-                $totalComissao += $valorComissao;
+                
+                // Vai somando o valor total da comissão
+                $totalComissao += $agenda->valor_comissao; 
             }
 
             // Busca na tabela de vendas os produtos vendidos
@@ -132,12 +104,12 @@ class FinanceiroController extends Controller
                     'data' => Carbon::parse($venda->created_at)->format('d/m/Y'),
                     'descricao' => 'Produto (Venda #' . $venda->id_venda . ')',
                     'valor_total' => $venda->valor_venda,
-                    'comissao' => $valorComissaoProduto
+                    'valor_comissao' => $valorComissaoProduto
                 ];
                 $totalComissao += $valorComissaoProduto;
             }
 
-            // Ordenar por data 
+            // Ordenar por data para ficar bonito na tela
             usort($comissoes, function($a, $b) {
                 return Carbon::createFromFormat('d/m/Y', $a['data']) <=> Carbon::createFromFormat('d/m/Y', $b['data']);
             });

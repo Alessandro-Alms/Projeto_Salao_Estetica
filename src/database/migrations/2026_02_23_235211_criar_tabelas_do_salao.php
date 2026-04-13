@@ -61,6 +61,8 @@ return new class extends Migration
             $table->decimal('valor_total', 10, 2)->nullable();
             $table->enum('status', ['confirmado', 'cancelado', 'falta', 'executado', 'presente'])->default('confirmado');
             $table->text('obs')->nullable();
+            $table->decimal('valor_comissao', 10, 2)->nullable()->after('valor_total');
+            $table->decimal('comissao_paga_percentual', 5, 2)->nullable()->after('valor_comissao');
             
             $table->timestamps();
         });
@@ -143,6 +145,9 @@ return new class extends Migration
 
     public function down(): void
     {
+        Schema::table('agendamentos', function (Blueprint $table) {
+            $table->dropColumn('valor_comissao');
+        });
         Schema::dropIfExists('vendas');
         Schema::dropIfExists('atendimentos');
         Schema::dropIfExists('agendamentos');   

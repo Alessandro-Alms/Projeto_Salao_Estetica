@@ -59,11 +59,11 @@
                                     </td>
                                     <td class="px-6 py-4 text-center">
                                         <span class="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs font-bold">
-                                            {{ number_format($agenda->percentual_usado, 0) }}%
+                                            {{ number_format($agenda->comissao_paga_percentual, 0) }}%
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 text-right font-bold text-gray-900">
-                                        R$ {{ number_format($agenda->comissao_calculada, 2, ',', '.') }}
+                                        R$ {{ number_format($agenda->valor_comissao, 2, ',', '.') }}
                                     </td>
                                 </tr>
                             @empty
