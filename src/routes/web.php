@@ -27,6 +27,7 @@
         Route::get('/meus-agendamentos', [AgendamentoController::class, 'indexCliente'])->name('cliente.index');
         Route::post('/agendamento/{id}/cancelar', [AgendamentoController::class, 'cancelarCliente'])->name('cliente.agendamento.cancelar');
         Route::post('/agendamentos/{id}/presenca', [AgendamentoController::class, 'confirmarPresenca'])->name('agendamento.presenca');
+        Route::patch('/agendamentos/{id}/falta', [AgendamentoController::class, 'marcarFalta'])->name('agendamentos.falta');
     });
 
     Route::middleware(['auth', 'gerente_ou_recepcionista'])->prefix('admin')->name('admin.')->group(function () {
@@ -43,7 +44,6 @@
         Route::get('profissionais', [UserController::class, 'index'])->name('profissionais.index');
         Route::get('agenda', [AgendamentoController::class, 'index'])->name('agenda.index');
         Route::post('agenda', [AgendamentoController::class, 'store'])->name('agenda.store');
-
     });
     Route::middleware(['auth', 'gerente'])->prefix('admin')->name('admin.')->group(function () {
         Route::resource('servicos', ServicoController::class)->names([
@@ -70,6 +70,7 @@
             'produtos' => 'produto'
         ])->except(['show']);
         Route::resource('bloqueios', BloqueioController::class)->except(['show', 'edit', 'update']);
+        Route::patch('/usuarios/{id}/status', [UserController::class, 'alterarStatus'])->name('usuarios.status');
     });
         Route::middleware(['auth', 'profissional'])->prefix('profissional')->name('profissional.')->group(function () {
         Route::get('/configuracoes', [UserController::class, 'configuracoesservicos'])->name('servicos.editar');
@@ -79,6 +80,7 @@
     });
     //rota para listar os agendamentos em formato JSON (para o FullCalendar) 
     Route::get('api/agendamentos', [AgendamentoController::class, 'listarJson'])->name('admin.agenda.json');
+
     Route::middleware(['auth', 'gerente'])->get('/admin/financeiro/fechamento', [FinanceiroController::class, 'fechamento'])->name('admin.financeiro.fechamento');
     Route::middleware(['auth', 'gerente'])->get('/admin/financeiro/comissoes', [FinanceiroController::class, 'comissoes'])->name('admin.financeiro.comissoes');
     require __DIR__.'/auth.php';

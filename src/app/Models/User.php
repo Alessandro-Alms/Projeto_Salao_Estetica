@@ -26,6 +26,7 @@ class User extends Authenticatable
         'faltas',
         'obs',
         'ultima_visita',
+        'status'
     ];
 
     protected $hidden = [

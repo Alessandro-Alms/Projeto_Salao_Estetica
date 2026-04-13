@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('endereco', 255)->nullable();
             $table->date('d_nasc')->nullable();
             $table->integer('faltas')->default(0);
+            $table->enum('status', ['ativo', 'bloqueado'])->default('ativo');
             $table->text('obs')->nullable();
             $table->dateTime('ultima_visita')->nullable();
 

@@ -115,6 +115,23 @@
                                                 </form>
                                             @endif
                                             </div>
+                                            <td>
+                                                @if($usuario->status === 'ativo')
+                                                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded">Ativo ({{ $usuario->faltas }} faltas)</span>
+                                                @else
+                                                    <span class="bg-red-100 text-red-800 px-2 py-1 rounded">Bloqueado</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <form action="{{ route('admin.usuarios.status', $usuario->id) }}" method="POST">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <input type="hidden" name="status" value="{{ $usuario->status === 'ativo' ? 'bloqueado' : 'ativo' }}">
+                                                    <button type="submit" class="text-sm font-bold {{ $usuario->status === 'ativo' ? 'text-red-600' : 'text-green-600' }}">
+                                                        {{ $usuario->status === 'ativo' ? 'Bloquear' : 'Reativar (Zerar Faltas)' }}
+                                                    </button>
+                                                </form>
+                                            </td>
                                         </td>
                                     </tr>
                                 @empty

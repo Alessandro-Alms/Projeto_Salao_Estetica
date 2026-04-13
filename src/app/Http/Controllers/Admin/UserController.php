@@ -194,4 +194,23 @@ class UserController extends Controller
 
         return back()->with('sucesso', 'Configurações e horários atualizados com sucesso!');
     }
+    public function alterarStatus(Request $request, $id)
+    {
+        if (auth()->user()->cargo !== 'gerente') {
+            abort(403);
+        }
+
+        $user = User::findOrFail($id);
+        
+        if ($request->status === 'ativo') {
+            $user->update([
+                'status' => 'ativo',
+                'faltas' => 0
+            ]);
+        } else {
+            $user->update(['status' => 'bloqueado']);
+        }
+
+        return back()->with('success', 'Status do usuário atualizado com sucesso!');
+    }
 }

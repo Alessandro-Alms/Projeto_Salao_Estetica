@@ -30,6 +30,10 @@ class AgendamentoController extends Controller
             'data_hora.after' => 'O agendamento deve ser para uma data futura.',
         ]);
 
+        if (auth()->user()->status === 'bloqueado') {
+            return back()->withErrors(['erro' => 'Sua conta está bloqueada para novos agendamentos devido ao excesso de faltas. Entre em contato com o suporte.']);
+        }
+
         $servico = Servico::findOrFail($request->servico_id);
         $profissional = User::findOrFail($request->profissional_id);
         
@@ -121,6 +125,7 @@ class AgendamentoController extends Controller
         if (auth()->user()->cargo === 'cliente') {
             return redirect()->route('cliente.index')->with('status', 'Agendamento realizado com sucesso!');
         }
+
         return back()->with('status', 'Agendamento realizado com sucesso!');
     }
     public function listarJson()
@@ -246,7 +251,7 @@ class AgendamentoController extends Controller
     }
     public function confirmarPresenca($id)
     {
-        $agendamento = \App\Models\Agendamento::findOrFail($id);
+        $agendamento = Agendamento::findOrFail($id);
 
         // Se o status for 'confirmado', mudamos para 'presente'
         if ($agendamento->status == 'confirmado') {
@@ -255,5 +260,19 @@ class AgendamentoController extends Controller
         }
 
         return back()->with('status', 'Check-in realizado!');
+    }
+    public function marcarFalta($id)
+    {
+        $agendamento = Agendamento::findOrFail($id);
+        $agendamento->update(['status' => 'faltou']);
+
+        $cliente = $agendamento->cliente; 
+        $cliente->increment('faltas');
+
+        if ($cliente->faltas >= 3) {
+            $cliente->update(['status' => 'bloqueado']);
+        }
+
+        return back()->with('success', 'Falta registrada. Cliente bloqueado se atingiu 3 faltas.');
     }
 }
