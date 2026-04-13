@@ -90,38 +90,58 @@ class AgendamentoController extends Controller
                 return back()->withErrors(['data_hora' => 'O horário escolhido coincide com um bloqueio de agenda: ' . $bloqueio->motivo])->withInput();
             }
         }
-        // Validação: Conflito (Colisão)
-        $conflito = Agendamento::where('profissional_id', $request->profissional_id)
-            ->where('status', '!=', 'cancelado')
-            ->where(function ($query) use ($inicio, $fim) {
-                $query->where(function ($q) use ($inicio, $fim) {
-                    $q->where('data_hora_inicio', '>=', $inicio)
-                    ->where('data_hora_inicio', '<', $fim);
-                })
-                ->orWhere(function ($q) use ($inicio, $fim) {
-                    $q->where('data_hora_fim', '>', $inicio)
-                    ->where('data_hora_fim', '<=', $fim);
-                })
-                ->orWhere(function ($q) use ($inicio, $fim) {
-                    $q->where('data_hora_inicio', '<=', $inicio)
-                    ->where('data_hora_fim', '>=', $fim);
-                });
-            })->exists();
 
-        if ($conflito) {
-            return back()->withErrors(['data_hora' => 'Este profissional já possui um agendamento que sobrepõe este horário.'])->withInput();
+        // =========================================================================
+        // BLINDAGEM CONTRA OVERBOOKING (Fila de Banco de Dados)
+        // =========================================================================
+        $resultadoAgendamento = DB::transaction(function () use ($request, $inicio, $fim, $servico) {
+            
+            // 1. A MÁGICA: Trava a "agenda" deste profissional por alguns milissegundos.
+            // Se outra pessoa tentar agendar ao mesmo tempo, o banco de dados vai colocar ela 
+            // numa fila de espera até essa verificação terminar.
+            User::where('id', $request->profissional_id)->lockForUpdate()->first();
+
+            // 2. Validação: Conflito (Colisão)
+            $conflito = Agendamento::where('profissional_id', $request->profissional_id)
+                ->where('status', '!=', 'cancelado')
+                ->where(function ($query) use ($inicio, $fim) {
+                    $query->where(function ($q) use ($inicio, $fim) {
+                        $q->where('data_hora_inicio', '>=', $inicio)
+                        ->where('data_hora_inicio', '<', $fim);
+                    })
+                    ->orWhere(function ($q) use ($inicio, $fim) {
+                        $q->where('data_hora_fim', '>', $inicio)
+                        ->where('data_hora_fim', '<=', $fim);
+                    })
+                    ->orWhere(function ($q) use ($inicio, $fim) {
+                        $q->where('data_hora_inicio', '<=', $inicio)
+                        ->where('data_hora_fim', '>=', $fim);
+                    });
+                })->exists();
+
+            // Se achou conflito, aborta a missão e avisa o controller
+            if ($conflito) {
+                return 'conflito'; 
+            }
+
+            // 3. Salvar Agendamento se a via estiver livre
+            Agendamento::create([
+                'cliente_id' => $request->cliente_id,
+                'profissional_id' => $request->profissional_id,
+                'servico_id' => $request->servico_id,
+                'data_hora_inicio' => $inicio,
+                'data_hora_fim' => $fim,
+                'status' => 'confirmado',
+                'valor_total' => $servico->preco, 
+            ]);
+
+            return 'sucesso';
+        });
+
+        // RESPOSTA AO USUÁRIO APÓS A TENTATIVA
+        if ($resultadoAgendamento === 'conflito') {
+            return back()->withErrors(['data_hora' => 'Poxa, alguém foi mais rápido! Este horário acabou de ser reservado por outra pessoa. Por favor, atualize a página e escolha outro horário.'])->withInput();
         }
-
-        // Salvar Agendamento
-        Agendamento::create([
-            'cliente_id' => $request->cliente_id,
-            'profissional_id' => $request->profissional_id,
-            'servico_id' => $request->servico_id,
-            'data_hora_inicio' => $inicio,
-            'data_hora_fim' => $fim,
-            'status' => 'confirmado',
-            'valor_total' => $servico->preco, 
-        ]);
 
         if (auth()->user()->cargo === 'cliente') {
             return redirect()->route('cliente.index')->with('status', 'Agendamento realizado com sucesso!');

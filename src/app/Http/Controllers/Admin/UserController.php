@@ -215,7 +215,7 @@ class UserController extends Controller
 
         return back()->with('success', 'Status do usuário atualizado com sucesso!');
     }
-     public function extrato(Request $request)
+    public function extrato(Request $request)
     {
         // Filtro de mês e ano (padrão é o atual)
         $mes = $request->get('mes', date('m'));
@@ -226,8 +226,9 @@ class UserController extends Controller
         $agendamentos = Agendamento::with('servico')
             ->where('profissional_id', $profissionalId)
             ->where('status', 'executado')
-            ->whereMonth('data_hora_inicio', $mes)
-            ->whereYear('data_hora_inicio', $ano)
+            // CORREÇÃO: Alinhado com o Financeiro do Gerente (updated_at)
+            ->whereMonth('updated_at', $mes)
+            ->whereYear('updated_at', $ano)
             ->get();
 
         // 2. Pegar as regras de comissão do profissional na tabela pivô
@@ -241,8 +242,9 @@ class UserController extends Controller
         // Calcular comissão de cada agendamento
         foreach ($agendamentos as $agenda) {
             $regra = $regras->get($agenda->servico_id);
-            // Se não tiver na pivô, o padrão é 10% (conforme solicitado)
-            $percentual = $regra ? $regra->comissao_percentual : 10.00; 
+            
+            // CORREÇÃO: Padrão 50% igual ao do FinanceiroController para evitar divergência
+            $percentual = $regra ? $regra->comissao_percentual : 50.00; 
             
             $valorBase = $agenda->servico->preco; // Comissão sobre o preço cheio do serviço
             $valorComissao = ($valorBase * $percentual) / 100;

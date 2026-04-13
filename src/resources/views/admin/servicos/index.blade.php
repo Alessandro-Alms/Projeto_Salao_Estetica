@@ -11,7 +11,17 @@
             @endif
         </div>
     </x-slot>
+            @if($errors->any())
+                <div style="background-color: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+                    <strong>Atenção:</strong> {{ $errors->first() }}
+                </div>
+            @endif
 
+            @if(session('status'))
+                <div style="background-color: #d4edda; color: #155724; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+                    <strong>Sucesso!</strong> {{ session('status') }}
+                </div>
+            @endif
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">

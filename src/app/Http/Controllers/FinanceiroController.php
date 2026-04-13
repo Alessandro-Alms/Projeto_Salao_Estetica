@@ -33,8 +33,9 @@ class FinanceiroController extends Controller
         $totalServicos = 0;
         $totalComissoesServicos = 0;
 
-        // Loop para calcular a comissão de CADA serviço separadamente, respeitando a porcentagem do profissional
+        // Loop para calcular a comissão de CADA serviço separadamente
         foreach ($agendamentos as $agenda) {
+            // $totalServicos recebe o que o cliente de fato pagou na hora (pode ser 0 se usou pacote, ou 50% se usou fidelidade)
             $totalServicos += $agenda->valor_total;
 
             // Busca a comissão exata deste profissional para este serviço na tabela pivot
@@ -46,19 +47,29 @@ class FinanceiroController extends Controller
             $comissaoPercentual = $pivot ? $pivot->comissao_percentual : 50.00; // 50% de segurança
             $taxa = $comissaoPercentual / 100;
 
-            $totalComissoesServicos += ($agenda->valor_total * $taxa);
+            // REGRA DE OURO: Comissão sempre calculada sobre o preço cheio do serviço!
+            $valorBaseComissao = $agenda->servico->preco;
+            $totalComissoesServicos += ($valorBaseComissao * $taxa);
         }
 
-        // Calcula produtos (Mantida a comissão fixa de 10% para produtos)
+        // Calcula produtos 
         $totalProdutos = DB::table('vendas')->whereDate('created_at', $dataSelecionada)->sum('valor_venda');
         $totalComissoesProdutos = $totalProdutos * 0.10; 
 
+        // Calcula PACOTES vendidos no dia (Adicionado!)
+        // Nota: Adapte "preco" para o nome da coluna de valor que está na sua tabela de pacotes, caso seja diferente.
+        $totalPacotes = DB::table('cliente_pacotes')
+            ->join('pacotes', 'cliente_pacotes.pacote_id', '=', 'pacotes.id_pacote') // Corrigido de 'id' para 'id_pacote'
+            ->whereDate('cliente_pacotes.created_at', $dataSelecionada)
+            ->sum('pacotes.valor_total');
         // Totais finais
         $totalComissoes = $totalComissoesServicos + $totalComissoesProdutos; 
-        $lucroLiquido = ($totalServicos + $totalProdutos) - $totalComissoes;
+        
+        // Lucro líquido agora soma os pacotes vendidos no dia
+        $lucroLiquido = ($totalServicos + $totalProdutos + $totalPacotes) - $totalComissoes;
 
         return view('admin.financeiro.fechamento', compact(
-            'totalServicos', 'totalProdutos', 'totalComissoes', 
+            'totalServicos', 'totalProdutos', 'totalPacotes', 'totalComissoes', 
             'lucroLiquido', 'dataSelecionada', 'exemploDataBanco'
         ));
     }
@@ -84,7 +95,7 @@ class FinanceiroController extends Controller
                 ->get();
 
             foreach ($agendamentos as $agenda) {
-                // Busca direta e segura na tabela pivot usando DB::table
+                // Busca direta e segura na tabela pivot 
                 $pivot = DB::table('profissional_servico')
                     ->where('profissional_id', $agenda->profissional_id)
                     ->where('servico_id', $agenda->servico_id)
@@ -92,12 +103,15 @@ class FinanceiroController extends Controller
 
                 // Puxa a comissao_percentual correta
                 $porcentagem = $pivot ? $pivot->comissao_percentual : 50.00; 
-                $valorComissao = ($agenda->valor_total * ($porcentagem / 100));
+                
+                // REGRA DE OURO: Comissão sobre o valor base do serviço
+                $valorBaseComissao = $agenda->servico->preco;
+                $valorComissao = ($valorBaseComissao * ($porcentagem / 100));
                 
                 $comissoes[] = [
                     'data' => $agenda->updated_at->format('d/m/Y'),
-                    'descricao' => 'Serviço: ' . ($agenda->servico->nome ?? 'Serviço não encontrado'),
-                    'valor_total' => $agenda->valor_total,
+                    'descricao' => 'Serviço: ' . ($agenda->servico->nome ?? 'Serviço não encontrado') . ' (Preço Base: R$ ' . number_format($valorBaseComissao, 2, ',', '.') . ')',
+                    'valor_total' => $agenda->valor_total, // Exibe o que o cliente pagou
                     'comissao' => $valorComissao
                 ];
                 $totalComissao += $valorComissao;
