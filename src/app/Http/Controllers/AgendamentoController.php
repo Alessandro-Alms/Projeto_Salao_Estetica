@@ -196,11 +196,12 @@ class AgendamentoController extends Controller
     public function marcarComoExecutado(Request $request, $id_agendamento)
     {
         $agendamento = Agendamento::findOrFail($id_agendamento);
+        $cliente = User::findOrFail($agendamento->cliente_id);
 
         // Iniciamos uma transação para garantir que ou faz TUDO ou não faz NADA
-        return DB::transaction(function () use ($request, $agendamento) {
+        return DB::transaction(function () use ($request, $agendamento, $cliente) { 
             
-            // 1. Verificação Prévia de Estoque (Para não dar erro no meio do caminho)
+            // 1. Verificação Prévia de Estoque
             if ($request->has('produtos')) {
                 foreach ($request->produtos as $item) {
                     if (!empty($item['id'])) {
@@ -208,7 +209,7 @@ class AgendamentoController extends Controller
                         $qtdPedida = $item['quantidade'] ?? 1;
 
                         if (!$produto || $produto->quantidade_estoque < $qtdPedida) {
-                            // Se um único produto falhar, paramos tudo aqui
+                            // Se um único produto falhar, paramos tudo e NADA é salvo no banco
                             return back()->withErrors([
                                 'estoque' => "Estoque insuficiente para o produto: " . ($produto->nome ?? 'Desconhecido')
                             ])->withInput();
@@ -217,13 +218,28 @@ class AgendamentoController extends Controller
                 }
             }
 
-            // 2. Se chegou aqui, todos os produtos têm estoque ou não há produtos.
-            // Agora sim mudamos o status do agendamento.
+
+            //  Fidelidade 
+            if ($cliente->contador_fidelidade == 5) {
+                // Aplica o desconto de 50%
+                $agendamento->valor_total = $agendamento->valor_total * 0.5;
+
+                $cliente->contador_fidelidade = 0;
+                $cliente->save();
+                
+                $mensagem = 'Atendimento concluído! O cliente ganhou 50% de desconto pela fidelidade! 🎉';
+            } else {
+                // Ganha mais um "selo"
+                $cliente->increment('contador_fidelidade');
+                $mensagem = 'Atendimento concluído com sucesso!';
+            }
+
+            // 3. Se chegou aqui, tudo certo! Mudamos o status do agendamento.
             $agendamento->status = 'executado';
             $agendamento->obs = $request->input('observacao');
             $agendamento->save();
 
-            // 3. Registrar as Vendas e Baixar Estoque
+            // 4. Registrar as Vendas e Baixar Estoque
             if ($request->has('produtos')) {
                 foreach ($request->produtos as $item) {
                     if (!empty($item['id'])) {
@@ -233,7 +249,7 @@ class AgendamentoController extends Controller
                         // Baixa o estoque
                         $produto->decrement('quantidade_estoque', $qtd);
 
-                        // Registra a venda (UC007 / UC014)
+                        // Registra a venda
                         DB::table('vendas')->insert([
                             'profissional_id' => auth()->id(),
                             'produto_id' => $produto->id_produto,
@@ -246,7 +262,8 @@ class AgendamentoController extends Controller
                 }
             }
 
-            return redirect()->route('profissional.agenda')->with('status', 'Atendimento finalizado com sucesso!');
+            // 5. Retornamos usando a $mensagem dinâmica que criamos ali em cima!
+            return redirect()->route('profissional.agenda')->with('status', $mensagem);
         });
     }
     public function confirmarPresenca($id)

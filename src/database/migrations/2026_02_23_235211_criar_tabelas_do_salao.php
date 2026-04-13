@@ -24,7 +24,7 @@ return new class extends Migration
             $table->enum('status', ['ativo', 'bloqueado'])->default('ativo');
             $table->text('obs')->nullable();
             $table->dateTime('ultima_visita')->nullable();
-
+            $table->integer('contador_fidelidade')->default(0);
             $table->rememberToken();
             $table->timestamps();
         });

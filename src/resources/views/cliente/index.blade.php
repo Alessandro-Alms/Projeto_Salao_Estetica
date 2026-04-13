@@ -7,7 +7,6 @@
                     + Novo Agendamento
                 </a>
             </div>
-
             @if(session('status'))
                 <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 shadow-sm">
                     {{ session('status') }}
@@ -26,6 +25,16 @@
                 @forelse($agendamentos as $agenda)
                     <div class="bg-white overflow-hidden shadow-sm rounded-xl border border-gray-200 p-5 flex flex-col justify-between">
                         <div>
+                            @if(auth()->user()->contador_fidelidade == 5)
+                                <span class="bg-yellow-100 text-yellow-800 text-xs font-bold px-2 py-1 rounded border border-yellow-300">
+                                    🎁 PRÓXIMO SERVIÇO COM 50% OFF!
+                                </span>
+                            @else
+                                <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded">
+                                    Fidelidade: {{ auth()->user()->contador_fidelidade }}/5
+                                </span>
+                            @endif
+
                             <div class="flex justify-between items-start mb-4">
                                 <div>
                                     <p class="text-sm text-gray-500 font-semibold uppercase">

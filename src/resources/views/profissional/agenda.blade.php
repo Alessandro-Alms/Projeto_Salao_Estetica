@@ -25,7 +25,19 @@
                     <div class="grid gap-4">
                         @foreach($itens as $agenda)
                             <div class="bg-white p-6 shadow rounded-xl border-l-4 border-pink-500">
-                                <div class="flex justify-between items-center mb-4">
+                                
+                                {{-- AVISO DE FIDELIDADE (Ajustado para ler do cliente) --}}
+                                @if($agenda->cliente->contador_fidelidade == 5)
+                                    <span class="bg-yellow-100 text-yellow-800 text-xs font-bold px-2 py-1 rounded border border-yellow-300">
+                                        🎁 PRÓXIMO SERVIÇO COM 50% OFF!
+                                    </span>
+                                @else
+                                    <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded">
+                                        Fidelidade do Cliente: {{ $agenda->cliente->contador_fidelidade }}/5
+                                    </span>
+                                @endif
+
+                                <div class="flex justify-between items-center mb-4 mt-2">
                                     <div>
                                         <span class="text-lg font-black text-gray-700">
                                             {{ \Carbon\Carbon::parse($agenda->data_hora_inicio)->format('H:i') }}
@@ -40,24 +52,26 @@
                                     </div>
                                 </div>
 
-                                {{-- LÓGICA DE BOTÕES DA DEMANDA 5 --}}
+                                {{-- LÓGICA DE BOTÕES --}}
                                 <div class="mt-4 pt-4 border-t border-gray-100">
                                     
-                                    {{-- PASSO 1: Marcar Presença (UC005) --}}
+                                    {{-- PASSO 1: Marcar Presença --}}
                                     @if($agenda->status == 'confirmado' || $agenda->status == 'pendente')
-                                        <form action="{{ route('agendamentos.falta', $agenda->id_agendamento) }}" method="POST">
-                                            @csrf
-                                            @method('PATCH')
-                                            <button type="submit" class="text-red-600 font-bold">Marcar Falta</button>
-                                        </form>
-                                        <form action="{{ route('agendamento.presenca', $agenda->id_agendamento) }}" method="POST">
-                                            @csrf
-                                            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition">
-                                                📍 Confirmar Presença (Check-in)
-                                            </button>
-                                        </form>
+                                        <div class="flex gap-4 items-center">
+                                            <form action="{{ route('agendamentos.falta', $agenda->id_agendamento) }}" method="POST" class="w-1/3">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit" class="w-full text-red-600 border border-red-600 hover:bg-red-50 font-bold py-2 px-4 rounded-lg transition">Marcar Falta</button>
+                                            </form>
+                                            <form action="{{ route('agendamento.presenca', $agenda->id_agendamento) }}" method="POST" class="w-2/3">
+                                                @csrf
+                                                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition">
+                                                    📍 Confirmar Presença (Check-in)
+                                                </button>
+                                            </form>
+                                        </div>
 
-                                    {{-- PASSO 2: Finalizar com Obs e Produto (UC006 e UC007) --}}
+                                    {{-- PASSO 2: Finalizar com Obs e Produto --}}
                                     @elseif($agenda->status == 'presente')
                                         <form action="{{ route('profissional.agendamento.executado', $agenda->id_agendamento) }}" method="POST" class="space-y-4">
                                             @csrf
@@ -89,12 +103,50 @@
                                                 </button>
                                             </div>
 
+                                            {{-- NOVO: Resumo Financeiro --}}
+                                            @php
+                                                // Busca a comissão específica deste profissional para ESTE serviço na tabela pivot
+                                                $pivot = \Illuminate\Support\Facades\DB::table('profissional_servico')
+                                                            ->where('profissional_id', auth()->id())
+                                                            ->where('servico_id', $agenda->servico_id) // ou $agenda->servico->id_servico
+                                                            ->first();
+
+                                                $porcentagemComissao = $pivot ? $pivot->comissao_percentual : 50; 
+                                                $taxaMatematica = $porcentagemComissao / 100;
+                                                
+                                                // Mude ->preco para ->valor se no seu banco a coluna do serviço se chamar valor
+                                                $valorServico = $agenda->servico->preco ?? 0; 
+                                                $valorReceber = $valorServico * $taxaMatematica;
+                                            @endphp
+
+                                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                                <h4 class="text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Resumo Financeiro</h4>
+                                                
+                                                <div class="flex justify-between text-sm mb-1">
+                                                    <span class="text-gray-600">Valor do Serviço:</span>
+                                                    <span class="font-semibold text-gray-900">R$ {{ number_format($valorServico, 2, ',', '.') }}</span>
+                                                </div>
+
+                                                <div class="border-t border-gray-200 my-2"></div>
+
+                                                <div class="flex justify-between items-center text-sm">
+                                                    <span class="text-pink-600 font-bold">Sua Comissão ({{ $porcentagemComissao }}%):</span>
+                                                    <span class="font-bold text-lg text-green-600">
+                                                        + R$ {{ number_format($valorReceber, 2, ',', '.') }}
+                                                    </span>
+                                                </div>
+                                                
+                                                <p class="text-xs text-gray-400 mt-2 italic">
+                                                    *Se adicionar produtos, ganhará mais comissão!
+                                                </p>
+                                            </div>
+
                                             <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg transition">
                                                 ✅ Finalizar e Baixar Estoque
                                             </button>
                                         </form>
                                     @else
-                                        <p class="text-center text-gray-400 italic text-sm">Atendimento já finalizado.</p>
+                                        <p class="text-center text-gray-400 italic text-sm">Atendimento finalizado.</p>
                                     @endif
                                 </div>
                             </div>
@@ -109,13 +161,13 @@
         </div>
     </div>  
 </x-app-layout>
+
 <script>
     let produtoIndex = 1;
     function addProduto() {
         const container = document.getElementById('lista-produtos');
         const novoItem = container.firstElementChild.cloneNode(true);
         
-        // Atualiza os nomes para produtos[1][id], produtos[2][id]...
         novoItem.querySelector('select').name = `produtos[${produtoIndex}][id]`;
         novoItem.querySelector('input').name = `produtos[${produtoIndex}][quantidade]`;
         novoItem.querySelector('input').value = 1;

@@ -17,7 +17,6 @@ class FinanceiroController extends Controller
         // TESTE 1: Buscar TUDO que é executado sem filtro de data
         $todosExecutados = Agendamento::where('status', 'executado')->get();
 
-        // Vamos ver o que tem dentro do primeiro item para comparar a data
         if ($todosExecutados->isNotEmpty()) {
             $exemploDataBanco = $todosExecutados->first()->updated_at->format('Y-m-d');
         } else {
@@ -30,13 +29,32 @@ class FinanceiroController extends Controller
             ->with(['profissional', 'servico'])
             ->get();
 
-        // Se a busca real falhar, mas o TESTE 1 tiver dados, o problema é a data.
-        // Vamos forçar os totais para o cálculo:
-        $totalServicos = $agendamentos->sum('valor_total');
-        $totalProdutos = DB::table('vendas')->whereDate('created_at', $dataSelecionada)->sum('valor_venda');
+        // Variáveis para somar os valores corretamente
+        $totalServicos = 0;
+        $totalComissoesServicos = 0;
 
-        // ... (restante dos cálculos de comissão que já fizemos) ...
-        $totalComissoes = ($totalServicos * 0.5) + ($totalProdutos * 0.1); 
+        // Loop para calcular a comissão de CADA serviço separadamente, respeitando a porcentagem do profissional
+        foreach ($agendamentos as $agenda) {
+            $totalServicos += $agenda->valor_total;
+
+            // Busca a comissão exata deste profissional para este serviço na tabela pivot
+            $pivot = DB::table('profissional_servico')
+                ->where('profissional_id', $agenda->profissional_id)
+                ->where('servico_id', $agenda->servico_id)
+                ->first();
+
+            $comissaoPercentual = $pivot ? $pivot->comissao_percentual : 50.00; // 50% de segurança
+            $taxa = $comissaoPercentual / 100;
+
+            $totalComissoesServicos += ($agenda->valor_total * $taxa);
+        }
+
+        // Calcula produtos (Mantida a comissão fixa de 10% para produtos)
+        $totalProdutos = DB::table('vendas')->whereDate('created_at', $dataSelecionada)->sum('valor_venda');
+        $totalComissoesProdutos = $totalProdutos * 0.10; 
+
+        // Totais finais
+        $totalComissoes = $totalComissoesServicos + $totalComissoesProdutos; 
         $lucroLiquido = ($totalServicos + $totalProdutos) - $totalComissoes;
 
         return view('admin.financeiro.fechamento', compact(
@@ -44,6 +62,7 @@ class FinanceiroController extends Controller
             'lucroLiquido', 'dataSelecionada', 'exemploDataBanco'
         ));
     }
+
     public function comissoes(Request $request)
     {
         $profissionais = User::where('cargo', 'profissional')->orderBy('name')->get();
@@ -56,28 +75,35 @@ class FinanceiroController extends Controller
 
         if ($profissionalId) {
             
-            // Busca na tabela de agendamentos os serviços executados por esse profissional no mês/ano selecionado
+            // Busca na tabela de agendamentos os serviços executados
             $agendamentos = Agendamento::where('profissional_id', $profissionalId)
                 ->where('status', 'executado')
                 ->whereMonth('updated_at', $mes)
                 ->whereYear('updated_at', $ano)
+                ->with('servico')
                 ->get();
 
             foreach ($agendamentos as $agenda) {
-                $vinculo = $agenda->profissional->servicos->find($agenda->servico_id);
-                $porcentagem = $vinculo ? ($vinculo->pivot->comissao_servico ?? 50) : 50; 
+                // Busca direta e segura na tabela pivot usando DB::table
+                $pivot = DB::table('profissional_servico')
+                    ->where('profissional_id', $agenda->profissional_id)
+                    ->where('servico_id', $agenda->servico_id)
+                    ->first();
+
+                // Puxa a comissao_percentual correta
+                $porcentagem = $pivot ? $pivot->comissao_percentual : 50.00; 
                 $valorComissao = ($agenda->valor_total * ($porcentagem / 100));
                 
                 $comissoes[] = [
                     'data' => $agenda->updated_at->format('d/m/Y'),
-                    'descricao' => 'Serviço: ' . $agenda->servico->nome,
+                    'descricao' => 'Serviço: ' . ($agenda->servico->nome ?? 'Serviço não encontrado'),
                     'valor_total' => $agenda->valor_total,
                     'comissao' => $valorComissao
                 ];
                 $totalComissao += $valorComissao;
             }
 
-            // Busca na tabela de vendas os produtos vendidos por esse profissional
+            // Busca na tabela de vendas os produtos vendidos
             $vendas = DB::table('vendas')
                 ->where('profissional_id', $profissionalId)
                 ->whereMonth('created_at', $mes)
@@ -85,7 +111,6 @@ class FinanceiroController extends Controller
                 ->get();
 
             foreach ($vendas as $venda) {
-
                 $porcentagemProduto = 10; 
                 $valorComissaoProduto = ($venda->valor_venda * ($porcentagemProduto / 100));
 
