@@ -7,6 +7,7 @@
     use App\Http\Controllers\ProdutoController;
     use App\Http\Controllers\AgendamentoController;
     use App\Http\Controllers\FinanceiroController;
+    use App\Http\Controllers\BloqueioController;
 
     Route::get('/', function () {
         return view('welcome');
@@ -68,6 +69,7 @@
         ])->parameters([
             'produtos' => 'produto'
         ])->except(['show']);
+        Route::resource('bloqueios', BloqueioController::class)->except(['show', 'edit', 'update']);
     });
         Route::middleware(['auth', 'profissional'])->prefix('profissional')->name('profissional.')->group(function () {
         Route::get('/configuracoes', [UserController::class, 'configuracoesservicos'])->name('servicos.editar');
@@ -77,7 +79,6 @@
     });
     //rota para listar os agendamentos em formato JSON (para o FullCalendar) 
     Route::get('api/agendamentos', [AgendamentoController::class, 'listarJson'])->name('admin.agenda.json');
-    // Coloque esta linha LOGO ANTES do final do arquivo, ou dentro do grupo 'gerente'
     Route::middleware(['auth', 'gerente'])->get('/admin/financeiro/fechamento', [FinanceiroController::class, 'fechamento'])->name('admin.financeiro.fechamento');
     Route::middleware(['auth', 'gerente'])->get('/admin/financeiro/comissoes', [FinanceiroController::class, 'comissoes'])->name('admin.financeiro.comissoes');
     require __DIR__.'/auth.php';

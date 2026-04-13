@@ -10,23 +10,22 @@ use Carbon\Carbon;
 use App\Models\HorarioTrabalho;
 use App\Models\Produto; 
 use Illuminate\Support\Facades\DB;
+use App\Models\BloqueioHorario;
 
 class AgendamentoController extends Controller
 {
     public function index()
     {
-        // Por enquanto, apenas retorna uma view vazia que criaremos
         return view('admin.agenda.index');
     }
 
     public function store(Request $request)
     {
-        // 1. Validação Básica
         $request->validate([
-            'cliente_id' => 'required|exists:users,id',
-            'profissional_id' => 'required|exists:users,id',
-            'servico_id' => 'required|exists:servicos,id_servico',
-            'data_hora' => 'required|date|after:now',
+            'cliente_id' => ['required','exists:users,id'],
+            'profissional_id' => ['required','exists:users,id'],
+            'servico_id' => ['required','exists:servicos,id_servico'],
+            'data_hora' => ['required','date','after:now'],
         ], [
             'data_hora.after' => 'O agendamento deve ser para uma data futura.',
         ]);
@@ -34,15 +33,14 @@ class AgendamentoController extends Controller
         $servico = Servico::findOrFail($request->servico_id);
         $profissional = User::findOrFail($request->profissional_id);
         
-        // 2. Definindo Início e Fim
+        // Definindo Início e Fim
         $inicio = Carbon::parse($request->data_hora);
         $diaSemana = $inicio->dayOfWeek; 
-        
+
         // Busca a duração
         $vinculo = $profissional->servicos->find($servico->id_servico);
 
-        // --- NOVA VALIDAÇÃO: ESPECIALIDADE ---
-        // 3.1. Verifica se o profissional realmente executa esse serviço
+        // Verifica se o profissional realmente executa esse serviço
         if (!$vinculo) {
             return back()->withErrors(['servico_id' => 'Este profissional não realiza este tipo de serviço.'])->withInput();
         }
@@ -50,8 +48,8 @@ class AgendamentoController extends Controller
         $duracao = $vinculo->pivot->duracao_customizada ?? $servico->duracao;
         $fim = $inicio->copy()->addMinutes($duracao);
 
-        // 3. Validação: Horário de Trabalho e Almoço
-        $escala = HorarioTrabalho::where('usuario_id', $profissional->id)
+        // Validação: Horário de Trabalho e Almoço
+        $escala = HorarioTrabalho::where('profissional_id', $profissional->id)
                     ->where('dia_semana', $diaSemana)
                     ->first();
 
@@ -59,22 +57,35 @@ class AgendamentoController extends Controller
             return back()->withErrors(['data_hora' => 'O profissional não trabalha neste dia da semana.'])->withInput();
         }
 
-        $horaInicioFormatada = $inicio->format('H:i:s');
-        $horaFimFormatada = $fim->format('H:i:s');
-        
+        $horaInicio = $inicio->format('H:i:s');
+        $horaFim = $fim->format('H:i:s');
+
         // Verifica expediente geral
-        if ($horaInicioFormatada < $escala->hora_inicio || $horaFimFormatada > $escala->hora_fim) {
+        if ($horaInicio < $escala->hora_inicio || $horaFim > $escala->hora_fim) {
             return back()->withErrors(['data_hora' => 'O horário escolhido está fora do expediente do profissional.'])->withInput();
         }
 
-        // --- NOVA VALIDAÇÃO: ALMOÇO MELHORADA ---
-        // 3.2. Verifica se o atendimento invade o almoço (em qualquer ponto)
+        // Verifica se o atendimento invade o almoço 
         // Se o início for antes do fim do almoço E o fim for depois do início do almoço, há intersecção.
-        if ($horaInicioFormatada < $escala->almoco_fim && $horaFimFormatada > $escala->almoco_inicio) {
+        if ($horaInicio < $escala->almoco_fim && $horaFim > $escala->almoco_inicio) {
             return back()->withErrors(['data_hora' => 'Este horário coincide ou invade o intervalo de almoço do profissional.'])->withInput();
         }
 
-        // 4. Validação: Conflito (Colisão) - Seu código original está ótimo aqui
+        // Validação: Bloqueios (Folgas e Feriados) 
+        $bloqueios = BloqueioHorario::where(function ($q) use ($request) {
+            $q->whereNull('profissional_id') // Bloqueio geral
+              ->orWhere('profissional_id', $request->profissional_id); // Bloqueio do profissional
+        })->get();
+
+        foreach ($bloqueios as $bloqueio) {
+            $bloqueioInicio = Carbon::parse($bloqueio->data_hora_inicio);
+            $bloqueioFim = Carbon::parse($bloqueio->data_hora_fim);
+
+            if ($inicio < $bloqueioFim && $fim > $bloqueioInicio) {
+                return back()->withErrors(['data_hora' => 'O horário escolhido coincide com um bloqueio de agenda: ' . $bloqueio->motivo])->withInput();
+            }
+        }
+        // Validação: Conflito (Colisão)
         $conflito = Agendamento::where('profissional_id', $request->profissional_id)
             ->where('status', '!=', 'cancelado')
             ->where(function ($query) use ($inicio, $fim) {
@@ -96,7 +107,7 @@ class AgendamentoController extends Controller
             return back()->withErrors(['data_hora' => 'Este profissional já possui um agendamento que sobrepõe este horário.'])->withInput();
         }
 
-        // 5. Salvar Agendamento
+        // Salvar Agendamento
         Agendamento::create([
             'cliente_id' => $request->cliente_id,
             'profissional_id' => $request->profissional_id,
@@ -219,8 +230,8 @@ class AgendamentoController extends Controller
 
                         // Registra a venda (UC007 / UC014)
                         DB::table('vendas')->insert([
-                            'user_id' => auth()->id(),
-                            'id_produto' => $produto->id_produto,
+                            'profissional_id' => auth()->id(),
+                            'produto_id' => $produto->id_produto,
                             'quantidade' => $qtd,
                             'valor_venda' => $produto->valor_unitario * $qtd,
                             'created_at' => now(),

@@ -10,7 +10,7 @@ class Venda extends Model
     protected $fillable = [
     'user_id', 
     'id_produto', 
-    'id_servico', 
+    'id_servico',   
     'quantidade', 
     'valor_venda'
     ];

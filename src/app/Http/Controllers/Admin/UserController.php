@@ -178,7 +178,7 @@ class UserController extends Controller
             foreach ($request->horarios as $dia => $dados) {
                 HorarioTrabalho::updateOrCreate(
                     [
-                        'usuario_id' => $usuario->id,
+                        'profissional_id' => $usuario->id,
                         'dia_semana' => $dia
                     ],
                     [

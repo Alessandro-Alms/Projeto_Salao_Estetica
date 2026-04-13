@@ -79,11 +79,41 @@ return new class extends Migration
         // 6. Tabela de Vendas (Produtos e Serviços avulsos)
         Schema::create('vendas', function (Blueprint $table) {
             $table->id('id_venda');
-            $table->foreignId('user_id')->constrained('users'); // Quem realizou a venda
-            $table->foreignId('id_produto')->nullable()->constrained('produtos', 'id_produto');
-            $table->foreignId('id_servico')->nullable()->constrained('servicos', 'id_servico');
+            $table->foreignId('profissional_id')->constrained('users'); // Quem realizou a venda
+            $table->foreignId('produto_id')->nullable()->constrained('produtos', 'id_produto');
+            $table->foreignId('servico_id')->nullable()->constrained('servicos', 'id_servico');
             $table->integer('quantidade')->default(1);
             $table->decimal('valor_venda', 10, 2);
+            $table->timestamps();
+        });
+        // Tabelas de relacionamento para Profissionais
+        Schema::create('profissional_servico', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('profissional_id')->constrained('users')->onDelete('cascade'); // O Profissional
+            $table->foreignId('servico_id')->constrained('servicos', 'id_servico')->onDelete('cascade');
+            $table->decimal('comissao_percentual', 5, 2)->default(50.00); // RN002
+            $table->integer('duracao_customizada')->nullable(); // RN006 (em minutos)
+            $table->timestamps();
+        });
+        // Tabela de Horários de Trabalho dos Profissionais
+        Schema::create('horarios_trabalho', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('profissional_id')->constrained('users')->onDelete('cascade');
+            $table->integer('dia_semana'); // 0 = Domingo, 1 = Segunda...
+            $table->time('hora_inicio')->default('08:00');
+            $table->time('hora_fim')->default('18:00');
+            $table->boolean('trabalha')->default(true); // Para marcar folgas fixas
+            $table->timestamps();
+            $table->time('almoco_inicio')->nullable()->default('12:00');
+            $table->time('almoco_fim')->nullable()->default('13:00');
+        });
+        // Tabela de Bloqueios de Horários (Feriados, Folgas, Atestados)
+        Schema::create('bloqueios_horarios', function (Blueprint $table) {
+            $table->id('id_bloqueio');
+            $table->foreignId('profissional_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->dateTime('data_hora_inicio');
+            $table->dateTime('data_hora_fim');
+            $table->string('motivo')->nullable(); 
             $table->timestamps();
         });
     }
@@ -92,9 +122,12 @@ return new class extends Migration
     {
         Schema::dropIfExists('vendas');
         Schema::dropIfExists('atendimentos');
-        Schema::dropIfExists('agendamentos');
+        Schema::dropIfExists('agendamentos');   
         Schema::dropIfExists('produtos');
         Schema::dropIfExists('servicos');
         Schema::dropIfExists('users');
+        Schema::dropIfExists('profissional_servico');
+        Schema::dropIfExists('horarios_trabalho');
+        Schema::dropIfExists('bloqueios_horarios');
     }
 };

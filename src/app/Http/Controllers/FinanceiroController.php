@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Agendamento;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
+use Carbon\Carbon;
 
 class FinanceiroController extends Controller
 {
@@ -54,6 +55,8 @@ class FinanceiroController extends Controller
         $totalComissao = 0;
 
         if ($profissionalId) {
+            
+            // Busca na tabela de agendamentos os serviços executados por esse profissional no mês/ano selecionado
             $agendamentos = Agendamento::where('profissional_id', $profissionalId)
                 ->where('status', 'executado')
                 ->whereMonth('updated_at', $mes)
@@ -62,17 +65,43 @@ class FinanceiroController extends Controller
 
             foreach ($agendamentos as $agenda) {
                 $vinculo = $agenda->profissional->servicos->find($agenda->servico_id);
-                $porcentagem = $vinculo ? ($vinculo->pivot->comissao_servico ?? 50) : 50;
+                $porcentagem = $vinculo ? ($vinculo->pivot->comissao_servico ?? 50) : 50; 
                 $valorComissao = ($agenda->valor_total * ($porcentagem / 100));
                 
                 $comissoes[] = [
                     'data' => $agenda->updated_at->format('d/m/Y'),
-                    'servico' => $agenda->servico->nome,
+                    'descricao' => 'Serviço: ' . $agenda->servico->nome,
                     'valor_total' => $agenda->valor_total,
                     'comissao' => $valorComissao
                 ];
                 $totalComissao += $valorComissao;
             }
+
+            // Busca na tabela de vendas os produtos vendidos por esse profissional
+            $vendas = DB::table('vendas')
+                ->where('profissional_id', $profissionalId)
+                ->whereMonth('created_at', $mes)
+                ->whereYear('created_at', $ano)
+                ->get();
+
+            foreach ($vendas as $venda) {
+
+                $porcentagemProduto = 10; 
+                $valorComissaoProduto = ($venda->valor_venda * ($porcentagemProduto / 100));
+
+                $comissoes[] = [
+                    'data' => Carbon::parse($venda->created_at)->format('d/m/Y'),
+                    'descricao' => 'Produto (Venda #' . $venda->id_venda . ')',
+                    'valor_total' => $venda->valor_venda,
+                    'comissao' => $valorComissaoProduto
+                ];
+                $totalComissao += $valorComissaoProduto;
+            }
+
+            // Ordenar por data 
+            usort($comissoes, function($a, $b) {
+                return Carbon::createFromFormat('d/m/Y', $a['data']) <=> Carbon::createFromFormat('d/m/Y', $b['data']);
+            });
         }
 
         return view('admin.financeiro.comissoes', compact('profissionais', 'comissoes', 'totalComissao', 'profissionalId'));

@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 
 class ServicoController extends Controller
 {
-        public function index()
+    public function index()
     {
         $servicos = Servico::all();
         return view('admin.servicos.index', compact('servicos'));

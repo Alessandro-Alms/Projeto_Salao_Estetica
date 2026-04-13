@@ -40,12 +40,13 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+    // Relacionamentos profissional - serviços 
     public function servicos()
     {
         return $this->belongsToMany(
             Servico::class,    
             'profissional_servico', 
-            'usuario_id', 
+            'profissional_id', 
             'servico_id', 
         )
         ->withPivot('comissao_percentual', 'duracao_customizada')
@@ -53,7 +54,7 @@ class User extends Authenticatable
     }
     public function horariosTrabalho()
     {
-        return $this->hasMany(HorarioTrabalho::class, 'usuario_id');
+        return $this->hasMany(HorarioTrabalho::class, 'profissional_id');
     }
     public function agendamentos(){
         $foreignKey = $this->cargo === 'profissional' ? 'cliente_id' : 'profissional_id';
