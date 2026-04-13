@@ -81,7 +81,7 @@
         Route::put('/configuracoes', [UserController::class, 'atualizarconfiguracoesservicos'])->name('servicos.atualizar');
         Route::post('/agendamento/{id_agendamento}/executado', [AgendamentoController::class, 'marcarComoExecutado'])->name('agendamento.executado');
         Route::get('/minha-agenda', [AgendamentoController::class, 'agendaProfissional'])->name('agenda');
-        Route::get('/comissao', [FinanceiroController::class, 'comissoes'])->name('comissao');
+        Route::get('/extrato', [UserController::class, 'extrato'])->name('extrato');
     });
     Route::middleware(['auth', 'gerente'])->prefix('admin')->name('admin.')->group(function () {
         Route::get('/financeiro/fechamento', [FinanceiroController::class, 'fechamento'])->name('financeiro.fechamento');

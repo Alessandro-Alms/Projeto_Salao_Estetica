@@ -29,7 +29,7 @@
         </a>
     </div>
     <div class="bg-white p-6 rounded-xl shadow-sm border border-blue-100 flex items-center justify-between">
-        <a href="{{ route('profissional.comissao') }}" class="text-blue-600 font-bold hover:underline">
+        <a href="{{ route('profissional.extrato') }}" class="text-blue-600 font-bold hover:underline">
             ver comissoes
         </a>
     </div>

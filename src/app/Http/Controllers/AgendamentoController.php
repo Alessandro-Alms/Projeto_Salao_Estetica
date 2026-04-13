@@ -243,20 +243,24 @@ class AgendamentoController extends Controller
                 }
             }
 
-
-            //  Fidelidade 
-            if ($cliente->contador_fidelidade == 5) {
-                // Aplica o desconto de 50%
-                $agendamento->valor_total = $agendamento->valor_total * 0.5;
-
-                $cliente->contador_fidelidade = 0;
-                $cliente->save();
-                
-                $mensagem = 'Atendimento concluído! O cliente ganhou 50% de desconto pela fidelidade! 🎉';
+ 
+            // Fidelidade (Só ganha ponto/desconto se NÃO estiver usando pacote)
+            if ($request->has('usar_pacote') && $request->usar_pacote != null) {
+                $mensagem = 'Sessão de pacote concluída com sucesso!';
             } else {
-                // Ganha mais um "selo"
-                $cliente->increment('contador_fidelidade');
-                $mensagem = 'Atendimento concluído com sucesso!';
+                if ($cliente->contador_fidelidade == 5) {
+                    // Aplica o desconto de 50%
+                    $agendamento->valor_total = $agendamento->valor_total * 0.5;
+
+                    $cliente->contador_fidelidade = 0;
+                    $cliente->save();
+                    
+                    $mensagem = 'Atendimento concluído! O cliente ganhou 50% de desconto pela fidelidade! 🎉';
+                } else {
+                    // Ganha mais um "selo"
+                    $cliente->increment('contador_fidelidade');
+                    $mensagem = 'Atendimento concluído com sucesso!';
+                }
             }
 
             // 3. Se chegou aqui, tudo certo! Mudamos o status do agendamento.

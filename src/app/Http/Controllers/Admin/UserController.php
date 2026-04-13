@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use App\Models\HorarioTrabalho;
 use App\Models\Servico;
+use App\Models\Agendamento;
+use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
@@ -212,5 +214,61 @@ class UserController extends Controller
         }
 
         return back()->with('success', 'Status do usuário atualizado com sucesso!');
+    }
+     public function extrato(Request $request)
+    {
+        // Filtro de mês e ano (padrão é o atual)
+        $mes = $request->get('mes', date('m'));
+        $ano = $request->get('ano', date('Y'));
+        $profissionalId = auth()->id();
+
+        // 1. Pegar agendamentos executados com os dados do serviço
+        $agendamentos = Agendamento::with('servico')
+            ->where('profissional_id', $profissionalId)
+            ->where('status', 'executado')
+            ->whereMonth('data_hora_inicio', $mes)
+            ->whereYear('data_hora_inicio', $ano)
+            ->get();
+
+        // 2. Pegar as regras de comissão do profissional na tabela pivô
+        $regras = DB::table('profissional_servico')
+            ->where('profissional_id', $profissionalId)
+            ->get()
+            ->keyBy('servico_id');
+
+        $totalComissaoServicos = 0;
+
+        // Calcular comissão de cada agendamento
+        foreach ($agendamentos as $agenda) {
+            $regra = $regras->get($agenda->servico_id);
+            // Se não tiver na pivô, o padrão é 10% (conforme solicitado)
+            $percentual = $regra ? $regra->comissao_percentual : 10.00; 
+            
+            $valorBase = $agenda->servico->preco; // Comissão sobre o preço cheio do serviço
+            $valorComissao = ($valorBase * $percentual) / 100;
+            
+            // Adicionando atributos temporários para a view
+            $agenda->comissao_calculada = $valorComissao;
+            $agenda->percentual_usado = $percentual;
+            
+            $totalComissaoServicos += $valorComissao;
+        }
+
+        // 3. Pegar comissão de produtos (10% fixo sobre o valor_venda na tabela vendas)
+        $totalVendasProdutos = DB::table('vendas')
+            ->where('profissional_id', $profissionalId)
+            ->whereMonth('created_at', $mes)
+            ->whereYear('created_at', $ano)
+            ->sum('valor_venda');
+
+        $totalComissaoProdutos = $totalVendasProdutos * 0.10;
+
+        return view('profissional.extrato', compact(
+            'agendamentos', 
+            'totalComissaoServicos', 
+            'totalComissaoProdutos', 
+            'mes', 
+            'ano'
+        ));
     }
 }
