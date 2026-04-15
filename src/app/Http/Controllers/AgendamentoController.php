@@ -355,4 +355,29 @@ class AgendamentoController extends Controller
 
         return back()->with('success', 'Falta registrada. Cliente bloqueado se atingiu 3 faltas.');
     }
+    public function salvarAvaliacao(Request $request)
+    {
+        $request->validate([
+            'agendamento_id' => 'required|exists:agendamentos,id_agendamento',
+            'nota' => 'required|integer|min:1|max:5',
+            'comentario' => 'nullable|string|max:500'
+        ]);
+
+        $agendamento = Agendamento::findOrFail($request->agendamento_id);
+
+        // Segurança: só o dono do agendamento avalia e só se estiver executado
+        if ($agendamento->cliente_id != auth()->id() || $agendamento->status != 'executado') {
+            return back()->with('error', 'Ação não permitida.');
+        }
+
+        \App\Models\Avaliacao::create([
+            'agendamento_id' => $agendamento->id_agendamento,
+            'cliente_id' => $agendamento->cliente_id,
+            'profissional_id' => $agendamento->profissional_id,
+            'nota' => $request->nota,
+            'comentario' => $request->comentario
+        ]);
+
+        return back()->with('success', 'Obrigado por avaliar nosso serviço!');
+    }
 }

@@ -58,6 +58,17 @@
                     <p class="text-sm text-gray-600">Gerenciar folgas e pausas</p>
                 </div>
             </a>
+            <a href="{{ route('admin.relatorios.index') }}" class="glass-card p-5 rounded-2xl shadow-lg border border-white/40 bg-white/70 backdrop-blur-sm flex items-center gap-4 hover:-translate-y-1 transition-transform cursor-pointer group">
+                <div class="bg-gradient-to-br from-blue-400 to-purple-500 w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-md group-hover:shadow-lg transition-all">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-2m3 0v-2m-3 8V9a6 6 0 0112 0v8a6 6 0 01-12 0z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="font-title text-lg text-[#1A002B] font-bold">Relatórios</h3>
+                    <p class="text-sm text-gray-600">Visualizar e exportar dados</p>
+                </div>
+            </a>
         </div>
     </div>
 </div>

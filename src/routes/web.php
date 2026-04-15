@@ -10,6 +10,7 @@ use App\Http\Controllers\FinanceiroController;
 use App\Http\Controllers\BloqueioController;
 use App\Http\Controllers\PacoteController;
 use App\Http\Controllers\ClientePacoteController;
+use App\Http\Controllers\RelatorioController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -37,6 +38,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/agendamentos/{id}/falta', [AgendamentoController::class, 'marcarFalta'])->name('agendamentos.falta');
     Route::get('/admin/pacotes/venda', [ClientePacoteController::class, 'create'])->name('admin.venda.create');
     Route::post('/admin/pacotes/venda', [ClientePacoteController::class, 'store'])->name('admin.venda.store');
+    Route::post('/avaliar-agendamento', [AgendamentoController::class, 'salvarAvaliacao'])->name('cliente.avaliar.salvar');
 });
 
 Route::middleware(['auth', 'gerente_ou_recepcionista'])->prefix('admin')->name('admin.')->group(function () {
@@ -84,6 +86,13 @@ Route::middleware(['auth', 'gerente'])->prefix('admin')->name('admin.')->group(f
     Route::get('/pacotes/{id}/editar', [PacoteController::class, 'edit'])->name('pacotes.edit');
     Route::put('/pacotes/{id}', [PacoteController::class, 'update'])->name('pacotes.update');
     Route::delete('/pacotes/{id}', [PacoteController::class, 'destroy'])->name('pacotes.destroy');
+    Route::get('/relatorios', [RelatorioController::class, 'index'])->name('relatorios.index');
+    Route::get('/relatorios/exportar-pdf', [RelatorioController::class, 'exportarPdf'])->name('relatorios.exportarPdf');
+    Route::get('/relatorios/exportar-excel', [RelatorioController::class, 'exportarExcel'])->name('relatorios.exportarExcel');
+    Route::get('/relatorios/faturamento', [RelatorioController::class, 'faturamento'])->name('relatorios.faturamento');
+    Route::get('/relatorios/ocupacao', [RelatorioController::class, 'ocupacao'])->name('relatorios.ocupacao');
+    Route::get('/relatorios/desempenho', [RelatorioController::class, 'desempenho'])->name('relatorios.desempenho');
+    Route::get('/relatorios/produtos', [RelatorioController::class, 'produtos'])->name('relatorios.produtos');
 });
 
 Route::middleware(['auth', 'profissional'])->prefix('profissional')->name('profissional.')->group(function () {

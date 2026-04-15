@@ -141,6 +141,17 @@ return new class extends Migration
             $table->enum('status', ['ativo', 'finalizado', 'vencido'])->default('ativo');
             $table->timestamps();
         });
+        Schema::create('avaliacoes', function (Blueprint $table) {
+            $table->id();
+            // Relacionamos com o agendamento (ID da sua tabela é id_agendamento)
+            $table->foreignId('agendamento_id')->constrained('agendamentos', 'id_agendamento')->onDelete('cascade');
+            $table->foreignId('cliente_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('profissional_id')->constrained('users')->onDelete('cascade');
+            
+            $table->integer('nota'); // 1 a 5
+            $table->text('comentario')->nullable();
+            $table->timestamps();
+        });
     }
 
     public function down(): void
@@ -159,5 +170,6 @@ return new class extends Migration
         Schema::dropIfExists('bloqueios_horarios');
         Schema::dropIfExists('cliente_pacotes');
         Schema::dropIfExists('pacotes');
+        Schema::dropIfExists('avaliacoes');
     }
 };

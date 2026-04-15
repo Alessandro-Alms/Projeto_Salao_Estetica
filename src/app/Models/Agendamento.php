@@ -34,4 +34,11 @@ class Agendamento extends Model
     public function servico() {
         return $this->belongsTo(Servico::class, 'servico_id', 'id_servico');
     }
+    // app/Models/Agendamento.php
+
+    public function avaliacao()
+    {
+        // Relaciona o ID do agendamento com a tabela de avaliações
+        return $this->hasOne(Avaliacao::class, 'agendamento_id', 'id_agendamento');
+    }
 }
