@@ -93,6 +93,14 @@ Route::middleware(['auth', 'gerente'])->prefix('admin')->name('admin.')->group(f
     Route::get('/relatorios/ocupacao', [RelatorioController::class, 'ocupacao'])->name('relatorios.ocupacao');
     Route::get('/relatorios/desempenho', [RelatorioController::class, 'desempenho'])->name('relatorios.desempenho');
     Route::get('/relatorios/produtos', [RelatorioController::class, 'produtos'])->name('relatorios.produtos');
+    Route::get('/relatorios/fidelizacao', [RelatorioController::class, 'fidelizacao'])->name('relatorios.fidelizacao');
+    Route::get('/relatorios/cancelamentos', [RelatorioController::class, 'cancelamentos'])->name('relatorios.cancelamentos');
+    Route::get('/relatorios/financeiro', [RelatorioController::class, 'financeiro'])->name('relatorios.financeiro');
+    Route::get('/relatorios/comissoes', [RelatorioController::class, 'comissoes'])->name('relatorios.comissoes');
+    Route::get('/relatorios/estoque', [RelatorioController::class, 'estoque'])->name('relatorios.estoque');
+    Route::get('/relatorios/sazonalidade', [RelatorioController::class, 'sazonalidade'])->name('relatorios.sazonalidade');
+    Route::get('/relatorios/avaliacoes', [RelatorioController::class, 'avaliacoes'])->name('relatorios.avaliacoes');
+    Route::get('/relatorios/previsao', [RelatorioController::class, 'previsao'])->name('relatorios.previsao');
 });
 
 Route::middleware(['auth', 'profissional'])->prefix('profissional')->name('profissional.')->group(function () {

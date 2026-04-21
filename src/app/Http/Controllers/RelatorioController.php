@@ -48,10 +48,6 @@ class RelatorioController extends Controller
             'desempenhoProfissionais', 'dataInicio', 'dataFim'
         ));
     }
-
-    /**
-     * RELATÓRIO 1: Faturamento por Período (Detalhado)
-     */
     public function faturamento(Request $request)
     {
         $dataInicio = $request->input('data_inicio', Carbon::now()->startOfMonth()->format('Y-m-d'));
@@ -60,103 +56,104 @@ class RelatorioController extends Controller
         $inicioQuery = $dataInicio . ' 00:00:00';
         $fimQuery = $dataFim . ' 23:59:59';
 
-        // 1. Serviços executados por dia
-        $servicosPorDia = DB::table('agendamentos')
-            ->select(DB::raw('DATE(updated_at) as data'), DB::raw('SUM(valor_total) as total'))
+        // 1. Receitas do Período Atual
+        $agendamentos = DB::table('agendamentos')
             ->where('status', 'executado')
-            ->whereBetween('updated_at', [$inicioQuery, $fimQuery])
-            ->groupBy(DB::raw('DATE(updated_at)'))
-            ->get();
+            ->whereBetween('data_hora_inicio', [$inicioQuery, $fimQuery])
+            ->selectRaw('COUNT(id_agendamento) as qtd, SUM(valor_total) as total')
+            ->first();
 
-        // 2. Vendas de produtos por dia
-        $vendasPorDia = DB::table('vendas')
-            ->select(DB::raw('DATE(created_at) as data'), DB::raw('SUM(valor_venda) as total'))
+        $vendas = DB::table('vendas')
             ->whereBetween('created_at', [$inicioQuery, $fimQuery])
-            ->groupBy(DB::raw('DATE(created_at)'))
-            ->get();
+            ->selectRaw('COUNT(id_venda) as qtd, SUM(valor_venda) as total')
+            ->first();
 
-        // 3. Monta o gráfico dia a dia (Calendário)
-        $dias = [];
-        $periodo = CarbonPeriod::create($dataInicio, $dataFim);
-        
-        foreach ($periodo as $data) {
-            $dataFormatada = $data->format('Y-m-d');
-            $dias[$dataFormatada] = [
-                'data_br' => $data->format('d/m'),
-                'servicos' => 0,
-                'produtos' => 0,
-            ];
+        $receitaServicos = $agendamentos->total ?? 0;
+        $receitaVendas = $vendas->total ?? 0;
+        $faturamentoTotal = $receitaServicos + $receitaVendas;
+
+        // Ticket Médio
+        $qtdTransacoes = ($agendamentos->qtd ?? 0) + ($vendas->qtd ?? 0);
+        $ticketMedio = $qtdTransacoes > 0 ? $faturamentoTotal / $qtdTransacoes : 0;
+
+        // 2. Comparativo com o Período Anterior
+        $diasPeriodo = Carbon::parse($dataInicio)->diffInDays(Carbon::parse($dataFim)) + 1;
+        $inicioAnterior = Carbon::parse($dataInicio)->subDays($diasPeriodo)->format('Y-m-d') . ' 00:00:00';
+        $fimAnterior = Carbon::parse($dataFim)->subDays($diasPeriodo)->format('Y-m-d') . ' 23:59:59';
+
+        $receitaAnteriorAgendamentos = DB::table('agendamentos')
+            ->where('status', 'executado')
+            ->whereBetween('data_hora_inicio', [$inicioAnterior, $fimAnterior])
+            ->sum('valor_total');
+            
+        $receitaAnteriorVendas = DB::table('vendas')
+            ->whereBetween('created_at', [$inicioAnterior, $fimAnterior])
+            ->sum('valor_venda');
+            
+        $faturamentoAnterior = $receitaAnteriorAgendamentos + $receitaAnteriorVendas;
+
+        // % de Crescimento
+        $crescimento = 0;
+        if ($faturamentoAnterior > 0) {
+            $crescimento = (($faturamentoTotal - $faturamentoAnterior) / $faturamentoAnterior) * 100;
+        } elseif ($faturamentoTotal > 0) {
+            $crescimento = 100;
         }
-
-        foreach ($servicosPorDia as $s) {
-            if (isset($dias[$s->data])) $dias[$s->data]['servicos'] = (float)$s->total;
-        }
-
-        foreach ($vendasPorDia as $v) {
-            if (isset($dias[$v->data])) $dias[$v->data]['produtos'] = (float)$v->total;
-        }
-
-        $dadosGrafico = array_values($dias);
-        $totalServicos = array_sum(array_column($dias, 'servicos'));
-        $totalProdutos = array_sum(array_column($dias, 'produtos'));
-        $faturamentoTotal = $totalServicos + $totalProdutos;
 
         return view('admin.relatorios.faturamento', compact(
-            'dataInicio', 'dataFim', 'faturamentoTotal', 'totalServicos', 'totalProdutos', 'dadosGrafico'
+            'dataInicio', 'dataFim', 'faturamentoTotal', 'receitaServicos', 'receitaVendas', 
+            'ticketMedio', 'qtdTransacoes', 'faturamentoAnterior', 'crescimento'
         ));
     }
-    public function ocupacao(Request $request)
+public function ocupacao(Request $request)
     {
         $dataInicio = $request->input('data_inicio', Carbon::now()->startOfMonth()->format('Y-m-d'));
         $dataFim = $request->input('data_fim', Carbon::now()->endOfMonth()->format('Y-m-d'));
 
-        // Ajustamos para o formato de busca no DateTime
         $inicioQuery = $dataInicio . ' 00:00:00';
         $fimQuery = $dataFim . ' 23:59:59';
 
-        // 1. Agendamentos por Hora (Compatível com SQLite e usando sua coluna correta)
-        // No SQLite usamos strftime('%H', coluna) para pegar a hora
-        $ocupacaoPorHora = DB::table('agendamentos')
-            ->select(DB::raw("strftime('%H', data_hora_inicio) as hora"), DB::raw('count(*) as total'))
+        // Trazemos todos os dados brutos primeiro (evita erro do SQLite vs MySQL)
+        $agendamentos = DB::table('agendamentos')
             ->whereBetween('data_hora_inicio', [$inicioQuery, $fimQuery])
-            ->whereIn('status', ['confirmado', 'executado', 'presente']) // Status que ocupam a agenda no seu banco
-            ->groupBy('hora')
-            ->orderBy('hora')
+            ->whereIn('status', ['pendente', 'confirmado', 'executado'])
             ->get();
 
-        // 2. Agendamentos por Dia da Semana (SQLite usa %w: 0=Domingo, 6=Sábado)
-        $ocupacaoPorDiaSemana = DB::table('agendamentos')
-            ->select(DB::raw("strftime('%w', data_hora_inicio) as dia_semana"), DB::raw('count(*) as total'))
-            ->whereBetween('data_hora_inicio', [$inicioQuery, $fimQuery])
-            ->whereIn('status', ['confirmado', 'executado', 'presente'])
-            ->groupBy('dia_semana')
-            ->get();
+        $totalAgendamentos = $agendamentos->count();
 
-        // Tradução dos dias para o gráfico (Ajustando 0-6 do SQLite para nomes)
-        $diasNomes = [0 => 'Dom', 1 => 'Seg', 2 => 'Ter', 3 => 'Qua', 4 => 'Qui', 5 => 'Sex', 6 => 'Sáb'];
-        $dadosDias = [];
-        foreach($diasNomes as $num => $nome) {
-            $registro = $ocupacaoPorDiaSemana->firstWhere('dia_semana', (string)$num);
-            $dadosDias[] = [
-                'label' => $nome,
-                'total' => $registro ? $registro->total : 0
-            ];
-        }
+        // 1. Agrupando por Horário usando o Laravel (Carbon)
+        $ocupacaoPorHoraRaw = $agendamentos->groupBy(function($item) {
+            return Carbon::parse($item->data_hora_inicio)->format('H'); // Extrai a hora
+        })->map->count();
 
-        // 3. Taxa de Ocupação Geral
-        $totalProfissionais = DB::table('users')->where('tipo', 'profissional')->count() ?: 1;
-        $diasNoPeriodo = Carbon::parse($dataInicio)->diffInDays(Carbon::parse($dataFim)) + 1;
-        $capacidadeTotal = $totalProfissionais * $diasNoPeriodo * 8; 
-        
-        $totalAgendamentos = DB::table('agendamentos')
-            ->whereBetween('data_hora_inicio', [$inicioQuery, $fimQuery])
-            ->whereIn('status', ['confirmado', 'executado', 'presente'])
-            ->count();
+        // Transformando num formato amigável para a View
+        $ocupacaoPorHora = $ocupacaoPorHoraRaw->map(function ($total, $hora) {
+            return (object) ['hora' => $hora, 'total' => $total];
+        })->sortBy('hora')->values();
 
-        $taxaOcupacao = $capacidadeTotal > 0 ? ($totalAgendamentos / $capacidadeTotal) * 100 : 0;
+        $horarioPico = $ocupacaoPorHora->sortByDesc('total')->first();
+        $horarioMorto = $ocupacaoPorHora->sortBy('total')->first();
+
+        // 2. Agrupando por Dia da Semana usando o Laravel (Carbon)
+        // No Carbon: 0 = Domingo, 1 = Segunda, 2 = Terça... 6 = Sábado
+        $ocupacaoPorDiaRaw = $agendamentos->groupBy(function($item) {
+            return Carbon::parse($item->data_hora_inicio)->dayOfWeek;
+        })->map->count();
+
+        $ocupacaoPorDia = $ocupacaoPorDiaRaw->map(function ($total, $dia) {
+            return (object) ['dia_semana' => $dia, 'total' => $total];
+        })->keyBy('dia_semana');
+
+        // Mapeamento correto dos dias pelo padrão do Carbon (0 a 6)
+        $nomesDias = [
+            0 => 'Domingo', 1 => 'Segunda', 2 => 'Terça', 
+            3 => 'Quarta', 4 => 'Quinta', 5 => 'Sexta', 6 => 'Sábado'
+        ];
 
         return view('admin.relatorios.ocupacao', compact(
-            'dataInicio', 'dataFim', 'ocupacaoPorHora', 'dadosDias', 'taxaOcupacao', 'totalAgendamentos'
+            'dataInicio', 'dataFim', 'totalAgendamentos', 
+            'ocupacaoPorHora', 'horarioPico', 'horarioMorto', 
+            'ocupacaoPorDia', 'nomesDias'
         ));
     }
     public function desempenho(Request $request)
@@ -167,27 +164,53 @@ class RelatorioController extends Controller
         $inicioQuery = $dataInicio . ' 00:00:00';
         $fimQuery = $dataFim . ' 23:59:59';
 
-        // Busca o desempenho cruzando Agendamentos, Usuários e Avaliações
-        $desempenhoProfissionais = DB::table('agendamentos')
-            ->join('users', 'agendamentos.profissional_id', '=', 'users.id')
-            ->leftJoin('avaliacoes', 'agendamentos.id_agendamento', '=', 'avaliacoes.agendamento_id')
+        // 1. Pega os serviços e comissões por profissional no período
+        $profissionaisRaw = DB::table('users')
+            ->where('cargo', 'profissional')
+            ->leftJoin('agendamentos', function ($join) use ($inicioQuery, $fimQuery) {
+                $join->on('users.id', '=', 'agendamentos.profissional_id')
+                     ->where('agendamentos.status', '=', 'executado')
+                     ->whereBetween('agendamentos.data_hora_inicio', [$inicioQuery, $fimQuery]);
+            })
             ->select(
+                'users.id',
                 'users.name',
-                DB::raw('COUNT(agendamentos.id_agendamento) as total_atendimentos'),
-                DB::raw('SUM(agendamentos.valor_total) as valor_total_gerado'),
-                DB::raw('SUM(agendamentos.valor_comissao) as comissao_gerada'),
-                DB::raw('AVG(avaliacoes.nota) as media_estrelas'),
-                DB::raw('COUNT(avaliacoes.id) as qtd_avaliacoes')
+                DB::raw('COUNT(agendamentos.id_agendamento) as total_servicos'),
+                DB::raw('SUM(agendamentos.valor_total) as receita_gerada'),
+                DB::raw('SUM(agendamentos.valor_comissao) as comissao_total')
             )
-            ->where('agendamentos.status', 'executado')
-            ->whereBetween('agendamentos.data_hora_inicio', [$inicioQuery, $fimQuery])
             ->groupBy('users.id', 'users.name')
-            ->orderByDesc('total_atendimentos')
+            ->orderByDesc('receita_gerada')
             ->get();
 
-        return view('admin.relatorios.desempenho', compact('dataInicio', 'dataFim', 'desempenhoProfissionais'));
+        // 2. Pega as avaliações médias (Geral, independentemente da data, para ver a reputação real)
+        $avaliacoes = DB::table('avaliacoes')
+            ->select(
+                'profissional_id', 
+                DB::raw('AVG(nota) as media_nota'), 
+                DB::raw('COUNT(id) as total_avaliacoes')
+            )
+            ->groupBy('profissional_id')
+            ->get()
+            ->keyBy('profissional_id');
+
+        // 3. Junta tudo numa coleção bonitinha
+        $profissionais = $profissionaisRaw->map(function ($prof) use ($avaliacoes) {
+            $avaliacao = $avaliacoes->get($prof->id);
+            $prof->media_nota = $avaliacao ? round($avaliacao->media_nota, 1) : null;
+            $prof->total_avaliacoes = $avaliacao ? $avaliacao->total_avaliacoes : 0;
+            return $prof;
+        });
+
+        // Highlights para os cards do topo
+        $campeaoFaturamento = $profissionais->sortByDesc('receita_gerada')->first();
+        $campeaoAvaliacao = $profissionais->where('total_avaliacoes', '>', 0)->sortByDesc('media_nota')->first();
+
+        return view('admin.relatorios.desempenho', compact(
+            'dataInicio', 'dataFim', 'profissionais', 'campeaoFaturamento', 'campeaoAvaliacao'
+        ));
     }
-public function produtos(Request $request)
+    public function produtos(Request $request)
     {
         $dataInicio = $request->input('data_inicio', Carbon::now()->startOfMonth()->format('Y-m-d'));
         $dataFim = $request->input('data_fim', Carbon::now()->endOfMonth()->format('Y-m-d'));
@@ -195,24 +218,445 @@ public function produtos(Request $request)
         $inicioQuery = $dataInicio . ' 00:00:00';
         $fimQuery = $dataFim . ' 23:59:59';
 
-        // Usando EXATAMENTE as colunas do seu Schema
-        // produtos.id_produto | vendas.produto_id
+        // Traz o ranking de produtos vendidos no período, somando quantidades e valores
         $produtosVendidos = DB::table('vendas')
             ->join('produtos', 'vendas.produto_id', '=', 'produtos.id_produto')
             ->select(
+                'produtos.id_produto',
                 'produtos.nome',
+                'produtos.quantidade_estoque',
                 DB::raw('SUM(vendas.quantidade) as total_vendido'),
                 DB::raw('SUM(vendas.valor_venda) as receita_gerada')
             )
-            ->whereNotNull('vendas.produto_id') // Garante que estamos pegando apenas vendas de PRODUTOS, e não serviços avulsos
+            ->whereNotNull('vendas.produto_id') // Garante que são vendas de PRODUTOS e não de serviços
             ->whereBetween('vendas.created_at', [$inicioQuery, $fimQuery])
-            ->groupBy('produtos.id_produto', 'produtos.nome')
-            ->orderByDesc('total_vendido')
+            ->groupBy('produtos.id_produto', 'produtos.nome', 'produtos.quantidade_estoque')
+            ->orderByDesc('total_vendido') // Ordena pelo "Giro" (os que saíram mais)
             ->get();
 
-        return view('admin.relatorios.produtos', compact('dataInicio', 'dataFim', 'produtosVendidos'));
-    }
+        // Totais para os cards de destaque
+        $totalUnidadesVendidas = $produtosVendidos->sum('total_vendido');
+        $receitaTotal = $produtosVendidos->sum('receita_gerada');
+        $campeao = $produtosVendidos->first();
 
+        return view('admin.relatorios.produtos', compact(
+            'dataInicio', 'dataFim', 'produtosVendidos', 
+            'totalUnidadesVendidas', 'receitaTotal', 'campeao'
+        ));
+    }
+    public function fidelizacao(Request $request)
+    {
+        $dataInicio = $request->input('data_inicio', Carbon::now()->startOfMonth()->format('Y-m-d'));
+        $dataFim = $request->input('data_fim', Carbon::now()->endOfMonth()->format('Y-m-d'));
+
+        $inicioQuery = $dataInicio . ' 00:00:00';
+        $fimQuery = $dataFim . ' 23:59:59';
+
+        // Traz apenas os clientes que visitaram o salão no período selecionado
+        $clientes = DB::table('users')
+            ->join('agendamentos', 'users.id', '=', 'agendamentos.cliente_id')
+            ->where('users.cargo', 'cliente')
+            ->where('agendamentos.status', 'executado')
+            ->whereBetween('agendamentos.data_hora_inicio', [$inicioQuery, $fimQuery])
+            ->select(
+                'users.id',
+                'users.name',
+                'users.telefone',
+                'users.contador_fidelidade',
+                DB::raw('COUNT(agendamentos.id_agendamento) as total_visitas'),
+                DB::raw('SUM(agendamentos.valor_total) as valor_gasto_total'),
+                DB::raw('MAX(agendamentos.data_hora_inicio) as ultima_visita')
+            )
+            ->groupBy('users.id', 'users.name', 'users.telefone', 'users.contador_fidelidade')
+            ->orderByDesc('valor_gasto_total') // Ordena do que gastou mais (VIP) para o que gastou menos
+            ->get();
+
+        // Cálculos para os Cards de Destaque
+        $totalClientesAtendidos = $clientes->count();
+        
+        // Taxa de Retorno: Clientes que tiveram MAIS DE 1 visita neste período
+        $clientesRetornaram = $clientes->where('total_visitas', '>', 1)->count();
+        
+        $taxaRetorno = $totalClientesAtendidos > 0 
+            ? ($clientesRetornaram / $totalClientesAtendidos) * 100 
+            : 0;
+
+        $clienteTop1 = $clientes->first(); // O cliente que mais gastou
+
+        return view('admin.relatorios.fidelizacao', compact(
+            'dataInicio', 'dataFim', 'clientes', 'totalClientesAtendidos', 
+            'clientesRetornaram', 'taxaRetorno', 'clienteTop1'
+        ));
+    }
+    public function cancelamentos(Request $request)
+    {
+        $dataInicio = $request->input('data_inicio', Carbon::now()->startOfMonth()->format('Y-m-d'));
+        $dataFim = $request->input('data_fim', Carbon::now()->endOfMonth()->format('Y-m-d'));
+
+        $inicioQuery = $dataInicio . ' 00:00:00';
+        $fimQuery = $dataFim . ' 23:59:59';
+
+        // 1. Traz todos os agendamentos do período (para calcular a percentagem)
+        $todosAgendamentos = DB::table('agendamentos')
+            ->whereBetween('data_hora_inicio', [$inicioQuery, $fimQuery])
+            ->get();
+
+        $totalGeral = $todosAgendamentos->count();
+
+        // 2. Filtra apenas as Faltas e Cancelamentos
+        $evasoes = $todosAgendamentos->whereIn('status', ['cancelado', 'falta']);
+        $totalEvasoes = $evasoes->count();
+        $prejuizoTotal = $evasoes->sum('valor_total');
+        
+        $taxaEvasao = $totalGeral > 0 ? ($totalEvasoes / $totalGeral) * 100 : 0;
+
+        // 3. Horários Críticos (Agrupando por Hora com o Carbon para evitar erro de DB)
+        $horariosCriticosRaw = $evasoes->groupBy(function($item) {
+            return Carbon::parse($item->data_hora_inicio)->format('H');
+        })->map->count();
+
+        // Pega os 5 piores horários
+        $horariosCriticos = $horariosCriticosRaw->map(function($total, $hora) {
+            return (object) ['hora' => $hora, 'total' => $total];
+        })->sortByDesc('total')->take(5);
+
+        // 4. Clientes Ofensores (Os que mais faltam)
+        $ofensoresRaw = $evasoes->groupBy('cliente_id')->map(function($items) {
+            return (object) [
+                'cliente_id' => $items->first()->cliente_id,
+                'total_falhas' => $items->count(),
+                'prejuizo' => $items->sum('valor_total')
+            ];
+        })->sortByDesc('total_falhas')->take(10); // Top 10
+
+        // Busca os nomes e telefones desses clientes ofensores
+        $clientesIds = $ofensoresRaw->pluck('cliente_id')->toArray();
+        $clientesDetalhados = DB::table('users')
+            ->whereIn('id', $clientesIds)
+            ->select('id', 'name', 'telefone')
+            ->get()
+            ->keyBy('id');
+
+        $ofensores = $ofensoresRaw->map(function($ofensor) use ($clientesDetalhados) {
+            $cliente = $clientesDetalhados->get($ofensor->cliente_id);
+            $ofensor->nome = $cliente ? $cliente->name : 'Desconhecido';
+            $ofensor->telefone = $cliente ? $cliente->telefone : null;
+            return $ofensor;
+        });
+
+        // 5. Motivos (Agrupa as observações 'obs' caso os recepcionistas preencham o motivo)
+        $motivos = $evasoes->whereNotNull('obs')->where('obs', '!=', '')
+            ->groupBy('obs')->map->count()
+            ->sortByDesc(function($count) { return $count; })
+            ->take(5);
+
+        return view('admin.relatorios.cancelamentos', compact(
+            'dataInicio', 'dataFim', 'totalGeral', 'totalEvasoes', 'prejuizoTotal', 
+            'taxaEvasao', 'horariosCriticos', 'ofensores', 'motivos'
+        ));
+    }
+    public function financeiro(Request $request)
+    {
+        $dataInicio = $request->input('data_inicio', Carbon::now()->startOfMonth()->format('Y-m-d'));
+        $dataFim = $request->input('data_fim', Carbon::now()->endOfMonth()->format('Y-m-d'));
+
+        $inicioQuery = $dataInicio . ' 00:00:00';
+        $fimQuery = $dataFim . ' 23:59:59';
+        $inicioDate = $dataInicio;
+        $fimDate = $dataFim;
+
+        // --- 1. ENTRADAS (RECEITAS) ---
+        // A) Serviços (Agendamentos Executados)
+        $receitaServicos = DB::table('agendamentos')
+            ->where('status', 'executado')
+            ->whereBetween('data_hora_inicio', [$inicioQuery, $fimQuery])
+            ->sum('valor_total') ?? 0;
+
+        // B) Vendas (Produtos físicos - onde produto_id não é nulo)
+        $receitaProdutos = DB::table('vendas')
+            ->whereNotNull('produto_id')
+            ->whereBetween('created_at', [$inicioQuery, $fimQuery])
+            ->sum('valor_venda') ?? 0;
+
+        // C) Pacotes (Cruzando cliente_pacotes com a tabela de pacotes)
+        $receitaPacotes = DB::table('cliente_pacotes')
+            ->join('pacotes', 'cliente_pacotes.pacote_id', '=', 'pacotes.id_pacote')
+            ->whereBetween('cliente_pacotes.data_compra', [$inicioDate, $fimDate])
+            ->sum('pacotes.valor_total') ?? 0;
+
+        $totalEntradas = $receitaServicos + $receitaProdutos + $receitaPacotes;
+
+        // --- 2. SAÍDAS (DESPESAS CONHECIDAS PELA BD) ---
+        // Comissões geradas nos agendamentos executados
+        $despesaComissoes = DB::table('agendamentos')
+            ->where('status', 'executado')
+            ->whereBetween('data_hora_inicio', [$inicioQuery, $fimQuery])
+            ->sum('valor_comissao') ?? 0;
+
+        $totalSaidas = $despesaComissoes;
+
+        // --- 3. SALDO FINAL ---
+        $saldoLiquido = $totalEntradas - $totalSaidas;
+
+        return view('admin.relatorios.financeiro', compact(
+            'dataInicio', 'dataFim', 
+            'receitaServicos', 'receitaProdutos', 'receitaPacotes', 'totalEntradas',
+            'despesaComissoes', 'totalSaidas', 'saldoLiquido'
+        ));
+    }
+    public function comissoes(Request $request)
+    {
+        $dataInicio = $request->input('data_inicio', Carbon::now()->startOfMonth()->format('Y-m-d'));
+        $dataFim = $request->input('data_fim', Carbon::now()->endOfMonth()->format('Y-m-d'));
+
+        $inicioQuery = $dataInicio . ' 00:00:00';
+        $fimQuery = $dataFim . ' 23:59:59';
+
+        // Traz os profissionais e a soma das suas comissões
+        $comissoes = DB::table('agendamentos')
+            ->join('users', 'agendamentos.profissional_id', '=', 'users.id')
+            ->where('agendamentos.status', 'executado')
+            ->whereBetween('agendamentos.data_hora_inicio', [$inicioQuery, $fimQuery])
+            ->select(
+                'users.id',
+                'users.name',
+                'users.telefone',
+                DB::raw('COUNT(agendamentos.id_agendamento) as total_servicos'),
+                DB::raw('SUM(agendamentos.valor_total) as receita_gerada'),
+                DB::raw('SUM(agendamentos.valor_comissao) as comissao_a_pagar')
+            )
+            ->groupBy('users.id', 'users.name', 'users.telefone')
+            ->orderByDesc('comissao_a_pagar')
+            ->get();
+
+        // Cálculos para os Cards de Destaque
+        $totalGeralComissoes = $comissoes->sum('comissao_a_pagar');
+        $totalServicosRealizados = $comissoes->sum('total_servicos');
+        $maiorComissao = $comissoes->first(); // Como está ordenado de forma decrescente, o primeiro é o que ganha mais
+
+        return view('admin.relatorios.comissoes', compact(
+            'dataInicio', 'dataFim', 'comissoes', 
+            'totalGeralComissoes', 'totalServicosRealizados', 'maiorComissao'
+        ));
+    }
+    public function estoque(Request $request)
+    {
+        // Traz todos os produtos, ordenando pelos que estão com menos estoque primeiro
+        $produtos = DB::table('produtos')
+            ->orderBy('quantidade_estoque', 'asc')
+            ->orderBy('nome', 'asc')
+            ->get();
+
+        // Cálculos para os Indicadores
+        $totalItens = $produtos->sum('quantidade_estoque');
+        
+        // Calcula quanto dinheiro está "parado" no estoque (Qtd * Valor Unitário)
+        $valorInvestido = $produtos->sum(function ($produto) {
+            return $produto->quantidade_estoque * $produto->valor_unitario;
+        });
+
+        // Produtos em Alerta (Consideramos alerta se tiver 5 ou menos unidades)
+        $produtosAlerta = $produtos->where('quantidade_estoque', '<=', 5);
+        $totalAlertas = $produtosAlerta->count();
+
+        return view('admin.relatorios.estoque', compact(
+            'produtos', 'totalItens', 'valorInvestido', 'totalAlertas'
+        ));
+    }
+    public function sazonalidade(Request $request)
+    {
+        $dataInicio = $request->input('data_inicio', Carbon::now()->startOfMonth()->format('Y-m-d'));
+        $dataFim = $request->input('data_fim', Carbon::now()->endOfMonth()->format('Y-m-d'));
+
+        $inicioQuery = $dataInicio . ' 00:00:00';
+        $fimQuery = $dataFim . ' 23:59:59';
+
+        // 1. Trazemos todos os agendamentos executados no período
+        $agendamentos = DB::table('agendamentos')
+            ->where('status', 'executado')
+            ->whereBetween('data_hora_inicio', [$inicioQuery, $fimQuery])
+            ->get();
+
+        $totalAgendamentos = $agendamentos->count();
+
+        // 2. Mapeamento dos dias da semana
+        $diasSemana = [
+            0 => 'Domingo', 1 => 'Segunda-feira', 2 => 'Terça-feira',
+            3 => 'Quarta-feira', 4 => 'Quinta-feira', 5 => 'Sexta-feira', 6 => 'Sábado'
+        ];
+
+        // 3. Agrupar os agendamentos pelo dia da semana usando o Carbon
+        $sazonalidadeDia = $agendamentos->groupBy(function($item) {
+            return Carbon::parse($item->data_hora_inicio)->dayOfWeek;
+        })->map(function($items, $dia) use ($diasSemana) {
+            return (object)[
+                'dia_numero' => $dia,
+                'dia_nome' => $diasSemana[$dia],
+                'total_servicos' => $items->count(),
+                'receita_gerada' => $items->sum('valor_total')
+            ];
+        });
+
+        // 4. Preencher os dias que não tiveram movimento com zero para não sumirem do gráfico/tabela
+        $sazonalidadeCompleta = collect($diasSemana)->map(function($nome, $numero) use ($sazonalidadeDia) {
+            if ($sazonalidadeDia->has($numero)) {
+                return $sazonalidadeDia->get($numero);
+            }
+            return (object)[
+                'dia_numero' => $numero, 
+                'dia_nome' => $nome, 
+                'total_servicos' => 0, 
+                'receita_gerada' => 0
+            ];
+        })->sortByDesc('total_servicos'); // Ordena do dia mais movimentado para o mais fraco
+
+        // 5. Destacar o melhor e o pior dia (ignorando dias com 0 se possível, para ser mais realista)
+        $diaMaisMovimentado = $sazonalidadeCompleta->first();
+        $diasComMovimento = $sazonalidadeCompleta->where('total_servicos', '>', 0);
+        $diaMenosMovimentado = $diasComMovimento->count() > 0 ? $diasComMovimento->last() : null;
+
+        return view('admin.relatorios.sazonalidade', compact(
+            'dataInicio', 'dataFim', 'totalAgendamentos',
+            'sazonalidadeCompleta', 'diaMaisMovimentado', 'diaMenosMovimentado'
+        ));
+    }
+    public function avaliacoes(Request $request)
+    {
+        $dataInicio = $request->input('data_inicio', Carbon::now()->startOfMonth()->format('Y-m-d'));
+        $dataFim = $request->input('data_fim', Carbon::now()->endOfMonth()->format('Y-m-d'));
+
+        $inicioQuery = $dataInicio . ' 00:00:00';
+        $fimQuery = $dataFim . ' 23:59:59';
+
+        // 1. Traz todas as avaliações do período com os nomes do cliente e do profissional
+        $avaliacoes = DB::table('avaliacoes')
+            ->join('users as clientes', 'avaliacoes.cliente_id', '=', 'clientes.id')
+            ->join('users as profissionais', 'avaliacoes.profissional_id', '=', 'profissionais.id')
+            ->whereBetween('avaliacoes.created_at', [$inicioQuery, $fimQuery])
+            ->select(
+                'avaliacoes.*', 
+                'clientes.name as cliente_nome', 
+                'profissionais.name as profissional_nome'
+            )
+            ->orderByDesc('avaliacoes.created_at')
+            ->get();
+
+        // 2. Indicadores Gerais
+        $totalAvaliacoes = $avaliacoes->count();
+        $mediaGeral = $totalAvaliacoes > 0 ? $avaliacoes->avg('nota') : 0;
+        
+        // Quantos promotores temos? (Notas 4 e 5)
+        $avaliacoesPositivas = $avaliacoes->whereIn('nota', [4, 5])->count();
+        $percentualAprovacao = $totalAvaliacoes > 0 ? ($avaliacoesPositivas / $totalAvaliacoes) * 100 : 0;
+
+        // 3. Distribuição das Estrelas (Quantas de 5, quantas de 4, etc.)
+        $distribuicao = [
+            5 => $avaliacoes->where('nota', 5)->count(),
+            4 => $avaliacoes->where('nota', 4)->count(),
+            3 => $avaliacoes->where('nota', 3)->count(),
+            2 => $avaliacoes->where('nota', 2)->count(),
+            1 => $avaliacoes->where('nota', 1)->count(),
+        ];
+
+        // 4. Ranking de Profissionais (Agrupado com Collections para evitar erro no SQLite)
+        $rankingProfissionais = $avaliacoes->groupBy('profissional_id')->map(function($items) {
+            return (object)[
+                'nome' => $items->first()->profissional_nome,
+                'media' => $items->avg('nota'),
+                'total_avaliacoes' => $items->count()
+            ];
+        })->sortByDesc('media')->take(5); // Top 5 melhores profissionais
+
+        return view('admin.relatorios.avaliacoes', compact(
+            'dataInicio', 'dataFim', 'avaliacoes', 'totalAvaliacoes', 
+            'mediaGeral', 'percentualAprovacao', 'distribuicao', 'rankingProfissionais'
+        ));
+    }
+    public function previsao(Request $request)
+    {
+        $hoje = Carbon::today();
+        
+        // 1. Analisar as últimas 4 semanas para encontrar a média de cada dia da semana
+        $historicoInicio = $hoje->copy()->subWeeks(4)->format('Y-m-d 00:00:00');
+        $historicoFim = $hoje->copy()->subDay()->format('Y-m-d 23:59:59');
+
+        $agendamentosPassados = DB::table('agendamentos')
+            ->whereBetween('data_hora_inicio', [$historicoInicio, $historicoFim])
+            ->whereIn('status', ['executado', 'confirmado']) // Considera apenas os que deram certo
+            ->get();
+
+        // 2. Calcula a média diária das últimas 4 semanas
+        $mediaPorDiaDaSemana = $agendamentosPassados->groupBy(function($item) {
+            return \Carbon\Carbon::parse($item->data_hora_inicio)->dayOfWeek;
+        })->map(function($items) {
+            return $items->count() / 4; // Divide por 4 semanas
+        });
+
+        // 3. Feriados Nacionais Fixos (Exemplo) - Mês-Dia
+        $feriados = [
+            '01-01' => 'Ano Novo',
+            '04-21' => 'Tiradentes',
+            '05-01' => 'Dia do Trabalhador',
+            '09-07' => 'Independência do Brasil',
+            '10-12' => 'Nossa Sra. Aparecida',
+            '11-02' => 'Finados',
+            '11-15' => 'Proclamação da República',
+            '12-25' => 'Natal',
+        ];
+
+        $diasSemanaNome = [
+            0 => 'Domingo', 1 => 'Segunda-feira', 2 => 'Terça-feira',
+            3 => 'Quarta-feira', 4 => 'Quinta-feira', 5 => 'Sexta-feira', 6 => 'Sábado'
+        ];
+
+        // 4. Construir a previsão para os próximos 7 dias
+        $proximos7Dias = [];
+        $totalPrevisao = 0;
+        $diasDeBaixa = 0;
+        $diasDeAlta = 0;
+
+        for ($i = 0; $i < 7; $i++) {
+            $diaAlvo = $hoje->copy()->addDays($i);
+            $diaSemana = $diaAlvo->dayOfWeek;
+            $dataFormatada = $diaAlvo->format('m-d'); // Para procurar nos feriados
+            
+            $feriadoNome = $feriados[$dataFormatada] ?? null;
+            $mediaHistorica = $mediaPorDiaDaSemana->get($diaSemana, 0);
+
+            // Regra de Negócio de Previsão: 
+            // Se for feriado, reduzimos a expectativa pela metade (salões costumam fechar ou ter menos fluxo)
+            // Se for sexta ou sábado (5 ou 6), costuma ser alta demanda natural
+            $previsaoDia = round($mediaHistorica);
+            $tendencia = 'Normal';
+
+            if ($feriadoNome) {
+                $previsaoDia = round($mediaHistorica * 0.5); 
+                $tendencia = 'Feriado / Baixa';
+                $diasDeBaixa++;
+            } elseif ($diaSemana == 5 || $diaSemana == 6 || $previsaoDia > 10) {
+                $tendencia = 'Alta Demanda';
+                $diasDeAlta++;
+            } elseif ($previsaoDia < 3) {
+                $tendencia = 'Baixa Demanda';
+                $diasDeBaixa++;
+            }
+            
+            $totalPrevisao += $previsaoDia;
+
+            $proximos7Dias[] = (object)[
+                'data_br' => $diaAlvo->format('d/m/Y'),
+                'dia_nome' => $diasSemanaNome[$diaSemana],
+                'is_hoje' => $i === 0,
+                'feriado' => $feriadoNome,
+                'previsao_agendamentos' => $previsaoDia,
+                'tendencia' => $tendencia
+            ];
+        }
+
+        return view('admin.relatorios.previsao', compact(
+            'proximos7Dias', 'totalPrevisao', 'diasDeAlta', 'diasDeBaixa'
+        ));
+    }
     public function exportarPdf(Request $request)
     {
         // ... (seu código de exportação PDF que já estava aí)

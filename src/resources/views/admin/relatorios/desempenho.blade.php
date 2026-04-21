@@ -2,124 +2,114 @@
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ __('Relatório 3: Desempenho por Profissional') }}
+                {{ __('REL003: Desempenho por Profissional') }}
             </h2>
-            <a href="{{ route('admin.relatorios.index') }}" class="text-sm text-blue-600 hover:underline">⬅ Voltar</a>
+            <a href="{{ route('admin.relatorios.index') ?? '#' }}" class="text-sm text-blue-600 hover:underline">⬅ Voltar</a>
         </div>
     </x-slot>
 
     <div class="container mx-auto px-4 py-6">
-        <div class="bg-white p-4 rounded-lg shadow mb-6">
-            <form method="GET" action="{{ route('admin.relatorios.desempenho') }}" class="flex items-end gap-3">
+        <div class="bg-white p-4 rounded-xl shadow mb-6">
+            <form method="GET" action="{{ route('admin.relatorios.desempenho') }}" class="flex flex-wrap items-end gap-4">
                 <div>
-                    <label class="block text-sm text-gray-600">Início</label>
-                    <input type="date" name="data_inicio" value="{{ $dataInicio }}" class="border rounded p-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Início</label>
+                    <input type="date" name="data_inicio" value="{{ $dataInicio }}" class="border border-gray-300 rounded-lg shadow-sm focus:border-amber-500 focus:ring-amber-500">
                 </div>
                 <div>
-                    <label class="block text-sm text-gray-600">Fim</label>
-                    <input type="date" name="data_fim" value="{{ $dataFim }}" class="border rounded p-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Fim</label>
+                    <input type="date" name="data_fim" value="{{ $dataFim }}" class="border border-gray-300 rounded-lg shadow-sm focus:border-amber-500 focus:ring-amber-500">
                 </div>
-                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Analisar Equipa</button>
+                <button type="submit" class="bg-amber-500 text-white px-5 py-2.5 rounded-lg font-bold hover:bg-amber-600 transition shadow-sm">
+                    Analisar Equipa
+                </button>
             </form>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white p-6 rounded-lg shadow lg:col-span-2">
-                <h3 class="font-bold mb-4 text-gray-700">Volume de Atendimentos</h3>
-                <div class="h-72">
-                    <canvas id="chartDesempenho"></canvas>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="bg-gradient-to-br from-amber-400 to-amber-600 p-6 rounded-xl shadow text-white flex items-center justify-between">
+                <div>
+                    <h3 class="text-sm font-bold opacity-90 uppercase tracking-wider mb-1">Profissional Mais Rentável</h3>
+                    @if($campeaoFaturamento && $campeaoFaturamento->receita_gerada > 0)
+                        <p class="text-3xl font-black mb-1">{{ $campeaoFaturamento->name }}</p>
+                        <p class="text-sm bg-white/20 px-3 py-1 rounded-full inline-block">
+                            Gerou R$ {{ number_format($campeaoFaturamento->receita_gerada, 2, ',', '.') }}
+                        </p>
+                    @else
+                        <p class="text-xl font-bold">Sem dados no período</p>
+                    @endif
                 </div>
+                <div class="text-6xl opacity-30">💰</div>
             </div>
 
-            @php
-                $melhorAvaliador = $desempenhoProfissionais->sortByDesc('media_estrelas')->first();
-            @endphp
-            
-            <div class="bg-gradient-to-br from-yellow-400 to-yellow-600 p-6 rounded-lg shadow text-white flex flex-col justify-center items-center text-center">
-                <div class="text-5xl mb-2">🏆</div>
-                <h3 class="text-sm font-bold opacity-80 uppercase tracking-wider mb-2">Profissional Destaque</h3>
-                @if($melhorAvaliador && $melhorAvaliador->media_estrelas > 0)
-                    <p class="text-2xl font-black mb-1">{{ $melhorAvaliador->name }}</p>
-                    <p class="text-3xl font-bold text-yellow-100">{{ number_format($melhorAvaliador->media_estrelas, 1) }} ⭐</p>
-                    <p class="text-sm mt-2 opacity-90">Baseado em {{ $melhorAvaliador->qtd_avaliacoes }} avaliações</p>
-                @else
-                    <p class="text-lg font-bold">Aguardando avaliações...</p>
-                @endif
+            <div class="bg-white border-l-4 border-yellow-400 p-6 rounded-xl shadow flex items-center justify-between">
+                <div>
+                    <h3 class="text-gray-500 font-bold uppercase text-sm mb-1">Melhor Avaliado (Estrelas)</h3>
+                    @if($campeaoAvaliacao)
+                        <p class="text-3xl font-black text-gray-800 mb-1">{{ $campeaoAvaliacao->name }}</p>
+                        <div class="flex items-center gap-2">
+                            <span class="text-yellow-400 text-xl">★</span>
+                            <span class="font-bold text-gray-700">{{ number_format($campeaoAvaliacao->media_nota, 1) }}</span>
+                            <span class="text-xs text-gray-400">({{ $campeaoAvaliacao->total_avaliacoes }} opiniões)</span>
+                        </div>
+                    @else
+                        <p class="text-xl font-bold text-gray-400">Nenhuma avaliação ainda</p>
+                    @endif
+                </div>
+                <div class="text-6xl opacity-10">⭐</div>
             </div>
         </div>
 
-        <div class="bg-white p-6 rounded-lg shadow overflow-x-auto">
-            <h3 class="font-bold mb-4 text-gray-700">Detalhamento Financeiro e Satisfação</h3>
+        <div class="bg-white p-6 rounded-xl shadow overflow-x-auto">
+            <h3 class="font-bold mb-4 text-gray-800 text-lg">Detalhamento da Equipa</h3>
+            
             <table class="w-full text-left border-collapse whitespace-nowrap">
                 <thead>
                     <tr class="bg-gray-50 text-gray-600 border-b border-gray-200">
-                        <th class="p-3">Profissional</th>
-                        <th class="p-3 text-center">Atendimentos</th>
-                        <th class="p-3 text-right">Valor Total (Salão)</th>
-                        <th class="p-3 text-right">Comissão (Profissional)</th>
+                        <th class="p-3 rounded-tl-lg">Profissional</th>
                         <th class="p-3 text-center">Avaliação Média</th>
+                        <th class="p-3 text-center">Serviços Executados</th>
+                        <th class="p-3 text-right">Receita Gerada para o Salão</th>
+                        <th class="p-3 text-right rounded-tr-lg">Comissões a Receber</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($desempenhoProfissionais as $prof)
-                    <tr class="border-b border-gray-100 hover:bg-gray-50 transition">
-                        <td class="p-3 font-bold text-gray-800">{{ $prof->name }}</td>
-                        <td class="p-3 text-center text-blue-600 font-bold">{{ $prof->total_atendimentos }}</td>
-                        <td class="p-3 text-right text-green-600 font-medium">R$ {{ number_format($prof->valor_total_gerado, 2, ',', '.') }}</td>
-                        <td class="p-3 text-right text-purple-600 font-medium">R$ {{ number_format($prof->comissao_gerada, 2, ',', '.') }}</td>
-                        <td class="p-3 text-center">
-                            @if($prof->qtd_avaliacoes > 0)
-                                <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded font-bold text-sm">
-                                    {{ number_format($prof->media_estrelas, 1) }} ⭐
+                    @forelse($profissionais as $prof)
+                        <tr class="border-b border-gray-100 hover:bg-gray-50 transition">
+                            <td class="p-3 font-bold text-gray-800">{{ $prof->name }}</td>
+                            
+                            <td class="p-3 text-center">
+                                @if($prof->media_nota)
+                                    <div class="inline-flex items-center gap-1 bg-yellow-50 text-yellow-700 px-2 py-1 rounded-full font-bold text-sm border border-yellow-200">
+                                        ⭐ {{ number_format($prof->media_nota, 1) }}
+                                    </div>
+                                @else
+                                    <span class="text-xs text-gray-400">Sem nota</span>
+                                @endif
+                            </td>
+                            
+                            <td class="p-3 text-center">
+                                <span class="bg-gray-100 text-gray-700 px-3 py-1 rounded-full font-bold">
+                                    {{ $prof->total_servicos }}
                                 </span>
-                                <span class="text-xs text-gray-400 ml-1">({{ $prof->qtd_avaliacoes }})</span>
-                            @else
-                                <span class="text-gray-400 text-sm">Sem notas</span>
-                            @endif
-                        </td>
-                    </tr>
+                            </td>
+                            
+                            <td class="p-3 text-right font-medium text-green-600">
+                                R$ {{ number_format($prof->receita_gerada ?? 0, 2, ',', '.') }}
+                            </td>
+
+                            <td class="p-3 text-right font-bold text-amber-600">
+                                R$ {{ number_format($prof->comissao_total ?? 0, 2, ',', '.') }}
+                            </td>
+                        </tr>
                     @empty
-                    <tr>
-                        <td colspan="5" class="p-6 text-center text-gray-500">Nenhum atendimento executado neste período.</td>
-                    </tr>
+                        <tr>
+                            <td colspan="5" class="p-8 text-center text-gray-500">
+                                Nenhum profissional cadastrado no sistema.
+                            </td>
+                        </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const dados = @json($desempenhoProfissionais);
-            
-            const labels = dados.map(item => item.name);
-            const totalAtendimentos = dados.map(item => item.total_atendimentos);
-
-            new Chart(document.getElementById('chartDesempenho'), {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Quantidade de Atendimentos',
-                        data: totalAtendimentos,
-                        backgroundColor: 'rgba(59, 130, 246, 0.7)', // Azul Tailwind
-                        borderColor: 'rgba(59, 130, 246, 1)',
-                        borderWidth: 1,
-                        borderRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { stepSize: 1 }
-                        }
-                    }
-                }
-            });
-        });
-    </script>
 </x-app-layout>
