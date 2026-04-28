@@ -1,63 +1,237 @@
 <x-app-layout>
-    <div class="py-12">
-        <div class="max-w-2xl mx-auto bg-white p-8 shadow rounded-lg border-t-4 border-pink-600">
-            <h1 class="text-2xl font-bold mb-6 text-pink-600 italic">✨ Agendar meu Horário</h1>
+    <div class="py-12 relative">
+        <!-- Fundo -->
+        <div class="fixed inset-0 -z-10 overflow-hidden">
+            <div class="absolute top-0 -left-20 w-[600px] h-[600px] bg-[#7B19E5]/20 rounded-full blur-3xl"></div>
+            <div class="absolute bottom-0 -right-20 w-[700px] h-[700px] bg-[#FF2EB6]/20 rounded-full blur-3xl"></div>
+            <div class="absolute top-1/3 left-1/3 w-[400px] h-[400px] bg-[#A955D3]/15 rounded-full blur-3xl"></div>
+            <div class="absolute inset-0 bg-gradient-to-br from-[#7B19E5]/5 via-white/30 to-[#FF2EB6]/5"></div>
+        </div>
 
-            {{-- BLOCO DE ERROS: Aqui aparecerão as mensagens de "Horário de Almoço", "Conflito", etc. --}}
-            @if ($errors->any())
-                <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded shadow-sm">
-                    <p class="font-bold mb-1">Não foi possível agendar:</p>
-                    <ul class="list-disc list-inside text-sm italic">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
+        <div class="max-w-2xl mx-auto px-4">
+            <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-8 bg-white/70 backdrop-blur-sm border border-white/40">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-10 h-10 bg-gradient-to-br from-[#7B19E5] to-[#FF2EB6] rounded-xl flex items-center justify-center shadow-md">
+                            <span class="text-white text-lg">✧</span>
+                        </div>
+                        <h1 class="text-2xl font-title text-[#4A00B9]">Agendar meu Horário</h1>
+                    </div>
+
+                    @if ($errors->any())
+                        <div class="mb-6 p-4 rounded-lg bg-red-50/80 border border-red-200 text-red-700">
+                            <p class="font-medium mb-1">Não foi possível agendar:</p>
+                            <ul class="list-disc list-inside text-sm">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
+                    <form action="{{ route('cliente.agendar.salvar') }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="cliente_id" value="{{ auth()->id() }}">
+
+                        <div class="space-y-5">
+                            <!-- Profissional -->
+                            <div>
+                                <label class="block text-sm font-medium text-[#4A00B9] mb-2">Com quem você deseja agendar?</label>
+                                <select name="profissional_id" 
+                                    class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
+                                    <option value="">Selecione o profissional</option>
+                                    @foreach($profissionais as $pro)
+                                        <option value="{{ $pro->id }}" {{ old('profissional_id') == $pro->id ? 'selected' : '' }}>
+                                            {{ $pro->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <!-- Serviços organizados por categoria -->
+                            <div>
+                                <label class="block text-sm font-medium text-[#4A00B9] mb-2">Quais serviços você deseja?</label>
+                                <div class="space-y-3 max-h-96 overflow-y-auto p-4 bg-white/30 rounded-lg border border-[#FFD6F4]">
+                                    
+                                    <!-- Cabelo -->
+                                    <div>
+                                        <p class="text-sm font-medium text-[#7B19E5] mb-2 flex items-center gap-2">
+                                            <span>✧</span> Cabelo
+                                        </p>
+                                        <div class="ml-6 space-y-2">
+                                            <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/50 cursor-pointer transition group">
+                                                <input type="checkbox" name="servicos[]" value="Corte e finalização" class="w-4 h-4 text-[#7B19E5] rounded border-[#FFD6F4] focus:ring-[#7B19E5]">
+                                                <span class="text-sm text-[#1A002B] group-hover:text-[#7B19E5] transition">Corte e finalização — R$ 89</span>
+                                            </label>
+                                            <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/50 cursor-pointer transition group">
+                                                <input type="checkbox" name="servicos[]" value="Progressiva e botox" class="w-4 h-4 text-[#7B19E5] rounded border-[#FFD6F4] focus:ring-[#7B19E5]">
+                                                <span class="text-sm text-[#1A002B] group-hover:text-[#7B19E5] transition">Progressiva e botox — R$ 89</span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <!-- Unhas -->
+                                    <div>
+                                        <p class="text-sm font-medium text-[#7B19E5] mb-2 flex items-center gap-2">
+                                            <span>✧</span> Unhas
+                                        </p>
+                                        <div class="ml-6 space-y-2">
+                                            <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/50 cursor-pointer transition group">
+                                                <input type="checkbox" name="servicos[]" value="Manicure e pedicure" class="w-4 h-4 text-[#7B19E5] rounded border-[#FFD6F4]">
+                                                <span class="text-sm text-[#1A002B]">Manicure e pedicure — R$ 49</span>
+                                            </label>
+                                            <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/50 cursor-pointer transition group">
+                                                <input type="checkbox" name="servicos[]" value="Alongamento de fibra" class="w-4 h-4 text-[#7B19E5] rounded border-[#FFD6F4]">
+                                                <span class="text-sm text-[#1A002B]">Alongamento de fibra — R$ 49</span>
+                                            </label>
+                                            <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/50 cursor-pointer transition group">
+                                                <input type="checkbox" name="servicos[]" value="Nail art exclusiva" class="w-4 h-4 text-[#7B19E5] rounded border-[#FFD6F4]">
+                                                <span class="text-sm text-[#1A002B]">Nail art exclusiva — R$ 49</span>
+                                            </label>
+                                            <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/50 cursor-pointer transition group">
+                                                <input type="checkbox" name="servicos[]" value="Esmaltação em gel" class="w-4 h-4 text-[#7B19E5] rounded border-[#FFD6F4]">
+                                                <span class="text-sm text-[#1A002B]">Esmaltação em gel — R$ 49</span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <!-- Maquiagem -->
+                                    <div>
+                                        <p class="text-sm font-medium text-[#7B19E5] mb-2 flex items-center gap-2">
+                                            <span>✧</span> Maquiagem
+                                        </p>
+                                        <div class="ml-6 space-y-2">
+                                            <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/50 cursor-pointer transition group">
+                                                <input type="checkbox" name="servicos[]" value="Social e noiva" class="w-4 h-4 text-[#7B19E5] rounded border-[#FFD6F4]">
+                                                <span class="text-sm text-[#1A002B]">Social e noiva — R$ 79</span>
+                                            </label>
+                                            <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/50 cursor-pointer transition group">
+                                                <input type="checkbox" name="servicos[]" value="Make artística" class="w-4 h-4 text-[#7B19E5] rounded border-[#FFD6F4]">
+                                                <span class="text-sm text-[#1A002B]">Make artística — R$ 79</span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <!-- Sobrancelhas -->
+                                    <div>
+                                        <p class="text-sm font-medium text-[#7B19E5] mb-2 flex items-center gap-2">
+                                            <span>✧</span> Sobrancelhas
+                                        </p>
+                                        <div class="ml-6 space-y-2">
+                                            <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/50 cursor-pointer transition group">
+                                                <input type="checkbox" name="servicos[]" value="Design tradicional" class="w-4 h-4 text-[#7B19E5] rounded border-[#FFD6F4]">
+                                                <span class="text-sm text-[#1A002B]">Design tradicional — R$ 39</span>
+                                            </label>
+                                            <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/50 cursor-pointer transition group">
+                                                <input type="checkbox" name="servicos[]" value="Henna e fio a fio" class="w-4 h-4 text-[#7B19E5] rounded border-[#FFD6F4]">
+                                                <span class="text-sm text-[#1A002B]">Henna e fio a fio — R$ 39</span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <!-- Tratamentos -->
+                                    <div>
+                                        <p class="text-sm font-medium text-[#7B19E5] mb-2 flex items-center gap-2">
+                                            <span>✧</span> Tratamentos
+                                        </p>
+                                        <div class="ml-6 space-y-2">
+                                            <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/50 cursor-pointer transition group">
+                                                <input type="checkbox" name="servicos[]" value="Hidratação, nutrição e reconstrução" class="w-4 h-4 text-[#7B19E5] rounded border-[#FFD6F4]">
+                                                <span class="text-sm text-[#1A002B]">Hidratação, nutrição e reconstrução — R$ 59</span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <!-- Coloração -->
+                                    <div>
+                                        <p class="text-sm font-medium text-[#7B19E5] mb-2 flex items-center gap-2">
+                                            <span>✧</span> Coloração
+                                        </p>
+                                        <div class="ml-6 space-y-2">
+                                            <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/50 cursor-pointer transition group">
+                                                <input type="checkbox" name="servicos[]" value="Mechas, luzes e coloração completa" class="w-4 h-4 text-[#7B19E5] rounded border-[#FFD6F4]">
+                                                <span class="text-sm text-[#1A002B]">Mechas, luzes e coloração completa — R$ 129</span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <!-- Penteados -->
+                                    <div>
+                                        <p class="text-sm font-medium text-[#7B19E5] mb-2 flex items-center gap-2">
+                                            <span>✧</span> Penteados
+                                        </p>
+                                        <div class="ml-6 space-y-2">
+                                            <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/50 cursor-pointer transition group">
+                                                <input type="checkbox" name="servicos[]" value="Festas, noivas e eventos especiais" class="w-4 h-4 text-[#7B19E5] rounded border-[#FFD6F4]">
+                                                <span class="text-sm text-[#1A002B]">Festas, noivas e eventos especiais — R$ 69</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">✧ Marque quantos serviços quiser</p>
+                            </div>
+
+                            <!-- Data e Hora -->
+                            <div>
+                                <label class="block text-sm font-medium text-[#4A00B9] mb-2">Quando?</label>
+                                <input type="datetime-local" name="data_hora" value="{{ old('data_hora') }}" 
+                                    class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
+                            </div>
+
+                            <button type="submit" class="w-full bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white py-4 text-sm rounded-full font-medium btn-primary shadow-lg hover:shadow-xl transition-all mt-6">
+                                Confirmar Agendamento
+                            </button>
+                        </div>
+                    </form>
                 </div>
-            @endif
-
-            <form action="{{ route('cliente.agendar.salvar') }}" method="POST">
-                @csrf
-                
-                {{-- GARANTINDO O CLIENTE_ID: Se for o próprio cliente logado --}}
-                <input type="hidden" name="cliente_id" value="{{ auth()->id() }}">
-
-                <div class="space-y-4">
-                    <div>
-                        <label class="block font-medium text-gray-700">Com quem você deseja agendar?</label>
-                        <select name="profissional_id" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-pink-500 focus:border-pink-500">
-                            <option value="">Selecione o profissional</option>
-                            @foreach($profissionais as $pro)
-                                <option value="{{ $pro->id }}" {{ old('profissional_id') == $pro->id ? 'selected' : '' }}>
-                                    {{ $pro->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block font-medium text-gray-700">Qual serviço?</label>
-                        <select name="servico_id" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-pink-500 focus:border-pink-500">
-                            <option value="">Selecione o serviço</option>
-                            @foreach($servicos as $serv)
-                                <option value="{{ $serv->id_servico }}" {{ old('servico_id') == $serv->id_servico ? 'selected' : '' }}>
-                                    {{ $serv->nome }} — R$ {{ number_format($serv->preco, 2, ',', '.') }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block font-medium text-gray-700">Quando?</label>
-                        {{-- O old('data_hora') impede que o cliente tenha que digitar a data de novo se der erro --}}
-                        <input type="datetime-local" name="data_hora" value="{{ old('data_hora') }}" 
-                               class="w-full border-gray-300 rounded-md shadow-sm focus:ring-pink-500 focus:border-pink-500">
-                    </div>
-
-                    <button type="submit" class="w-full bg-pink-600 text-white py-3 rounded-md hover:bg-pink-700 font-bold shadow-lg transition duration-200">
-                        🚀 Confirmar Agendamento
-                    </button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 </x-app-layout>
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Playfair+Display:wght@700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+    
+    .font-title {
+        font-family: 'Playfair Display', serif;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+    }
+    
+    .glass-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 8px 32px rgba(123, 25, 229, 0.1);
+    }
+    
+    .btn-primary {
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        z-index: 1;
+    }
+    
+    .btn-primary::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s ease, height 0.6s ease;
+        z-index: -1;
+    }
+    
+    .btn-primary:hover::before {
+        width: 300px;
+        height: 300px;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+    }
+</style>

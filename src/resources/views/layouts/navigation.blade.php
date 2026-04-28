@@ -11,18 +11,18 @@
             <!-- Navigation Links (Desktop) -->
             <div class="hidden sm:flex sm:items-center sm:ml-6">
                 <div class="flex space-x-4">
-                    <a href="{{ route('dashboard') }}" class="text-sm text-[#1A002B] hover:text-[#FF2EB6] transition-colors {{ request()->routeIs('dashboard') ? 'text-[#FF2EB6]' : '' }}">
+                    <a href="{{ route('dashboard') }}" class="text-sm text-[#1A002B] hover:text-[#FF2EB6] transition-colors">
                         Dashboard
                     </a>
                     
                     @if(auth()->user()->cargo === 'gerente')
-                        <a href="{{ route('admin.usuarios.index') }}" class="text-sm text-[#1A002B] hover:text-[#FF2EB6] transition-colors {{ request()->routeIs('admin.usuarios.*') ? 'text-[#FF2EB6]' : '' }}">
+                        <a href="{{ route('admin.usuarios.index') }}" class="text-sm text-[#1A002B] hover:text-[#FF2EB6] transition-colors">
                             Usuários
                         </a>
-                        <a href="{{ route('admin.servicos.index') }}" class="text-sm text-[#1A002B] hover:text-[#FF2EB6] transition-colors {{ request()->routeIs('admin.servicos.*') ? 'text-[#FF2EB6]' : '' }}">
+                        <a href="{{ route('admin.servicos.index') }}" class="text-sm text-[#1A002B] hover:text-[#FF2EB6] transition-colors">
                             Serviços
                         </a>
-                        <a href="{{ route('admin.produtos.index') }}" class="text-sm text-[#1A002B] hover:text-[#FF2EB6] transition-colors {{ request()->routeIs('admin.produtos.*') ? 'text-[#FF2EB6]' : '' }}">
+                        <a href="{{ route('admin.produtos.index') }}" class="text-sm text-[#1A002B] hover:text-[#FF2EB6] transition-colors">
                             Produtos
                         </a>
                     @endif
