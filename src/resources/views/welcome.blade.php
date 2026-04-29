@@ -129,19 +129,19 @@
                 
                 <nav class="hidden md:flex items-center gap-10" aria-label="Navegação principal">
                     <a href="#servicos" class="text-[#1A002B] text-sm hover:text-[#7B19E5] transition-colors font-semibold"> SERVIÇOS </a>
+                    <a href="#produtos" class="text-[#1A002B] text-sm hover:text-[#7B19E5] transition-colors font-semibold"> PRODUTOS </a>
                     <a href="#depoimentos" class="text-[#1A002B] text-sm hover:text-[#7B19E5] transition-colors font-semibold"> DEPOIMENTOS </a>
-                   <a href="#contato" class="text-[#1A002B] text-sm hover:text-[#7B19E5] transition-colors font-semibold"> CONTATO </a>
+                    <a href="#contato" class="text-[#1A002B] text-sm hover:text-[#7B19E5] transition-colors font-semibold"> CONTATO </a>
                 </nav>
                 
                 <div class="flex items-center gap-2">
-    <a href="/login" class="bg-[#7B19E5] text-white px-6 py-2.5 text-sm rounded-full btn-primary shadow-lg">
-        LOGIN
-    </a>
-
-    <a href="/agendar" class="bg-[#FF2EB6] text-white px-6 py-2.5 text-sm rounded-full btn-primary shadow-lg">
-        AGENDAR
-    </a>
-</div>
+                    <a href="/login" class="bg-[#7B19E5] text-white px-6 py-2.5 text-sm rounded-full btn-primary shadow-lg">
+                        LOGIN
+                    </a>
+                    <a href="/agendar" class="bg-[#FF2EB6] text-white px-6 py-2.5 text-sm rounded-full btn-primary shadow-lg">
+                        AGENDAR
+                    </a>
+                </div>
             </div>
         </div>
     </header>
@@ -372,6 +372,97 @@
             <div class="text-center mt-12">
                 <a href="#servicos" class="bg-[#7B19E5] text-white px-8 py-3.5 text-sm tracking-wider rounded-full font-medium btn-primary inline-block shadow-xl">
                     VER TODOS OS SERVIÇOS
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Produtos -->
+    <section id="produtos" class="py-24 relative">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16 fade-in">
+                <span class="text-[#FF2EB6] text-sm tracking-[0.25em] mb-3 block font-medium">PRODUTOS</span>
+                <h2 class="text-5xl font-title text-[#1A002B] mb-4 title-glow">Produtos exclusivos</h2>
+                <p class="text-[#4A00B9] font-body text-lg">Complete seu look com nossos produtos</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Acessórios -->
+                <div class="glass-card rounded-2xl overflow-hidden shadow-xl hover-lift border border-white/40">
+                    <div class="image-zoom h-48 overflow-hidden">
+                        <img src="https://plus.unsplash.com/premium_photo-1681276169690-a22f1193c784?q=80&w=387&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
+                             alt="Acessórios" 
+                             class="w-full h-full object-cover"
+                             loading="lazy">
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-[#7B19E5] text-xl">✧</span>
+                            <h3 class="text-xl font-title text-[#4A00B9]">Acessórios</h3>
+                        </div>
+                        <p class="text-sm text-[#1A002B] mb-4 font-body">Tiaras, presilhas, headbands e muito mais para deixar seu visual ainda mais especial.</p>
+                        <span class="text-[#FF2EB6] font-medium">a partir de R$ 29</span>
+                    </div>
+                </div>
+
+                <!-- Kits -->
+                <div class="glass-card rounded-2xl overflow-hidden shadow-xl hover-lift border border-white/40">
+                    <div class="image-zoom h-48 overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1601070846144-6be3aad73f7b?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8aGFpciUyMHByb2R1Y3RzfGVufDB8fDB8fHww" 
+                             alt="Kits" 
+                             class="w-full h-full object-cover"
+                             loading="lazy">
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-[#7B19E5] text-xl">✦</span>
+                            <h3 class="text-xl font-title text-[#4A00B9]">Kits</h3>
+                        </div>
+                        <p class="text-sm text-[#1A002B] mb-4 font-body">Kits completos com shampoo, condicionador e finalizadores para cabelos perfeitos.</p>
+                        <span class="text-[#FF2EB6] font-medium">a partir de R$ 79</span>
+                    </div>
+                </div>
+
+                <!-- Cosméticos -->
+                <div class="glass-card rounded-2xl overflow-hidden shadow-xl hover-lift border border-white/40">
+                    <div class="image-zoom h-48 overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1512496015851-a90fb38ba796?w=500&auto=format&fit=crop" 
+                             alt="Cosméticos" 
+                             class="w-full h-full object-cover"
+                             loading="lazy">
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-[#7B19E5] text-xl">✧</span>
+                            <h3 class="text-xl font-title text-[#4A00B9]">Cosméticos</h3>
+                        </div>
+                        <p class="text-sm text-[#1A002B] mb-4 font-body">Pó compacto, batons, gloss e make básica para você arrasar no dia a dia.</p>
+                        <span class="text-[#FF2EB6] font-medium">a partir de R$ 39</span>
+                    </div>
+                </div>
+
+                <!-- Cabelo -->
+                <div class="glass-card rounded-2xl overflow-hidden shadow-xl hover-lift border border-white/40">
+                    <div class="image-zoom h-48 overflow-hidden">
+                        <img src="https://plus.unsplash.com/premium_photo-1728693697249-1d56feca531a?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mzd8fGhhaXIlMjBwcm9kdWN0c3xlbnwwfHwwfHx8MA%3D%3D" 
+                             alt="Cabelo" 
+                             class="w-full h-full object-cover"
+                             loading="lazy">
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-[#7B19E5] text-xl">✦</span>
+                            <h3 class="text-xl font-title text-[#4A00B9]">Cabelo</h3>
+                        </div>
+                        <p class="text-sm text-[#1A002B] mb-4 font-body">Finalizadores, óleos, leave-ins e produtos para todos os tipos de cabelo.</p>
+                        <span class="text-[#FF2EB6] font-medium">a partir de R$ 49</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-12">
+                <a href="#servicos" class="bg-[#7B19E5] text-white px-8 py-3.5 text-sm tracking-wider rounded-full font-medium btn-primary inline-block shadow-xl">
+                    VER TODOS OS PRODUTOS
                 </a>
             </div>
         </div>
