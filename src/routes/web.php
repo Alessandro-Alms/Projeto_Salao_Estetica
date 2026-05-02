@@ -25,22 +25,36 @@ Route::get('/agendar', function () {
     return view('agendar');
 })->name('agendar');
 
+// ==========================================
+// ROTAS DO CLIENTE (Exige Login)
+// ==========================================
 Route::middleware('auth')->group(function () {
-    Route::get('/meu-agendamento', [AgendamentoController::class, 'clienteAgendar'])->name('cliente.agendar.novo'); 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    
+    // ✅ Mantido intacto para não quebrar a view atual
     Route::get('/agendar-servico', [AgendamentoController::class, 'clienteAgendar'])->name('cliente.agendar');
     Route::post('/agendar-servico', [AgendamentoController::class, 'storeCliente'])->name('cliente.agendar.salvar');
+    
+    // ======== NOVAS ROTAS DO WIZARD ========
+    Route::get('/agendar-novo', [AgendamentoController::class, 'novoAgendamento'])->name('cliente.agendar.novo');
+    
+    // ✅ CORREÇÃO 1: Nomes adicionados às rotas AJAX
+    Route::get('/api/profissionais-por-servico', [AgendamentoController::class, 'getProfissionaisAjax'])->name('api.profissionais');
+    Route::get('/api/horarios-disponiveis', [AgendamentoController::class, 'getHorariosAjax'])->name('api.horarios');
+    // =======================================
+
     Route::get('/meus-agendamentos', [AgendamentoController::class, 'indexCliente'])->name('cliente.index');
     Route::post('/agendamento/{id}/cancelar', [AgendamentoController::class, 'cancelarCliente'])->name('cliente.agendamento.cancelar');
     Route::post('/agendamentos/{id}/presenca', [AgendamentoController::class, 'confirmarPresenca'])->name('agendamento.presenca');
     Route::patch('/agendamentos/{id}/falta', [AgendamentoController::class, 'marcarFalta'])->name('agendamentos.falta');
-    Route::get('/admin/pacotes/venda', [ClientePacoteController::class, 'create'])->name('admin.venda.create');
-    Route::post('/admin/pacotes/venda', [ClientePacoteController::class, 'store'])->name('admin.venda.store');
     Route::post('/avaliar-agendamento', [AgendamentoController::class, 'salvarAvaliacao'])->name('cliente.avaliar.salvar');
 });
 
+// ==========================================
+// ROTAS ADMIN (Gerente ou Recepcionista)
+// ==========================================
 Route::middleware(['auth', 'gerente_ou_recepcionista'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('usuarios', UserController::class)->names([
         'index'   => 'usuarios.index',
@@ -54,9 +68,16 @@ Route::middleware(['auth', 'gerente_ou_recepcionista'])->prefix('admin')->name('
     Route::get('profissionais', [UserController::class, 'index'])->name('profissionais.index');
     Route::get('agenda', [AgendamentoController::class, 'index'])->name('agenda.index');
     Route::post('agenda', [AgendamentoController::class, 'store'])->name('agenda.store');
+
+    // ✅ CORREÇÃO 2: Rotas de Venda de Pacotes movidas para cá (Segurança total)
+    // O prefixo 'admin' e o nome 'admin.' já são aplicados automaticamente por este grupo
+    Route::get('/pacotes/venda', [ClientePacoteController::class, 'create'])->name('venda.create');
+    Route::post('/pacotes/venda', [ClientePacoteController::class, 'store'])->name('venda.store');
 });
 
-// Agrupei todas as rotas do Gerente num lugar só para ficar mais limpo
+// ==========================================
+// ROTAS ADMIN (Apenas Gerente)
+// ==========================================
 Route::middleware(['auth', 'gerente'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('servicos', ServicoController::class)->names([
         'index'   => 'servicos.index',
@@ -103,6 +124,9 @@ Route::middleware(['auth', 'gerente'])->prefix('admin')->name('admin.')->group(f
     Route::get('/relatorios/previsao', [RelatorioController::class, 'previsao'])->name('relatorios.previsao');
 });
 
+// ==========================================
+// ROTAS PROFISSIONAL
+// ==========================================
 Route::middleware(['auth', 'profissional'])->prefix('profissional')->name('profissional.')->group(function () {
     Route::get('/configuracoes', [UserController::class, 'configuracoesservicos'])->name('servicos.editar');
     Route::put('/configuracoes', [UserController::class, 'atualizarconfiguracoesservicos'])->name('servicos.atualizar');
@@ -110,8 +134,5 @@ Route::middleware(['auth', 'profissional'])->prefix('profissional')->name('profi
     Route::get('/minha-agenda', [AgendamentoController::class, 'agendaProfissional'])->name('agenda');
     Route::get('/extrato', [UserController::class, 'extrato'])->name('extrato');
 });
-
-// rota para listar os agendamentos em formato JSON (para o FullCalendar) 
-Route::get('api/agendamentos', [AgendamentoController::class, 'listarJson'])->name('admin.agenda.json');
 
 require __DIR__.'/auth.php';

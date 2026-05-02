@@ -20,6 +20,144 @@ class AgendamentoController extends Controller
         return view('admin.agenda.index');
     }
 
+    // =========================================================
+    // NOVAS FUNÇÕES PARA O AGENDAMENTO PASSO A PASSO (WIZARD)
+    // =========================================================
+
+    public function novoAgendamento()
+    {
+        // Passo 1: Carrega apenas os serviços para a tela inicial
+        $servicos = Servico::all();
+        // Nota: se criares a view com o nome agendar_wizard.blade.php
+        return view('cliente.agendar_wizard', compact('servicos')); 
+    }
+
+    public function getProfissionaisAjax(Request $request)
+    {
+        $servicoId = $request->servico_id;
+        
+        // Passo 2: Busca apenas profissionais que FAZEM o serviço selecionado
+        $profissionais = User::where('cargo', 'profissional')
+            ->whereHas('servicos', function($q) use ($servicoId) {
+                // Certifica-te que 'id_servico' é o nome correto da tua chave primária de serviços
+                $q->where('servicos.id_servico', $servicoId); 
+            })
+            ->get(['id', 'name']);
+            
+        return response()->json($profissionais);
+    }
+
+    public function getHorariosAjax(Request $request)
+    {
+        $data = $request->data; // ex: '2026-05-02'
+        $profissionalId = $request->profissional_id;
+        $servicoId = $request->servico_id;
+
+        $inicioDia = Carbon::parse($data);
+        $diaSemana = $inicioDia->dayOfWeek;
+
+        // 1. Pega a duração do serviço com base na tua lógica de vínculo
+        $profissional = User::find($profissionalId);
+        $servico = Servico::find($servicoId);
+        
+        if (!$profissional || !$servico) {
+            return response()->json([]);
+        }
+
+        $vinculo = $profissional->servicos->find($servicoId);
+        
+        if (!$vinculo) {
+            return response()->json([]); // Retorna vazio se não houver vínculo
+        }
+
+        $duracao = $vinculo->pivot->duracao_customizada ?? $servico->duracao;
+
+        // 2. Busca a Escala de Trabalho do dia
+        $escala = HorarioTrabalho::where('profissional_id', $profissionalId)
+                    ->where('dia_semana', $diaSemana)
+                    ->first();
+
+        // Se não tem escala ou não trabalha, não há horários
+        if (!$escala || !$escala->trabalha) {
+            return response()->json([]); 
+        }
+
+        // 3. Busca Agendamentos e Bloqueios para este dia
+        $agendamentos = Agendamento::where('profissional_id', $profissionalId)
+            ->whereDate('data_hora_inicio', $data)
+            ->where('status', '!=', 'cancelado')
+            ->get();
+
+        $bloqueios = BloqueioHorario::where(function ($q) use ($profissionalId) {
+            $q->whereNull('profissional_id')->orWhere('profissional_id', $profissionalId);
+        })->whereDate('data_hora_inicio', '<=', $data)
+          ->whereDate('data_hora_fim', '>=', $data)
+          ->get();
+
+        // 4. Montar a Grade de Horários (pulando de 30 em 30 min)
+        $horarios = [];
+        $horaAtual = Carbon::parse($data . ' ' . $escala->hora_inicio);
+        $horaFimExpediente = Carbon::parse($data . ' ' . $escala->hora_fim);
+        $horaAlmocoInicio = Carbon::parse($data . ' ' . $escala->almoco_inicio);
+        $horaAlmocoFim = Carbon::parse($data . ' ' . $escala->almoco_fim);
+
+        while ($horaAtual < $horaFimExpediente) {
+            $horaFimEstimado = $horaAtual->copy()->addMinutes($duracao);
+            $ocupado = false;
+
+            // Regra A: O serviço termina depois do expediente?
+            if ($horaFimEstimado > $horaFimExpediente) {
+                $ocupado = true;
+            }
+
+            // Regra B: O serviço invade o horário de almoço?
+            if (!$ocupado && $horaAtual < $horaAlmocoFim && $horaFimEstimado > $horaAlmocoInicio) {
+                $ocupado = true;
+            }
+
+            // Regra C: Conflita com agendamentos existentes?
+            if (!$ocupado) {
+                foreach ($agendamentos as $ag) {
+                    $agInicio = Carbon::parse($ag->data_hora_inicio);
+                    $agFim = Carbon::parse($ag->data_hora_fim);
+                    if ($horaAtual < $agFim && $horaFimEstimado > $agInicio) {
+                        $ocupado = true; break;
+                    }
+                }
+            }
+
+            // Regra D: Conflita com Bloqueios/Feriados?
+            if (!$ocupado) {
+                foreach ($bloqueios as $bq) {
+                    $bqInicio = Carbon::parse($bq->data_hora_inicio);
+                    $bqFim = Carbon::parse($bq->data_hora_fim);
+                    if ($horaAtual < $bqFim && $horaFimEstimado > $bqInicio) {
+                        $ocupado = true; break;
+                    }
+                }
+            }
+
+            // Regra E: Ignorar horários no passado (se o cliente estiver marcando para "hoje")
+            if ($horaAtual < now()) {
+                $ocupado = true;
+            }
+
+            // Salva na lista para devolver ao Javascript
+            $horarios[] = [
+                'hora' => $horaAtual->format('H:i'),
+                'ocupado' => $ocupado
+            ];
+
+            // Avança o loop em 30 minutos (podes alterar para 15 ou 60)
+            $horaAtual->addMinutes(30);
+        }
+
+        return response()->json($horarios);
+    }
+
+    // =========================================================
+    // FUNÇÃO MASTER DE SALVAR (INTACTA - PROTEÇÃO OVERBOOKING)
+    // =========================================================
     public function store(Request $request)
     {
         $request->validate([
@@ -149,6 +287,7 @@ class AgendamentoController extends Controller
 
         return back()->with('status', 'Agendamento realizado com sucesso!');
     }
+
     public function listarJson()
     {
         $agendamentos = Agendamento::with(['cliente', 'servico', 'profissional'])->get();
@@ -163,12 +302,14 @@ class AgendamentoController extends Controller
             ];
         }));
     }
+
     public function clienteAgendar()
     {
         $profissionais = User::where('cargo', 'profissional')->get();
         $servicos = Servico::all();
         return view('cliente.agendar', compact('profissionais', 'servicos'));
     }
+
     public function agendaProfissional()
     {
         // Usamos o query builder puro para testar se o Eloquent está bugando
@@ -184,11 +325,26 @@ class AgendamentoController extends Controller
 
         return view('profissional.agenda', compact('agendamentos', 'produtos'));
     }
+
+    // =========================================================
+    // MODIFICADO PARA O PASSO A PASSO (WIZARD)
+    // =========================================================
     public function storeCliente(Request $request)
     {
+        // Se a requisição vier do Novo Wizard (separado), juntamos num único campo 'data_hora'
+        if ($request->has('data_agendamento') && $request->has('hora_agendamento')) {
+            $request->merge([
+                'data_hora' => $request->data_agendamento . ' ' . $request->hora_agendamento
+            ]);
+        }
+
+        // Injeta o ID do cliente logado por segurança
         $request->merge(['cliente_id' => auth()->id()]);
+        
+        // Passa a bola para a tua função store() original
         return $this->store($request);
     }
+
     public function indexCliente()
     {
         $agendamentos = Agendamento::where('cliente_id', auth()->id())
@@ -200,6 +356,7 @@ class AgendamentoController extends Controller
 
         return view('cliente.index', compact('agendamentos', 'pacotes'));
     }
+
     public function cancelarCliente($id_agendamento)
     {
         // Busca o agendamento ou dá erro 404
@@ -216,6 +373,7 @@ class AgendamentoController extends Controller
 
         return back()->with('status', 'Agendamento cancelado com sucesso!');
     }
+
     public function marcarComoExecutado(Request $request, $id_agendamento)
     {
         $agendamento = Agendamento::findOrFail($id_agendamento);
@@ -329,6 +487,7 @@ class AgendamentoController extends Controller
             return redirect()->route('profissional.agenda')->with('status', $mensagem);
         });
     }
+
     public function confirmarPresenca($id)
     {
         $agendamento = Agendamento::findOrFail($id);
@@ -341,6 +500,7 @@ class AgendamentoController extends Controller
 
         return back()->with('status', 'Check-in realizado!');
     }
+
     public function marcarFalta($id)
     {
         $agendamento = Agendamento::findOrFail($id);
@@ -355,6 +515,7 @@ class AgendamentoController extends Controller
 
         return back()->with('success', 'Falta registrada. Cliente bloqueado se atingiu 3 faltas.');
     }
+
     public function salvarAvaliacao(Request $request)
     {
         $request->validate([

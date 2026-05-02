@@ -53,7 +53,7 @@
             {{-- SECÇÃO DE AGENDAMENTOS --}}
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-bold text-gray-800">Meus Agendamentos</h2>
-                <a href="{{ route('cliente.agendar') }}" class="bg-pink-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-pink-700 transition shadow-sm">
+                <a href="{{ route('cliente.agendar.novo') }}" class="bg-pink-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-pink-700 transition shadow-sm">
                     + Novo Agendamento
                 </a>
             </div>
