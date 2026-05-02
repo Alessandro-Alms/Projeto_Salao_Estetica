@@ -28,131 +28,242 @@ class AgendamentoController extends Controller
     {
         // Passo 1: Carrega apenas os serviços para a tela inicial
         $servicos = Servico::all();
-        // Nota: se criares a view com o nome agendar_wizard.blade.php
-        return view('cliente.agendar_wizard', compact('servicos')); 
+        // Agora usa a nova view com o layout Google Calendar
+        return view('cliente.agendar_novo', compact('servicos')); 
     }
 
     public function getProfissionaisAjax(Request $request)
     {
         $servicoId = $request->servico_id;
+        $dataHoraString = $request->data_hora; // Opcional: "YYYY-MM-DD HH:mm"
         
-        // Passo 2: Busca apenas profissionais que FAZEM o serviço selecionado
-        $profissionais = User::where('cargo', 'profissional')
+        // Passo 1: Busca profissionais que FAZEM o serviço selecionado
+        $profisionaisCandidatos = User::where('cargo', 'profissional')
             ->whereHas('servicos', function($q) use ($servicoId) {
-                // Certifica-te que 'id_servico' é o nome correto da tua chave primária de serviços
                 $q->where('servicos.id_servico', $servicoId); 
             })
             ->get(['id', 'name']);
+        
+        // Se não há data_hora, retorna todos os profissionais
+        if (!$dataHoraString) {
+            return response()->json($profisionaisCandidatos);
+        }
+        
+        // Passo 2: Se data_hora foi fornecida, filtra apenas profissionais livres naquele horário
+        $dataHora = Carbon::parse($dataHoraString);
+        $servico = Servico::find($servicoId);
+        
+        if (!$servico) {
+            return response()->json([]);
+        }
+        
+        $duracao = $servico->duracao;
+        $dataHoraFim = $dataHora->copy()->addMinutes($duracao);
+        $diaSemana = $dataHora->dayOfWeek;
+        
+        // Filtra profissionais que estão LIVRES naquele horário
+        $profissionaisLivres = $profisionaisCandidatos->filter(function($prof) use ($dataHora, $dataHoraFim, $diaSemana, $servicoId) {
             
-        return response()->json($profissionais);
+            // Verificar se o profissional trabalha neste dia da semana
+            $escala = HorarioTrabalho::where('profissional_id', $prof->id)
+                ->where('dia_semana', $diaSemana)
+                ->first();
+            
+            if (!$escala || !$escala->trabalha) {
+                return false; // Não trabalha neste dia
+            }
+            
+            $horaInicio = $dataHora->format('H:i:s');
+            $horaFim = $dataHoraFim->format('H:i:s');
+            
+            // Verificar se está dentro do expediente
+            if ($horaInicio < $escala->hora_inicio || $horaFim > $escala->hora_fim) {
+                return false; // Fora do expediente
+            }
+            
+            // Verificar se invade almoço
+            if ($horaInicio < $escala->almoco_fim && $horaFim > $escala->almoco_inicio) {
+                return false; // Coincide com almoço
+            }
+            
+            // Verificar bloqueios (folgas, feriados)
+            $bloqueios = BloqueioHorario::where(function ($q) use ($prof) {
+                $q->whereNull('profissional_id')->orWhere('profissional_id', $prof->id);
+            })->whereDate('data_hora_inicio', '<=', $dataHora)
+              ->whereDate('data_hora_fim', '>=', $dataHora)
+              ->get();
+            
+            foreach ($bloqueios as $bloqueio) {
+                $bqInicio = Carbon::parse($bloqueio->data_hora_inicio);
+                $bqFim = Carbon::parse($bloqueio->data_hora_fim);
+                if ($dataHora < $bqFim && $dataHoraFim > $bqInicio) {
+                    return false; // Conflita com bloqueio
+                }
+            }
+            
+            // Verificar agendamentos existentes
+            $agendamentos = Agendamento::where('profissional_id', $prof->id)
+                ->where('status', '!=', 'cancelado')
+                ->get();
+            
+            foreach ($agendamentos as $ag) {
+                $agInicio = Carbon::parse($ag->data_hora_inicio);
+                $agFim = Carbon::parse($ag->data_hora_fim);
+                if ($dataHora < $agFim && $dataHoraFim > $agInicio) {
+                    return false; // Conflita com agendamento
+                }
+            }
+            
+            // Profissional está livre!
+            return true;
+        });
+        
+        return response()->json(array_values($profissionaisLivres->toArray()));
     }
 
     public function getHorariosAjax(Request $request)
     {
         $data = $request->data; // ex: '2026-05-02'
-        $profissionalId = $request->profissional_id;
         $servicoId = $request->servico_id;
+        $profissionalId = $request->profissional_id; // Opcional - se não tiver, busca de todos
+
+        $servico = Servico::find($servicoId);
+        if (!$servico) {
+            return response()->json([]);
+        }
 
         $inicioDia = Carbon::parse($data);
         $diaSemana = $inicioDia->dayOfWeek;
 
-        // 1. Pega a duração do serviço com base na tua lógica de vínculo
-        $profissional = User::find($profissionalId);
-        $servico = Servico::find($servicoId);
-        
-        if (!$profissional || !$servico) {
+        // Se profissional foi especificado, usa aquele
+        if ($profissionalId) {
+            $profissional = User::find($profissionalId);
+            if (!$profissional) {
+                return response()->json([]);
+            }
+            $profissionais = collect([$profissional]);
+        } else {
+            // Senão, busca TODOS os profissionais que fazem este serviço
+            $profissionais = User::where('cargo', 'profissional')
+                ->whereHas('servicos', function($q) use ($servicoId) {
+                    $q->where('servicos.id_servico', $servicoId);
+                })
+                ->get();
+        }
+
+        if ($profissionais->isEmpty()) {
             return response()->json([]);
         }
 
-        $vinculo = $profissional->servicos->find($servicoId);
-        
-        if (!$vinculo) {
-            return response()->json([]); // Retorna vazio se não houver vínculo
-        }
+        // Array para armazenar status de cada horário por profissional
+        $horariosStatus = []; // hora => [prof1 => ocupado?, prof2 => ocupado?, ...]
 
-        $duracao = $vinculo->pivot->duracao_customizada ?? $servico->duracao;
+        // Para cada profissional, verificar seus horários
+        foreach ($profissionais as $prof) {
+            $vinculo = $prof->servicos->find($servicoId);
+            
+            if (!$vinculo) continue;
 
-        // 2. Busca a Escala de Trabalho do dia
-        $escala = HorarioTrabalho::where('profissional_id', $profissionalId)
-                    ->where('dia_semana', $diaSemana)
-                    ->first();
+            $duracao = $vinculo->pivot->duracao_customizada ?? $servico->duracao;
 
-        // Se não tem escala ou não trabalha, não há horários
-        if (!$escala || !$escala->trabalha) {
-            return response()->json([]); 
-        }
+            // 2. Busca a Escala de Trabalho do dia deste profissional
+            $escala = HorarioTrabalho::where('profissional_id', $prof->id)
+                        ->where('dia_semana', $diaSemana)
+                        ->first();
 
-        // 3. Busca Agendamentos e Bloqueios para este dia
-        $agendamentos = Agendamento::where('profissional_id', $profissionalId)
-            ->whereDate('data_hora_inicio', $data)
-            ->where('status', '!=', 'cancelado')
-            ->get();
+            if (!$escala || !$escala->trabalha) continue;
 
-        $bloqueios = BloqueioHorario::where(function ($q) use ($profissionalId) {
-            $q->whereNull('profissional_id')->orWhere('profissional_id', $profissionalId);
-        })->whereDate('data_hora_inicio', '<=', $data)
-          ->whereDate('data_hora_fim', '>=', $data)
-          ->get();
+            // 3. Busca Agendamentos e Bloqueios para este dia
+            $agendamentos = Agendamento::where('profissional_id', $prof->id)
+                ->whereDate('data_hora_inicio', $data)
+                ->where('status', '!=', 'cancelado')
+                ->get();
 
-        // 4. Montar a Grade de Horários (pulando de 30 em 30 min)
-        $horarios = [];
-        $horaAtual = Carbon::parse($data . ' ' . $escala->hora_inicio);
-        $horaFimExpediente = Carbon::parse($data . ' ' . $escala->hora_fim);
-        $horaAlmocoInicio = Carbon::parse($data . ' ' . $escala->almoco_inicio);
-        $horaAlmocoFim = Carbon::parse($data . ' ' . $escala->almoco_fim);
+            $bloqueios = BloqueioHorario::where(function ($q) use ($prof) {
+                $q->whereNull('profissional_id')->orWhere('profissional_id', $prof->id);
+            })->whereDate('data_hora_inicio', '<=', $data)
+              ->whereDate('data_hora_fim', '>=', $data)
+              ->get();
 
-        while ($horaAtual < $horaFimExpediente) {
-            $horaFimEstimado = $horaAtual->copy()->addMinutes($duracao);
-            $ocupado = false;
+            // 4. Montar horários para este profissional
+            $horaAtual = Carbon::parse($data . ' ' . $escala->hora_inicio);
+            $horaFimExpediente = Carbon::parse($data . ' ' . $escala->hora_fim);
+            $horaAlmocoInicio = Carbon::parse($data . ' ' . $escala->almoco_inicio);
+            $horaAlmocoFim = Carbon::parse($data . ' ' . $escala->almoco_fim);
 
-            // Regra A: O serviço termina depois do expediente?
-            if ($horaFimEstimado > $horaFimExpediente) {
-                $ocupado = true;
-            }
+            while ($horaAtual < $horaFimExpediente) {
+                $horaFimEstimado = $horaAtual->copy()->addMinutes($duracao);
+                $ocupado = false;
 
-            // Regra B: O serviço invade o horário de almoço?
-            if (!$ocupado && $horaAtual < $horaAlmocoFim && $horaFimEstimado > $horaAlmocoInicio) {
-                $ocupado = true;
-            }
+                // Regra A: O serviço termina depois do expediente?
+                if ($horaFimEstimado > $horaFimExpediente) {
+                    $ocupado = true;
+                }
 
-            // Regra C: Conflita com agendamentos existentes?
-            if (!$ocupado) {
-                foreach ($agendamentos as $ag) {
-                    $agInicio = Carbon::parse($ag->data_hora_inicio);
-                    $agFim = Carbon::parse($ag->data_hora_fim);
-                    if ($horaAtual < $agFim && $horaFimEstimado > $agInicio) {
-                        $ocupado = true; break;
+                // Regra B: O serviço invade o horário de almoço?
+                if (!$ocupado && $horaAtual < $horaAlmocoFim && $horaFimEstimado > $horaAlmocoInicio) {
+                    $ocupado = true;
+                }
+
+                // Regra C: Conflita com agendamentos existentes?
+                if (!$ocupado) {
+                    foreach ($agendamentos as $ag) {
+                        $agInicio = Carbon::parse($ag->data_hora_inicio);
+                        $agFim = Carbon::parse($ag->data_hora_fim);
+                        if ($horaAtual < $agFim && $horaFimEstimado > $agInicio) {
+                            $ocupado = true; break;
+                        }
                     }
                 }
-            }
 
-            // Regra D: Conflita com Bloqueios/Feriados?
-            if (!$ocupado) {
-                foreach ($bloqueios as $bq) {
-                    $bqInicio = Carbon::parse($bq->data_hora_inicio);
-                    $bqFim = Carbon::parse($bq->data_hora_fim);
-                    if ($horaAtual < $bqFim && $horaFimEstimado > $bqInicio) {
-                        $ocupado = true; break;
+                // Regra D: Conflita com Bloqueios/Feriados?
+                if (!$ocupado) {
+                    foreach ($bloqueios as $bq) {
+                        $bqInicio = Carbon::parse($bq->data_hora_inicio);
+                        $bqFim = Carbon::parse($bq->data_hora_fim);
+                        if ($horaAtual < $bqFim && $horaFimEstimado > $bqInicio) {
+                            $ocupado = true; break;
+                        }
                     }
                 }
-            }
 
-            // Regra E: Ignorar horários no passado (se o cliente estiver marcando para "hoje")
-            if ($horaAtual < now()) {
-                $ocupado = true;
-            }
+                // Regra E: Ignorar horários no passado
+                if ($horaAtual < now()) {
+                    $ocupado = true;
+                }
 
-            // Salva na lista para devolver ao Javascript
-            $horarios[] = [
-                'hora' => $horaAtual->format('H:i'),
-                'ocupado' => $ocupado
+                $hora_str = $horaAtual->format('H:i');
+
+                // Inicializar array de status para este horário se não existir
+                if (!isset($horariosStatus[$hora_str])) {
+                    $horariosStatus[$hora_str] = [];
+                }
+
+                // Armazenar status deste profissional para este horário
+                $horariosStatus[$hora_str][$prof->id] = $ocupado;
+
+                $horaAtual->addMinutes(30);
+            }
+        }
+
+        // Formatar resposta: um horário é DISPONÍVEL se AT LEAST ONE profissional está livre
+        $resultado = [];
+        foreach ($horariosStatus as $hora => $statusPorProf) {
+            // Se pelo menos um profissional está livre neste horário
+            $temProfissionalLivre = in_array(false, $statusPorProf, true);
+            
+            $resultado[] = [
+                'hora' => $hora,
+                'ocupado' => !$temProfissionalLivre // Ocupado só se TODOS estão ocupados
             ];
-
-            // Avança o loop em 30 minutos (podes alterar para 15 ou 60)
-            $horaAtual->addMinutes(30);
         }
 
-        return response()->json($horarios);
+        // Ordenar por hora
+        usort($resultado, function($a, $b) {
+            return strcmp($a['hora'], $b['hora']);
+        });
+
+        return response()->json($resultado);
     }
 
     // =========================================================
