@@ -16,15 +16,20 @@
             @csrf
             
             {{-- Campos ocultos para armazenar dados --}}
-            <input type="hidden" id="servico_id" name="servico_id">
+            <input type="hidden" id="servicos_ids" name="servicos_ids">
             <input type="hidden" id="profissional_id" name="profissional_id">
 
-            {{-- PASSO 1: ESCOLHER SERVIÇO --}}
+            {{-- PASSO 1: ESCOLHER SERVIÇO(S) --}}
             <div id="passo-1" class="passo">
-                <h3 class="text-2xl font-semibold mb-8">Qual serviço desejas realizar?</h3>
+                <h3 class="text-2xl font-semibold mb-8">Quais serviços desejas realizar? (Podes escolher mais de um)</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     @foreach($servicos as $servico)
-                        <div class="flex items-start p-5 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition" id="servico-card-{{ $servico->id_servico }}" onclick="selecionarServico({{ $servico->id_servico }}, '{{ $servico->nome }}')">
+                        <div class="flex items-start p-5 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition servico-card" 
+                             id="servico-card-{{ $servico->id_servico }}"
+                             data-id="{{ $servico->id_servico }}"
+                             data-nome="{{ e($servico->nome) }}"
+                             data-duracao="{{ $servico->duracao }}">
+                            <input type="checkbox" id="checkbox-servico-{{ $servico->id_servico }}" class="mt-1 mr-3" onclick="event.stopPropagation();">
                             <div class="w-full">
                                 <p class="font-bold text-lg text-gray-800">{{ $servico->nome }}</p>
                                 <p class="text-sm text-gray-600 mt-2">R$ {{ number_format($servico->preco, 2, ',', '.') }}</p>
@@ -32,6 +37,15 @@
                             </div>
                         </div>
                     @endforeach
+                </div>
+
+                {{-- Resumo dos Serviços Selecionados --}}
+                <div id="resumo-servicos-selecionados" class="mt-8 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg hidden">
+                    <h4 class="font-semibold text-blue-800 mb-3">📋 Serviços Selecionados:</h4>
+                    <ul id="lista-servicos-selecionados" class="space-y-2"></ul>
+                    <div class="mt-4 pt-4 border-t-2 border-blue-200">
+                        <p class="font-bold text-blue-900">⏱️ Tempo Total: <span id="tempo-total">0</span> minutos</p>
+                    </div>
                 </div>
                 
                 <div class="mt-12 flex justify-end">
@@ -294,14 +308,18 @@
 </style>
 
 <script>
+    console.log('Script carregado!');
+    
     // Constantes
     const urlProfissionais = "{{ route('api.profissionais') }}";
     const urlHorarios = "{{ route('api.horarios') }}";
 
     // Estado Global
     let estadoAgendamento = {
-        servicoId: null,
-        servicoNome: null,
+        servicosIds: [],
+        servicosNomes: [],
+        servicosDuracao: {},
+        duraoTotal: 0,
         dataSelecionada: null,
         horaSelecionada: null,
         profissionalId: null,
@@ -311,22 +329,60 @@
     let mesAtual = new Date().getMonth();
     let anoAtual = new Date().getFullYear();
 
-    // ==================== PASSO 1: SERVIÇO ====================
-    function selecionarServico(servicoId, servicoNome) {
-        estadoAgendamento.servicoId = servicoId;
-        estadoAgendamento.servicoNome = servicoNome;
-        document.getElementById('servico_id').value = servicoId;
+    // ==================== PASSO 1: SERVIÇO(S) ====================
+    function toggleServico(servicoId, servicoNome, duracao) {
+        const checkbox = document.getElementById(`checkbox-servico-${servicoId}`);
+        const card = document.getElementById(`servico-card-${servicoId}`);
         
-        // Remove seleção anterior
-        document.querySelectorAll('[id^="servico-card-"]').forEach(card => {
-            card.classList.remove('border-blue-600', 'bg-blue-50', 'shadow-lg');
-            card.classList.add('border-gray-200');
+        if (estadoAgendamento.servicosIds.includes(servicoId)) {
+            // Remover serviço
+            estadoAgendamento.servicosIds = estadoAgendamento.servicosIds.filter(id => id !== servicoId);
+            estadoAgendamento.servicosNomes = estadoAgendamento.servicosNomes.filter(nome => nome !== servicoNome);
+            delete estadoAgendamento.servicosDuracao[servicoId];
+            checkbox.checked = false;
+            card.classList.remove('border-blue-400', 'border-4', 'bg-blue-100');
+        } else {
+            // Adicionar serviço
+            estadoAgendamento.servicosIds.push(servicoId);
+            estadoAgendamento.servicosNomes.push(servicoNome);
+            estadoAgendamento.servicosDuracao[servicoId] = duracao;
+            checkbox.checked = true;
+            card.classList.add('border-blue-400', 'border-4', 'bg-blue-100');
+        }
+        
+        atualizarResumoServicos();
+    }
+
+    function atualizarResumoServicos() {
+        const resumoDiv = document.getElementById('resumo-servicos-selecionados');
+        const listaUl = document.getElementById('lista-servicos-selecionados');
+        
+        if (estadoAgendamento.servicosIds.length === 0) {
+            resumoDiv.classList.add('hidden');
+            document.getElementById('servicos_ids').value = '';
+            return;
+        }
+        
+        // Mostrar resumo
+        resumoDiv.classList.remove('hidden');
+        listaUl.innerHTML = '';
+        
+        let tempoTotal = 0;
+        estadoAgendamento.servicosIds.forEach((id, index) => {
+            const nome = estadoAgendamento.servicosNomes[index];
+            const duracao = estadoAgendamento.servicosDuracao[id];
+            tempoTotal += duracao;
+            
+            const li = document.createElement('li');
+            li.innerHTML = `<span class="text-blue-900">✓ ${nome}</span> <span class="text-gray-600">(${duracao} min)</span>`;
+            listaUl.appendChild(li);
         });
         
-        // Adiciona seleção ao card clicado
-        const card = document.getElementById(`servico-card-${servicoId}`);
-        card.classList.remove('border-gray-200');
-        card.classList.add('border-blue-600', 'bg-blue-50', 'shadow-lg', 'border-4');
+        document.getElementById('tempo-total').innerText = tempoTotal;
+        estadoAgendamento.duraoTotal = tempoTotal;
+        
+        // Atualizar campo oculto
+        document.getElementById('servicos_ids').value = estadoAgendamento.servicosIds.join(',');
     }
 
     // ==================== PASSO 2: CALENDÁRIO ====================
@@ -436,7 +492,7 @@
 
     // ==================== PASSO 3: HORÁRIOS ====================
     function carregarHorarios() {
-        if (!estadoAgendamento.servicoId || !estadoAgendamento.dataSelecionada) return;
+        if (estadoAgendamento.servicosIds.length === 0 || !estadoAgendamento.dataSelecionada) return;
         
         const data = estadoAgendamento.dataSelecionada.toISOString().split('T')[0];
         const inputData = document.getElementById('data_agendamento');
@@ -445,7 +501,11 @@
         const gradeHorarios = document.getElementById('grade_horarios');
         gradeHorarios.innerHTML = '<p class="text-gray-500 col-span-full text-center">Carregando horários...</p>';
         
-        fetch(`${urlHorarios}?data=${data}&servico_id=${estadoAgendamento.servicoId}`)
+        // Passar o primeiro serviço e a duração total
+        const servicoId = estadoAgendamento.servicosIds[0];
+        const duracao = estadoAgendamento.duraoTotal;
+        
+        fetch(`${urlHorarios}?data=${data}&servico_id=${servicoId}&duracao=${duracao}`)
             .then(r => r.json())
             .then(horarios => {
                 gradeHorarios.innerHTML = '';
@@ -480,17 +540,19 @@
 
     // ==================== PASSO 4: PROFISSIONAIS ====================
     function carregarProfissionaisDisponiveis() {
-        if (!estadoAgendamento.servicoId || !estadoAgendamento.dataSelecionada || !estadoAgendamento.horaSelecionada) return;
+        if (estadoAgendamento.servicosIds.length === 0 || !estadoAgendamento.dataSelecionada || !estadoAgendamento.horaSelecionada) return;
         
         const gradeProfissionais = document.getElementById('grade_profissionais');
         gradeProfissionais.innerHTML = '<p class="text-gray-500 col-span-full text-center">Carregando profissionais...</p>';
         
         // Formatar data e hora para enviar ao backend
-        const data = estadoAgendamento.dataSelecionada.toISOString().split('T')[0]; // YYYY-MM-DD
-        const hora = estadoAgendamento.horaSelecionada; // HH:mm
+        const data = estadoAgendamento.dataSelecionada.toISOString().split('T')[0];
+        const hora = estadoAgendamento.horaSelecionada;
         const dataHora = `${data} ${hora}`;
+        const servicosIds = estadoAgendamento.servicosIds.join(',');
+        const duracao = estadoAgendamento.duraoTotal;
         
-        fetch(`${urlProfissionais}?servico_id=${estadoAgendamento.servicoId}&data_hora=${encodeURIComponent(dataHora)}`)
+        fetch(`${urlProfissionais}?servicos_ids=${servicosIds}&data_hora=${encodeURIComponent(dataHora)}&duracao=${duracao}`)
             .then(r => r.json())
             .then(profissionais => {
                 gradeProfissionais.innerHTML = '';
@@ -505,7 +567,7 @@
                     card.className = 'profissional-card';
                     card.innerHTML = `
                         <h4>👤 ${prof.name}</h4>
-                        <p>✓ Disponível neste serviço</p>
+                        <p>✓ Disponível para os serviços</p>
                     `;
                     card.onclick = () => selecionarProfissional(prof.id, prof.name, card);
                     gradeProfissionais.appendChild(card);
@@ -527,8 +589,8 @@
 
     // ==================== NAVEGAÇÃO ====================
     function irParaPasso(passo) {
-        if (passo === 2 && !estadoAgendamento.servicoId) {
-            alert('Por favor, escolhe um serviço!');
+        if (passo === 2 && estadoAgendamento.servicosIds.length === 0) {
+            alert('Por favor, escolhe pelo menos um serviço!');
             return;
         }
         if (passo === 3 && !estadoAgendamento.dataSelecionada) {
@@ -579,7 +641,8 @@
     }
 
     function preencherResumo() {
-        document.getElementById('resumo_servico').innerText = estadoAgendamento.servicoNome;
+        const servicos = estadoAgendamento.servicosNomes.join(', ');
+        document.getElementById('resumo_servico').innerText = servicos;
         document.getElementById('resumo_profissional').innerText = estadoAgendamento.profissionalNome;
         
         const dataTxt = estadoAgendamento.dataSelecionada.toLocaleDateString('pt-PT', { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' });
@@ -589,6 +652,18 @@
 
     // Inicialização
     document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOMContentLoaded disparado');
+        // Event listener para cards de serviços
+        document.querySelectorAll('.servico-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const servicoId = parseInt(this.dataset.id);
+                const servicoNome = this.dataset.nome;
+                const servicoDuracao = parseInt(this.dataset.duracao);
+                console.log('Card clicado:', servicoId, servicoNome, servicoDuracao);
+                toggleServico(servicoId, servicoNome, servicoDuracao);
+            });
+        });
+        
         irParaPasso(1);
     });
 </script>

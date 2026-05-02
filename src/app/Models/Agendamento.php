@@ -30,10 +30,23 @@ class Agendamento extends Model
         return $this->belongsTo(User::class, 'profissional_id');
     }
 
-    // Relacionamento: O agendamento é de um serviço específico
+    // Relacionamento: O agendamento é de um serviço específico (compatibilidade com código antigo)
     public function servico() {
         return $this->belongsTo(Servico::class, 'servico_id', 'id_servico');
     }
+
+    // Relacionamento: Múltiplos serviços por agendamento
+    public function servicos() {
+        return $this->belongsToMany(
+            Servico::class,
+            'agendamento_servico',
+            'agendamento_id',
+            'servico_id',
+            'id_agendamento',
+            'id_servico'
+        );
+    }
+
     // app/Models/Agendamento.php
 
     public function avaliacao()

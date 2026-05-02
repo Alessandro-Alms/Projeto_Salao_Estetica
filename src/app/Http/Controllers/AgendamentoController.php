@@ -34,35 +34,45 @@ class AgendamentoController extends Controller
 
     public function getProfissionaisAjax(Request $request)
     {
-        $servicoId = $request->servico_id;
+        // Suporta tanto servico_id (compatibilidade) quanto servicos_ids (múltiplos)
+        $servicoIdSingle = $request->servico_id;
+        $servicosIdsString = $request->servicos_ids;
         $dataHoraString = $request->data_hora; // Opcional: "YYYY-MM-DD HH:mm"
+        $duracao = (int) $request->duracao; // Opcional: duração total em minutos
         
-        // Passo 1: Busca profissionais que FAZEM o serviço selecionado
-        $profisionaisCandidatos = User::where('cargo', 'profissional')
-            ->whereHas('servicos', function($q) use ($servicoId) {
-                $q->where('servicos.id_servico', $servicoId); 
-            })
-            ->get(['id', 'name']);
+        // Determinar qual array de serviços usar
+        if ($servicosIdsString) {
+            $servicosIds = array_map('intval', explode(',', $servicosIdsString));
+        } elseif ($servicoIdSingle) {
+            $servicosIds = [$servicoIdSingle];
+        } else {
+            return response()->json([]);
+        }
         
-        // Se não há data_hora, retorna todos os profissionais
-        if (!$dataHoraString) {
-            return response()->json($profisionaisCandidatos);
+        // Passo 1: Busca profissionais que FAZEM TODOS os serviços selecionados
+        // Precisa de múltiplos whereHas - um para cada serviço
+        $profissionaisCandidatos = User::where('cargo', 'profissional');
+        
+        foreach ($servicosIds as $servicoId) {
+            $profissionaisCandidatos = $profissionaisCandidatos->whereHas('servicos', function($q) use ($servicoId) {
+                $q->where('servicos.id_servico', $servicoId);
+            });
+        }
+        
+        $profissionaisCandidatos = $profissionaisCandidatos->get(['id', 'name']);
+        
+        // Se não há data_hora ou duracao, retorna todos os profissionais que fazem os serviços
+        if (!$dataHoraString || !$duracao) {
+            return response()->json($profissionaisCandidatos);
         }
         
         // Passo 2: Se data_hora foi fornecida, filtra apenas profissionais livres naquele horário
         $dataHora = Carbon::parse($dataHoraString);
-        $servico = Servico::find($servicoId);
-        
-        if (!$servico) {
-            return response()->json([]);
-        }
-        
-        $duracao = $servico->duracao;
         $dataHoraFim = $dataHora->copy()->addMinutes($duracao);
         $diaSemana = $dataHora->dayOfWeek;
         
         // Filtra profissionais que estão LIVRES naquele horário
-        $profissionaisLivres = $profisionaisCandidatos->filter(function($prof) use ($dataHora, $dataHoraFim, $diaSemana, $servicoId) {
+        $profissionaisLivres = $profissionaisCandidatos->filter(function($prof) use ($dataHora, $dataHoraFim, $diaSemana, $servicosIds) {
             
             // Verificar se o profissional trabalha neste dia da semana
             $escala = HorarioTrabalho::where('profissional_id', $prof->id)
@@ -70,7 +80,7 @@ class AgendamentoController extends Controller
                 ->first();
             
             if (!$escala || !$escala->trabalha) {
-                return false; // Não trabalha neste dia
+                return false;
             }
             
             $horaInicio = $dataHora->format('H:i:s');
@@ -78,12 +88,12 @@ class AgendamentoController extends Controller
             
             // Verificar se está dentro do expediente
             if ($horaInicio < $escala->hora_inicio || $horaFim > $escala->hora_fim) {
-                return false; // Fora do expediente
+                return false;
             }
             
             // Verificar se invade almoço
             if ($horaInicio < $escala->almoco_fim && $horaFim > $escala->almoco_inicio) {
-                return false; // Coincide com almoço
+                return false;
             }
             
             // Verificar bloqueios (folgas, feriados)
@@ -97,7 +107,7 @@ class AgendamentoController extends Controller
                 $bqInicio = Carbon::parse($bloqueio->data_hora_inicio);
                 $bqFim = Carbon::parse($bloqueio->data_hora_fim);
                 if ($dataHora < $bqFim && $dataHoraFim > $bqInicio) {
-                    return false; // Conflita com bloqueio
+                    return false;
                 }
             }
             
@@ -110,11 +120,10 @@ class AgendamentoController extends Controller
                 $agInicio = Carbon::parse($ag->data_hora_inicio);
                 $agFim = Carbon::parse($ag->data_hora_fim);
                 if ($dataHora < $agFim && $dataHoraFim > $agInicio) {
-                    return false; // Conflita com agendamento
+                    return false;
                 }
             }
             
-            // Profissional está livre!
             return true;
         });
         
@@ -126,6 +135,7 @@ class AgendamentoController extends Controller
         $data = $request->data; // ex: '2026-05-02'
         $servicoId = $request->servico_id;
         $profissionalId = $request->profissional_id; // Opcional - se não tiver, busca de todos
+        $duracao = (int) $request->duracao; // Converter para int - opcional - duração customizada (para múltiplos serviços)
 
         $servico = Servico::find($servicoId);
         if (!$servico) {
@@ -164,7 +174,12 @@ class AgendamentoController extends Controller
             
             if (!$vinculo) continue;
 
-            $duracao = $vinculo->pivot->duracao_customizada ?? $servico->duracao;
+            // Usar duração passada como parâmetro (múltiplos serviços) ou duração customizada/padrão
+            if ($duracao) {
+                $duracaoUsada = $duracao;
+            } else {
+                $duracaoUsada = $vinculo->pivot->duracao_customizada ?? $vinculo->duracao;
+            }
 
             // 2. Busca a Escala de Trabalho do dia deste profissional
             $escala = HorarioTrabalho::where('profissional_id', $prof->id)
@@ -192,7 +207,7 @@ class AgendamentoController extends Controller
             $horaAlmocoFim = Carbon::parse($data . ' ' . $escala->almoco_fim);
 
             while ($horaAtual < $horaFimExpediente) {
-                $horaFimEstimado = $horaAtual->copy()->addMinutes($duracao);
+                $horaFimEstimado = $horaAtual->copy()->addMinutes($duracaoUsada);
                 $ocupado = false;
 
                 // Regra A: O serviço termina depois do expediente?
@@ -271,35 +286,59 @@ class AgendamentoController extends Controller
     // =========================================================
     public function store(Request $request)
     {
+        // Suporta tanto servico_id (compatibilidade) quanto servicos_ids (múltiplos)
+        $servicos_ids = null;
+        if ($request->has('servicos_ids') && is_array($request->servicos_ids)) {
+            $servicos_ids = $request->servicos_ids;
+        } elseif ($request->has('servicos_ids') && is_string($request->servicos_ids)) {
+            $servicos_ids = array_map('intval', explode(',', $request->servicos_ids));
+        } elseif ($request->has('servico_id')) {
+            $servicos_ids = [$request->servico_id];
+        }
+
+        // Validação básica
         $request->validate([
             'cliente_id' => ['required','exists:users,id'],
             'profissional_id' => ['required','exists:users,id'],
-            'servico_id' => ['required','exists:servicos,id_servico'],
             'data_hora' => ['required','date','after:now'],
         ], [
             'data_hora.after' => 'O agendamento deve ser para uma data futura.',
         ]);
 
+        if (!$servicos_ids || empty($servicos_ids)) {
+            return back()->withErrors(['servicos' => 'Por favor, escolhe pelo menos um serviço.'])->withInput();
+        }
+
         if (auth()->user()->status === 'bloqueado') {
             return back()->withErrors(['erro' => 'Sua conta está bloqueada para novos agendamentos devido ao excesso de faltas. Entre em contato com o suporte.']);
         }
 
-        $servico = Servico::findOrFail($request->servico_id);
         $profissional = User::findOrFail($request->profissional_id);
         
         // Definindo Início e Fim
         $inicio = Carbon::parse($request->data_hora);
-        $diaSemana = $inicio->dayOfWeek; 
+        $diaSemana = $inicio->dayOfWeek;
 
-        // Busca a duração
-        $vinculo = $profissional->servicos->find($servico->id_servico);
+        // Busca a duração total de todos os serviços
+        $duracao = 0;
+        $servicosPrincipais = [];
+        $valorTotal = 0;
+        
+        foreach ($servicos_ids as $servicoId) {
+            $servico = Servico::findOrFail($servicoId);
+            $vinculo = $profissional->servicos->find($servicoId);
 
-        // Verifica se o profissional realmente executa esse serviço
-        if (!$vinculo) {
-            return back()->withErrors(['servico_id' => 'Este profissional não realiza este tipo de serviço.'])->withInput();
+            // Verifica se o profissional realmente executa esse serviço
+            if (!$vinculo) {
+                return back()->withErrors(['servicos' => "Este profissional não realiza o serviço: {$servico->nome}"])->withInput();
+            }
+
+            $duracaoServico = $vinculo->pivot->duracao_customizada ?? $servico->duracao;
+            $duracao += $duracaoServico;
+            $servicosPrincipais[] = $servico;
+            $valorTotal += $servico->preco;
         }
 
-        $duracao = $vinculo->pivot->duracao_customizada ?? $servico->duracao;
         $fim = $inicio->copy()->addMinutes($duracao);
 
         // Validação: Horário de Trabalho e Almoço
@@ -320,15 +359,14 @@ class AgendamentoController extends Controller
         }
 
         // Verifica se o atendimento invade o almoço 
-        // Se o início for antes do fim do almoço E o fim for depois do início do almoço, há intersecção.
         if ($horaInicio < $escala->almoco_fim && $horaFim > $escala->almoco_inicio) {
             return back()->withErrors(['data_hora' => 'Este horário coincide ou invade o intervalo de almoço do profissional.'])->withInput();
         }
 
         // Validação: Bloqueios (Folgas e Feriados) 
         $bloqueios = BloqueioHorario::where(function ($q) use ($request) {
-            $q->whereNull('profissional_id') // Bloqueio geral
-              ->orWhere('profissional_id', $request->profissional_id); // Bloqueio do profissional
+            $q->whereNull('profissional_id')
+              ->orWhere('profissional_id', $request->profissional_id);
         })->get();
 
         foreach ($bloqueios as $bloqueio) {
@@ -343,11 +381,9 @@ class AgendamentoController extends Controller
         // =========================================================================
         // BLINDAGEM CONTRA OVERBOOKING (Fila de Banco de Dados)
         // =========================================================================
-        $resultadoAgendamento = DB::transaction(function () use ($request, $inicio, $fim, $servico) {
+        $resultadoAgendamento = DB::transaction(function () use ($request, $inicio, $fim, $servicos_ids, $servicosPrincipais, $valorTotal) {
             
-            // 1. A MÁGICA: Trava a "agenda" deste profissional por alguns milissegundos.
-            // Se outra pessoa tentar agendar ao mesmo tempo, o banco de dados vai colocar ela 
-            // numa fila de espera até essa verificação terminar.
+            // 1. Trava a "agenda" deste profissional
             User::where('id', $request->profissional_id)->lockForUpdate()->first();
 
             // 2. Validação: Conflito (Colisão)
@@ -368,21 +404,30 @@ class AgendamentoController extends Controller
                     });
                 })->exists();
 
-            // Se achou conflito, aborta a missão e avisa o controller
+            // Se achou conflito, aborta a missão
             if ($conflito) {
                 return 'conflito'; 
             }
 
-            // 3. Salvar Agendamento se a via estiver livre
-            Agendamento::create([
+            // 3. Salvar Agendamento com o primeiro serviço (para compatibilidade)
+            $agendamento = Agendamento::create([
                 'cliente_id' => $request->cliente_id,
                 'profissional_id' => $request->profissional_id,
-                'servico_id' => $request->servico_id,
+                'servico_id' => $servicos_ids[0],
                 'data_hora_inicio' => $inicio,
                 'data_hora_fim' => $fim,
                 'status' => 'confirmado',
-                'valor_total' => $servico->preco, 
+                'valor_total' => $valorTotal,
             ]);
+
+            // 4. Adicionar serviços na tabela pivot agendamento_servico
+            foreach ($servicos_ids as $servicoId) {
+                $servico = $servicosPrincipais[array_search($servicoId, $servicos_ids)];
+                $agendamento->servicos()->attach($servicoId, [
+                    'duracao' => $servico->duracao,
+                    'preco' => $servico->preco
+                ]);
+            }
 
             return 'sucesso';
         });
@@ -447,6 +492,12 @@ class AgendamentoController extends Controller
             $request->merge([
                 'data_hora' => $request->data_agendamento . ' ' . $request->hora_agendamento
             ]);
+        }
+
+        // Se vem servicos_ids (múltiplos), converte para array
+        if ($request->has('servicos_ids')) {
+            $servicos_ids = array_map('intval', explode(',', $request->servicos_ids));
+            $request->merge(['servicos_ids' => $servicos_ids]);
         }
 
         // Injeta o ID do cliente logado por segurança
