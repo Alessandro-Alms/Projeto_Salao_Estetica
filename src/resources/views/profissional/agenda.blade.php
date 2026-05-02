@@ -31,14 +31,29 @@
                 </div>
             @endif
 
+            {{-- FILTRO DE PERÍODO --}}
+            <div class="mb-6 flex gap-3 flex-wrap">
+                <form method="GET" action="{{ route('profissional.agenda') }}" class="flex gap-2">
+                    <input type="hidden" name="filtro" id="filtro_input" value="{{ request('filtro', '7') }}">
+                    
+                    <button type="button" onclick="filtrarAgendamentos(7)" 
+                            class="px-4 py-2 rounded-full text-sm font-medium transition-all {{ request('filtro', '7') == '7' ? 'bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white shadow-md' : 'bg-white/70 border border-[#FFD6F4] text-[#4A00B9] hover:bg-white/90' }}">
+                        📅 Próximos 7 dias
+                    </button>
+
+                    <button type="button" onclick="filtrarAgendamentos(30)" 
+                            class="px-4 py-2 rounded-full text-sm font-medium transition-all {{ request('filtro') == '30' ? 'bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white shadow-md' : 'bg-white/70 border border-[#FFD6F4] text-[#4A00B9] hover:bg-white/90' }}">
+                        📅 Próximos 30 dias
+                    </button>
+
+                    <button type="button" onclick="filtrarAgendamentos('todos')" 
+                            class="px-4 py-2 rounded-full text-sm font-medium transition-all {{ request('filtro') == 'todos' ? 'bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white shadow-md' : 'bg-white/70 border border-[#FFD6F4] text-[#4A00B9] hover:bg-white/90' }}">
+                        📅 Todos os agendamentos
+                    </button>
+                </form>
+            </div>
+
             @forelse($agendamentos as $dia => $itens)
-                <div class="mb-8">
-                    <div class="flex items-center gap-2 mb-3">
-                        <span class="text-[#FF2EB6] text-xl">✦</span>
-                        <h2 class="bg-gradient-to-r from-[#FF2EB6]/20 to-[#7B19E5]/20 text-[#4A00B9] px-4 py-2 rounded-full font-title text-lg inline-block">
-                            📅 Dia: {{ $dia }}
-                        </h2>
-                    </div>
                     
                     <div class="grid gap-4">
                         @foreach($itens as $agenda)
@@ -218,6 +233,16 @@
         
         container.appendChild(novoItem);
         produtoIndex++;
+    }
+
+    function filtrarAgendamentos(periodo) {
+        const url = new URL(window.location);
+        if (periodo === 'todos') {
+            url.searchParams.set('filtro', 'todos');
+        } else {
+            url.searchParams.set('filtro', periodo);
+        }
+        window.location.href = url.toString();
     }
 </script>
 

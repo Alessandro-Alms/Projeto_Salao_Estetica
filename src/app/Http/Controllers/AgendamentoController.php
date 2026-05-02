@@ -466,17 +466,27 @@ class AgendamentoController extends Controller
         return view('cliente.agendar', compact('profissionais', 'servicos'));
     }
 
-    public function agendaProfissional()
+    public function agendaProfissional(Request $request)
     {
-        // Usamos o query builder puro para testar se o Eloquent está bugando
-        $agendamentos = Agendamento::where('profissional_id', auth()->id())
-                                    ->with(['cliente', 'servico'])
-                                    ->orderBy('data_hora_inicio', 'asc')
-                                    ->get()
-                                    ->groupBy(fn($data) => \Carbon\Carbon::parse($data->data_hora_inicio)->format('d/m/Y'));
+        $filtro = $request->get('filtro', '7');
+        
+        $query = Agendamento::where('profissional_id', auth()->id())
+                            ->with(['cliente', 'servico', 'servicos'])
+                            ->orderBy('data_hora_inicio', 'asc');
+        
+        // Aplicar filtro de período
+        if ($filtro !== 'todos') {
+            $dias = (int) $filtro;
+            $dataLimite = Carbon::now()->addDays($dias);
+            $query->whereBetween('data_hora_inicio', [
+                Carbon::now()->startOfDay(),
+                $dataLimite->endOfDay()
+            ]);
+        }
+        
+        $agendamentos = $query->get()
+                            ->groupBy(fn($data) => \Carbon\Carbon::parse($data->data_hora_inicio)->format('d/m/Y'));
 
-        // Verificação de segurança: se a lista não estiver vazia, 
-        // o Laravel VAI ter que carregar o ID.
         $produtos = Produto::where('quantidade_estoque', '>', 0)->get();
 
         return view('profissional.agenda', compact('agendamentos', 'produtos'));
