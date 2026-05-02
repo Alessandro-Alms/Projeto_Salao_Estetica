@@ -54,6 +54,13 @@
             </div>
 
             @forelse($agendamentos as $dia => $itens)
+                <div class="mb-8">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="text-[#FF2EB6] text-xl">✦</span>
+                        <h2 class="bg-gradient-to-r from-[#FF2EB6]/20 to-[#7B19E5]/20 text-[#4A00B9] px-4 py-2 rounded-full font-title text-lg inline-block">
+                            📅 Dia: {{ $dia }}
+                        </h2>
+                    </div>
                     
                     <div class="grid gap-4">
                         @foreach($itens as $agenda)
