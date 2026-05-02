@@ -20,9 +20,9 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-// ✅ Página de agendamento (Adicionado pelo Front-end)
+// ✅ Redirecionamento para o formulário de agendamento do cliente
 Route::get('/agendar', function () {
-    return view('agendar');
+    return redirect()->route('cliente.agendar.novo');
 })->name('agendar');
 
 // ==========================================
@@ -68,6 +68,8 @@ Route::middleware(['auth', 'gerente_ou_recepcionista'])->prefix('admin')->name('
     Route::get('profissionais', [UserController::class, 'index'])->name('profissionais.index');
     Route::get('agenda', [AgendamentoController::class, 'index'])->name('agenda.index');
     Route::post('agenda', [AgendamentoController::class, 'store'])->name('agenda.store');
+    Route::get('/agendar-cliente', [AgendamentoController::class, 'agendarGerencial'])->name('agendar.cliente');
+    Route::post('/agendar-cliente', [AgendamentoController::class, 'salvarAgendamentoGerencial'])->name('agendar.cliente.salvar');
 
     // ✅ CORREÇÃO 2: Rotas de Venda de Pacotes movidas para cá (Segurança total)
     // O prefixo 'admin' e o nome 'admin.' já são aplicados automaticamente por este grupo
@@ -133,6 +135,8 @@ Route::middleware(['auth', 'profissional'])->prefix('profissional')->name('profi
     Route::post('/agendamento/{id_agendamento}/executado', [AgendamentoController::class, 'marcarComoExecutado'])->name('agendamento.executado');
     Route::get('/minha-agenda', [AgendamentoController::class, 'agendaProfissional'])->name('agenda');
     Route::get('/extrato', [UserController::class, 'extrato'])->name('extrato');
+    Route::get('/agendar-cliente', [AgendamentoController::class, 'agendarGerencial'])->name('agendar.cliente');
+    Route::post('/agendar-cliente', [AgendamentoController::class, 'salvarAgendamentoGerencial'])->name('agendar.cliente.salvar');
 });
 
 require __DIR__.'/auth.php';

@@ -6,6 +6,15 @@
         </div>
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <a href="{{ route('admin.agendar.cliente') }}" class="group flex items-center gap-4 p-4 rounded-xl bg-white/50 hover:bg-white/80 transition-all hover:shadow-lg hover:-translate-y-1 border border-[#FFD6F4]">
+                <div class="w-12 h-12 bg-gradient-to-br from-[#FF2EB6] to-[#FF69B4] rounded-xl flex items-center justify-center shadow-md">
+                    <span class="text-white text-xl">➕</span>
+                </div>
+                <div>
+                    <h4 class="font-title text-[#4A00B9]">Agendar Cliente</h4>
+                    <p class="text-xs text-gray-500">Marcar para um cliente</p>
+                </div>
+            </a>
             <a href="{{ route('admin.agenda.index') }}" class="group flex items-center gap-4 p-4 rounded-xl bg-white/50 hover:bg-white/80 transition-all hover:shadow-lg hover:-translate-y-1 border border-[#FFD6F4]">
                 <div class="w-12 h-12 bg-gradient-to-br from-[#7B19E5] to-[#A855F7] rounded-xl flex items-center justify-center shadow-md">
                     <span class="text-white text-xl">📅</span>

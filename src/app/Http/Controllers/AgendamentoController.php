@@ -444,6 +444,127 @@ class AgendamentoController extends Controller
         return back()->with('status', 'Agendamento realizado com sucesso!');
     }
 
+    public function agendarGerencial()
+    {
+        // Buscar todos os clientes
+        $clientes = User::where('cargo', 'cliente')->orderBy('name')->get();
+        
+        // Buscar todos os profissionais
+        $profissionais = User::where('cargo', 'profissional')->orderBy('name')->get();
+        
+        // Buscar todos os serviços
+        $servicos = Servico::all();
+        
+        return view('agendamentos.gerencial_agendar', compact('clientes', 'profissionais', 'servicos'));
+    }
+
+    public function salvarAgendamentoGerencial(Request $request)
+    {
+        $request->validate([
+            'cliente_id' => ['required', 'exists:users,id'],
+            'profissional_id' => ['required', 'exists:users,id'],
+            'servico_id' => ['required', 'exists:servicos,id_servico'],
+            'data' => ['required', 'date', 'after_or_equal:today'],
+            'hora' => ['required', 'date_format:H:i'],
+        ], [
+            'data.after_or_equal' => 'A data deve ser hoje ou uma data futura.',
+        ]);
+
+        // Combinar data e hora
+        $data_hora = Carbon::parse($request->data . ' ' . $request->hora);
+
+        // Buscar serviço
+        $servico = Servico::findOrFail($request->servico_id);
+        $profissional = User::findOrFail($request->profissional_id);
+
+        // Verificar se o profissional faz esse serviço
+        $vinculo = $profissional->servicos->find($request->servico_id);
+        if (!$vinculo) {
+            return back()->withErrors(['servico_id' => 'Este profissional não realiza este serviço.'])->withInput();
+        }
+
+        // Verificar dia da semana e expediente
+        $diaSemana = $data_hora->dayOfWeek;
+        $escala = HorarioTrabalho::where('profissional_id', $profissional->id)
+                    ->where('dia_semana', $diaSemana)
+                    ->first();
+
+        if (!$escala || !$escala->trabalha) {
+            return back()->withErrors(['data' => 'O profissional não trabalha neste dia da semana.'])->withInput();
+        }
+
+        $duracaoServico = $vinculo->pivot->duracao_customizada ?? $servico->duracao;
+        $data_hora_fim = $data_hora->copy()->addMinutes($duracaoServico);
+
+        $horaInicio = $data_hora->format('H:i:s');
+        $horaFim = $data_hora_fim->format('H:i:s');
+
+        // Verificar expediente
+        if ($horaInicio < $escala->hora_inicio || $horaFim > $escala->hora_fim) {
+            return back()->withErrors(['hora' => 'O horário está fora do expediente do profissional.'])->withInput();
+        }
+
+        // Verificar almoço
+        if ($horaInicio < $escala->almoco_fim && $horaFim > $escala->almoco_inicio) {
+            return back()->withErrors(['hora' => 'Este horário coincide com o intervalo de almoço.'])->withInput();
+        }
+
+        // Verificar bloqueios
+        $bloqueios = BloqueioHorario::where(function ($q) use ($profissional) {
+            $q->whereNull('profissional_id')->orWhere('profissional_id', $profissional->id);
+        })->get();
+
+        foreach ($bloqueios as $bloqueio) {
+            $bqInicio = Carbon::parse($bloqueio->data_hora_inicio);
+            $bqFim = Carbon::parse($bloqueio->data_hora_fim);
+            if ($data_hora < $bqFim && $data_hora_fim > $bqInicio) {
+                return back()->withErrors(['data' => 'Este período está bloqueado: ' . $bloqueio->motivo])->withInput();
+            }
+        }
+
+        // Verificar conflito com agendamentos existentes
+        $conflito = Agendamento::where('profissional_id', $profissional->id)
+            ->where('status', '!=', 'cancelado')
+            ->where(function ($q) use ($data_hora, $data_hora_fim) {
+                $q->where(function ($q2) use ($data_hora, $data_hora_fim) {
+                    $q2->where('data_hora_inicio', '>=', $data_hora)
+                        ->where('data_hora_inicio', '<', $data_hora_fim);
+                })
+                ->orWhere(function ($q2) use ($data_hora, $data_hora_fim) {
+                    $q2->where('data_hora_fim', '>', $data_hora)
+                        ->where('data_hora_fim', '<=', $data_hora_fim);
+                })
+                ->orWhere(function ($q2) use ($data_hora, $data_hora_fim) {
+                    $q2->where('data_hora_inicio', '<=', $data_hora)
+                        ->where('data_hora_fim', '>=', $data_hora_fim);
+                });
+            })
+            ->exists();
+
+        if ($conflito) {
+            return back()->withErrors(['hora' => 'Este horário já está ocupado.'])->withInput();
+        }
+
+        // Salvar agendamento
+        $agendamento = Agendamento::create([
+            'cliente_id' => $request->cliente_id,
+            'profissional_id' => $request->profissional_id,
+            'servico_id' => $request->servico_id,
+            'data_hora_inicio' => $data_hora,
+            'data_hora_fim' => $data_hora_fim,
+            'status' => 'confirmado',
+            'valor_total' => $servico->preco,
+        ]);
+
+        // Adicionar na tabela pivot
+        $agendamento->servicos()->attach($request->servico_id, [
+            'duracao' => $servico->duracao,
+            'preco' => $servico->preco
+        ]);
+
+        return redirect()->route('admin.agenda.index')->with('status', 'Agendamento realizado com sucesso!');
+    }
+
     public function listarJson()
     {
         $agendamentos = Agendamento::with(['cliente', 'servico', 'profissional'])->get();
