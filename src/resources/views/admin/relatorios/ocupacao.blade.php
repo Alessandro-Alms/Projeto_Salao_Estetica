@@ -1,112 +1,417 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ __('REL002: Ocupação da Agenda') }}
-            </h2>
-            <a href="{{ route('admin.relatorios.index') ?? '#' }}" class="text-sm text-blue-600 hover:underline">⬅ Voltar</a>
+            <div class="flex items-center gap-2">
+                <span class="text-[#7B19E5] text-xl">✧</span>
+                <h2 class="font-title text-xl text-[#1A002B]">
+                    {{ __('REL002: Ocupação da Agenda') }}
+                </h2>
+            </div>
+            <a href="{{ route('admin.relatorios.index') ?? '#' }}" class="text-sm text-[#7B19E5] hover:text-[#FF2EB6] transition-colors inline-flex items-center gap-1">
+                <i class="fa-solid fa-arrow-left text-xs"></i> Voltar
+            </a>
         </div>
     </x-slot>
 
-    <div class="container mx-auto px-4 py-6">
-        <div class="bg-white p-4 rounded-xl shadow mb-6">
-            <form method="GET" action="{{ route('admin.relatorios.ocupacao') }}" class="flex flex-wrap items-end gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Início</label>
-                    <input type="date" name="data_inicio" value="{{ $dataInicio }}" class="border border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Fim</label>
-                    <input type="date" name="data_fim" value="{{ $dataFim }}" class="border border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                </div>
-                <button type="submit" class="bg-indigo-600 text-white px-5 py-2.5 rounded-lg font-bold hover:bg-indigo-700 transition shadow-sm">
-                    Analisar Ocupação
-                </button>
-            </form>
+    <div class="py-12 relative">
+        <!-- Fundo -->
+        <div class="fixed inset-0 -z-10 overflow-hidden">
+            <div class="absolute top-0 -left-20 w-[600px] h-[600px] bg-[#7B19E5]/20 rounded-full blur-3xl"></div>
+            <div class="absolute bottom-0 -right-20 w-[700px] h-[700px] bg-[#FF2EB6]/20 rounded-full blur-3xl"></div>
+            <div class="absolute top-1/3 left-1/3 w-[400px] h-[400px] bg-[#A955D3]/15 rounded-full blur-3xl"></div>
+            <div class="absolute inset-0 bg-gradient-to-br from-[#7B19E5]/5 via-white/30 to-[#FF2EB6]/5"></div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white border-l-4 border-indigo-500 p-6 rounded-xl shadow flex flex-col justify-center">
-                <h3 class="text-gray-500 font-bold uppercase text-sm mb-2">Volume Total</h3>
-                <p class="text-4xl font-black text-gray-800">{{ $totalAgendamentos }}</p>
-                <p class="text-sm text-gray-500 mt-2">Agendamentos válidos no período</p>
+        <div class="container mx-auto px-4">
+            <!-- Filtro -->
+            <div class="glass-card rounded-2xl shadow-xl overflow-hidden mb-6">
+                <div class="p-4 bg-white/70 backdrop-blur-sm border border-white/40">
+                    <form method="GET" action="{{ route('admin.relatorios.ocupacao') }}" class="flex flex-wrap items-end gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-[#4A00B9] mb-1">Início</label>
+                            <input type="date" name="data_inicio" value="{{ $dataInicio }}" 
+                                class="px-4 py-2.5 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-[#4A00B9] mb-1">Fim</label>
+                            <input type="date" name="data_fim" value="{{ $dataFim }}" 
+                                class="px-4 py-2.5 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
+                        </div>
+                        <button type="submit" class="bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white px-6 py-2.5 text-sm rounded-full font-medium btn-primary shadow-md hover:shadow-lg transition-all">
+                            Analisar Ocupação
+                        </button>
+                    </form>
+                </div>
             </div>
 
-            <div class="bg-gradient-to-br from-orange-400 to-red-500 p-6 rounded-xl shadow text-white relative overflow-hidden flex flex-col justify-center">
-                <div class="absolute right-4 top-4 opacity-20 text-5xl">🔥</div>
-                <h3 class="text-sm font-bold opacity-80 uppercase tracking-wider mb-2">Horário de Pico</h3>
-                @if($horarioPico)
-                    <p class="text-4xl font-black mb-1">{{ str_pad($horarioPico->hora, 2, '0', STR_PAD_LEFT) }}:00</p>
-                    <p class="text-sm bg-white/20 px-3 py-1 rounded-full inline-block mt-2 self-start">
-                        {{ $horarioPico->total }} atendimentos
-                    </p>
-                @else
-                    <p class="text-xl font-bold">Sem dados</p>
-                @endif
-            </div>
-
-            <div class="bg-gradient-to-br from-blue-400 to-cyan-500 p-6 rounded-xl shadow text-white relative overflow-hidden flex flex-col justify-center">
-                <div class="absolute right-4 top-4 opacity-20 text-5xl">❄️</div>
-                <h3 class="text-sm font-bold opacity-80 uppercase tracking-wider mb-2">Horário Morto</h3>
-                @if($horarioMorto)
-                    <p class="text-4xl font-black mb-1">{{ str_pad($horarioMorto->hora, 2, '0', STR_PAD_LEFT) }}:00</p>
-                    <p class="text-sm bg-white/20 px-3 py-1 rounded-full inline-block mt-2 self-start">
-                        Apenas {{ $horarioMorto->total }} atendimentos
-                    </p>
-                @else
-                    <p class="text-xl font-bold">Sem dados</p>
-                @endif
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="bg-white p-6 rounded-xl shadow">
-                <h3 class="font-bold mb-6 text-gray-800 text-lg border-b pb-2">Distribuição por Horário</h3>
-                
-                @if($ocupacaoPorHora->count() > 0)
-                    @php $maxHora = $ocupacaoPorHora->max('total'); @endphp
-                    <div class="space-y-3">
-                        @foreach($ocupacaoPorHora as $hora)
-                            @php $percentual = ($hora->total / $maxHora) * 100; @endphp
-                            <div class="flex items-center gap-3">
-                                <span class="w-12 text-sm font-bold text-gray-600 text-right">{{ str_pad($hora->hora, 2, '0', STR_PAD_LEFT) }}:00</span>
-                                <div class="flex-1 bg-gray-100 rounded-full h-4 overflow-hidden">
-                                    <div class="bg-indigo-500 h-full rounded-full" style="width: {{ $percentual }}%"></div>
-                                </div>
-                                <span class="w-8 text-sm text-gray-500">{{ $hora->total }}</span>
-                            </div>
-                        @endforeach
+            <!-- Cards de resumo -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <!-- Volume Total -->
+                <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
+                    <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
+                        <h3 class="text-gray-500 font-bold uppercase text-sm mb-2">Volume Total</h3>
+                        <p class="text-4xl font-black text-[#7B19E5]">{{ $totalAgendamentos }}</p>
+                        <p class="text-sm text-gray-500 mt-2">Agendamentos válidos no período</p>
                     </div>
-                @else
-                    <p class="text-gray-500 text-center py-4">Nenhum agendamento encontrado.</p>
-                @endif
+                </div>
+
+                <!-- Horário de Pico -->
+                <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
+                    <div class="p-6 bg-gradient-to-br from-[#FF2EB6] to-[#FF69B4] text-white">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="text-sm font-bold opacity-80 uppercase tracking-wider mb-2">Horário de Pico</h3>
+                                @if($horarioPico)
+                                    <p class="text-4xl font-black mb-1">{{ str_pad($horarioPico->hora, 2, '0', STR_PAD_LEFT) }}:00</p>
+                                    <p class="text-sm bg-white/20 px-3 py-1 rounded-full inline-block mt-2">
+                                        {{ $horarioPico->total }} atendimentos
+                                    </p>
+                                @else
+                                    <p class="text-xl font-bold">Sem dados</p>
+                                @endif
+                            </div>
+                            <div class="opacity-30 text-4xl">✧</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Horário Morto -->
+                <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
+                    <div class="p-6 bg-gradient-to-br from-[#7B19E5] to-[#A855F7] text-white">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="text-sm font-bold opacity-80 uppercase tracking-wider mb-2">Horário Morto</h3>
+                                @if($horarioMorto)
+                                    <p class="text-4xl font-black mb-1">{{ str_pad($horarioMorto->hora, 2, '0', STR_PAD_LEFT) }}:00</p>
+                                    <p class="text-sm bg-white/20 px-3 py-1 rounded-full inline-block mt-2">
+                                        Apenas {{ $horarioMorto->total }} atendimentos
+                                    </p>
+                                @else
+                                    <p class="text-xl font-bold">Sem dados</p>
+                                @endif
+                            </div>
+                            <div class="opacity-30 text-4xl">✧</div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="bg-white p-6 rounded-xl shadow">
-                <h3 class="font-bold mb-6 text-gray-800 text-lg border-b pb-2">Dias Mais Movimentados</h3>
-                
-                @if($ocupacaoPorDia->count() > 0)
-                    @php $maxDia = $ocupacaoPorDia->max('total'); @endphp
-                    <div class="space-y-4">
-                        {{-- Nova ordem do Carbon: 1=Segunda, 2=Terça... 6=Sábado, 0=Domingo --}}
-                        @foreach([1, 2, 3, 4, 5, 6, 0] as $diaSemana) 
-                            @php 
-                                $total = isset($ocupacaoPorDia[$diaSemana]) ? $ocupacaoPorDia[$diaSemana]->total : 0;
-                                $percentual = $maxDia > 0 ? ($total / $maxDia) * 100 : 0;
-                            @endphp
-                            <div class="flex items-center gap-3">
-                                <span class="w-20 text-sm font-bold text-gray-600 text-right">{{ $nomesDias[$diaSemana] }}</span>
-                                <div class="flex-1 bg-gray-100 rounded-full h-5 overflow-hidden">
-                                    <div class="{{ $percentual == 100 ? 'bg-orange-500' : 'bg-blue-400' }} h-full rounded-full transition-all" style="width: {{ $percentual }}%"></div>
-                                </div>
-                                <span class="w-8 text-sm text-gray-500 font-medium">{{ $total }}</span>
+            <!-- Gráficos -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Distribuição por Horário -->
+                <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
+                    <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
+                        <div class="flex items-center gap-2 border-b border-[#FFD6F4] pb-2 mb-4">
+                            <span class="text-[#7B19E5] text-xl">✧</span>
+                            <h3 class="font-title text-[#4A00B9] text-lg">Distribuição por Horário</h3>
+                        </div>
+                        
+                        @if($ocupacaoPorHora->count() > 0)
+                            @php $maxHora = $ocupacaoPorHora->max('total'); @endphp
+                            <div class="space-y-3">
+                                @foreach($ocupacaoPorHora as $hora)
+                                    @php $percentual = $maxHora > 0 ? ($hora->total / $maxHora) * 100 : 0; @endphp
+                                    <div class="flex items-center gap-3">
+                                        <span class="w-12 text-sm font-bold text-gray-600 text-right">{{ str_pad($hora->hora, 2, '0', STR_PAD_LEFT) }}:00</span>
+                                        <div class="flex-1 bg-gray-200 rounded-full h-4 overflow-hidden">
+                                            <div class="bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] h-full rounded-full" style="width: {{ $percentual }}%"></div>
+                                        </div>
+                                        <span class="w-8 text-sm text-gray-500">{{ $hora->total }}</span>
+                                    </div>
+                                @endforeach
                             </div>
-                        @endforeach
+                        @else
+                            <p class="text-gray-500 text-center py-4">✧ Nenhum agendamento encontrado.</p>
+                        @endif
                     </div>
-                @else
-                    <p class="text-gray-500 text-center py-4">Nenhum agendamento encontrado.</p>
-                @endif
+                </div>
+
+                <!-- Dias Mais Movimentados -->
+                <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
+                    <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
+                        <div class="flex items-center gap-2 border-b border-[#FFD6F4] pb-2 mb-4">
+                            <span class="text-[#7B19E5] text-xl">✧</span>
+                            <h3 class="font-title text-[#4A00B9] text-lg">Dias Mais Movimentados</h3>
+                        </div>
+                        
+                        @if($ocupacaoPorDia->count() > 0)
+                            @php $maxDia = $ocupacaoPorDia->max('total'); @endphp
+                            <div class="space-y-4">
+                                @foreach([1, 2, 3, 4, 5, 6, 0] as $diaSemana) 
+                                    @php 
+                                        $total = isset($ocupacaoPorDia[$diaSemana]) ? $ocupacaoPorDia[$diaSemana]->total : 0;
+                                        $percentual = $maxDia > 0 ? ($total / $maxDia) * 100 : 0;
+                                    @endphp
+                                    <div class="flex items-center gap-3">
+                                        <span class="w-20 text-sm font-bold text-gray-600 text-right">{{ $nomesDias[$diaSemana] }}</span>
+                                        <div class="flex-1 bg-gray-200 rounded-full h-5 overflow-hidden">
+                                            <div class="{{ $percentual == 100 ? 'bg-gradient-to-r from-[#FF2EB6] to-[#FF69B4]' : 'bg-gradient-to-r from-[#7B19E5] to-[#A855F7]' }} h-full rounded-full transition-all" style="width: {{ $percentual }}%"></div>
+                                        </div>
+                                        <span class="w-8 text-sm text-gray-500 font-medium">{{ $total }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <p class="text-gray-500 text-center py-4">✧ Nenhum agendamento encontrado.</p>
+                        @endif
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </x-app-layout>
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Playfair+Display:wght@700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+    
+    .font-title {
+        font-family: 'Playfair Display', serif;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+    }
+    
+    .glass-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 8px 32px rgba(123, 25, 229, 0.1);
+    }
+    
+    .btn-primary {
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        z-index: 1;
+    }
+    
+    .btn-primary::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s ease, height 0.6s ease;
+        z-index: -1;
+    }
+    
+    .btn-primary:hover::before {
+        width: 300px;
+        height: 300px;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+    }
+</style><x-app-layout>
+    <x-slot name="header">
+        <div class="flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <span class="text-[#7B19E5] text-xl">✧</span>
+                <h2 class="font-title text-xl text-[#1A002B]">
+                    {{ __('REL002: Ocupação da Agenda') }}
+                </h2>
+            </div>
+            <a href="{{ route('admin.relatorios.index') ?? '#' }}" class="text-sm text-[#7B19E5] hover:text-[#FF2EB6] transition-colors inline-flex items-center gap-1">
+                <i class="fa-solid fa-arrow-left text-xs"></i> Voltar
+            </a>
+        </div>
+    </x-slot>
+
+    <div class="py-12 relative">
+        <!-- Fundo -->
+        <div class="fixed inset-0 -z-10 overflow-hidden">
+            <div class="absolute top-0 -left-20 w-[600px] h-[600px] bg-[#7B19E5]/20 rounded-full blur-3xl"></div>
+            <div class="absolute bottom-0 -right-20 w-[700px] h-[700px] bg-[#FF2EB6]/20 rounded-full blur-3xl"></div>
+            <div class="absolute top-1/3 left-1/3 w-[400px] h-[400px] bg-[#A955D3]/15 rounded-full blur-3xl"></div>
+            <div class="absolute inset-0 bg-gradient-to-br from-[#7B19E5]/5 via-white/30 to-[#FF2EB6]/5"></div>
+        </div>
+
+        <div class="container mx-auto px-4">
+            <!-- Filtro -->
+            <div class="glass-card rounded-2xl shadow-xl overflow-hidden mb-6">
+                <div class="p-4 bg-white/70 backdrop-blur-sm border border-white/40">
+                    <form method="GET" action="{{ route('admin.relatorios.ocupacao') }}" class="flex flex-wrap items-end gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-[#4A00B9] mb-1">Início</label>
+                            <input type="date" name="data_inicio" value="{{ $dataInicio }}" 
+                                class="px-4 py-2.5 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-[#4A00B9] mb-1">Fim</label>
+                            <input type="date" name="data_fim" value="{{ $dataFim }}" 
+                                class="px-4 py-2.5 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
+                        </div>
+                        <button type="submit" class="bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white px-6 py-2.5 text-sm rounded-full font-medium btn-primary shadow-md hover:shadow-lg transition-all">
+                            Analisar Ocupação
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Cards de resumo -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <!-- Volume Total -->
+                <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
+                    <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
+                        <h3 class="text-gray-500 font-bold uppercase text-sm mb-2">Volume Total</h3>
+                        <p class="text-4xl font-black text-[#7B19E5]">{{ $totalAgendamentos }}</p>
+                        <p class="text-sm text-gray-500 mt-2">Agendamentos válidos no período</p>
+                    </div>
+                </div>
+
+                <!-- Horário de Pico -->
+                <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
+                    <div class="p-6 bg-gradient-to-br from-[#FF2EB6] to-[#FF69B4] text-white">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="text-sm font-bold opacity-80 uppercase tracking-wider mb-2">Horário de Pico</h3>
+                                @if($horarioPico)
+                                    <p class="text-4xl font-black mb-1">{{ str_pad($horarioPico->hora, 2, '0', STR_PAD_LEFT) }}:00</p>
+                                    <p class="text-sm bg-white/20 px-3 py-1 rounded-full inline-block mt-2">
+                                        {{ $horarioPico->total }} atendimentos
+                                    </p>
+                                @else
+                                    <p class="text-xl font-bold">Sem dados</p>
+                                @endif
+                            </div>
+                            <div class="opacity-30 text-4xl">✧</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Horário Morto -->
+                <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
+                    <div class="p-6 bg-gradient-to-br from-[#7B19E5] to-[#A855F7] text-white">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="text-sm font-bold opacity-80 uppercase tracking-wider mb-2">Horário Morto</h3>
+                                @if($horarioMorto)
+                                    <p class="text-4xl font-black mb-1">{{ str_pad($horarioMorto->hora, 2, '0', STR_PAD_LEFT) }}:00</p>
+                                    <p class="text-sm bg-white/20 px-3 py-1 rounded-full inline-block mt-2">
+                                        Apenas {{ $horarioMorto->total }} atendimentos
+                                    </p>
+                                @else
+                                    <p class="text-xl font-bold">Sem dados</p>
+                                @endif
+                            </div>
+                            <div class="opacity-30 text-4xl">✧</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráficos -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Distribuição por Horário -->
+                <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
+                    <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
+                        <div class="flex items-center gap-2 border-b border-[#FFD6F4] pb-2 mb-4">
+                            <span class="text-[#7B19E5] text-xl">✧</span>
+                            <h3 class="font-title text-[#4A00B9] text-lg">Distribuição por Horário</h3>
+                        </div>
+                        
+                        @if($ocupacaoPorHora->count() > 0)
+                            @php $maxHora = $ocupacaoPorHora->max('total'); @endphp
+                            <div class="space-y-3">
+                                @foreach($ocupacaoPorHora as $hora)
+                                    @php $percentual = $maxHora > 0 ? ($hora->total / $maxHora) * 100 : 0; @endphp
+                                    <div class="flex items-center gap-3">
+                                        <span class="w-12 text-sm font-bold text-gray-600 text-right">{{ str_pad($hora->hora, 2, '0', STR_PAD_LEFT) }}:00</span>
+                                        <div class="flex-1 bg-gray-200 rounded-full h-4 overflow-hidden">
+                                            <div class="bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] h-full rounded-full" style="width: {{ $percentual }}%"></div>
+                                        </div>
+                                        <span class="w-8 text-sm text-gray-500">{{ $hora->total }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <p class="text-gray-500 text-center py-4">✧ Nenhum agendamento encontrado.</p>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Dias Mais Movimentados -->
+                <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
+                    <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
+                        <div class="flex items-center gap-2 border-b border-[#FFD6F4] pb-2 mb-4">
+                            <span class="text-[#7B19E5] text-xl">✧</span>
+                            <h3 class="font-title text-[#4A00B9] text-lg">Dias Mais Movimentados</h3>
+                        </div>
+                        
+                        @if($ocupacaoPorDia->count() > 0)
+                            @php $maxDia = $ocupacaoPorDia->max('total'); @endphp
+                            <div class="space-y-4">
+                                @foreach([1, 2, 3, 4, 5, 6, 0] as $diaSemana) 
+                                    @php 
+                                        $total = isset($ocupacaoPorDia[$diaSemana]) ? $ocupacaoPorDia[$diaSemana]->total : 0;
+                                        $percentual = $maxDia > 0 ? ($total / $maxDia) * 100 : 0;
+                                    @endphp
+                                    <div class="flex items-center gap-3">
+                                        <span class="w-20 text-sm font-bold text-gray-600 text-right">{{ $nomesDias[$diaSemana] }}</span>
+                                        <div class="flex-1 bg-gray-200 rounded-full h-5 overflow-hidden">
+                                            <div class="{{ $percentual == 100 ? 'bg-gradient-to-r from-[#FF2EB6] to-[#FF69B4]' : 'bg-gradient-to-r from-[#7B19E5] to-[#A855F7]' }} h-full rounded-full transition-all" style="width: {{ $percentual }}%"></div>
+                                        </div>
+                                        <span class="w-8 text-sm text-gray-500 font-medium">{{ $total }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <p class="text-gray-500 text-center py-4">✧ Nenhum agendamento encontrado.</p>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</x-app-layout>
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Playfair+Display:wght@700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+    
+    .font-title {
+        font-family: 'Playfair Display', serif;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+    }
+    
+    .glass-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 8px 32px rgba(123, 25, 229, 0.1);
+    }
+    
+    .btn-primary {
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        z-index: 1;
+    }
+    
+    .btn-primary::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s ease, height 0.6s ease;
+        z-index: -1;
+    }
+    
+    .btn-primary:hover::before {
+        width: 300px;
+        height: 300px;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+    }
+</style>

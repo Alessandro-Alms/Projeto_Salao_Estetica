@@ -1,70 +1,90 @@
 <x-app-layout>
-    <div class="py-12">
+    <x-slot name="header">
+        <div class="hidden"></div>
+    </x-slot>
+
+    <div class="py-12 relative">
+        <!-- Fundo -->
+        <div class="fixed inset-0 -z-10 overflow-hidden">
+            <div class="absolute top-0 -left-20 w-[600px] h-[600px] bg-[#7B19E5]/20 rounded-full blur-3xl"></div>
+            <div class="absolute bottom-0 -right-20 w-[700px] h-[700px] bg-[#FF2EB6]/20 rounded-full blur-3xl"></div>
+            <div class="absolute top-1/3 left-1/3 w-[400px] h-[400px] bg-[#A955D3]/15 rounded-full blur-3xl"></div>
+            <div class="absolute inset-0 bg-gradient-to-br from-[#7B19E5]/5 via-white/30 to-[#FF2EB6]/5"></div>
+        </div>
+
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             
             {{-- Alertas de Feedback --}}
             @if(session('success'))
-                <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 shadow-sm rounded-r">
-                    {{ session('success') }}
+                <div class="mb-6 p-4 rounded-lg bg-green-50/80 border border-green-200 text-green-700">
+                    ✧ {{ session('success') }}
                 </div>
             @endif
 
             @if($errors->any())
-                <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 shadow-sm rounded-r">
+                <div class="mb-6 p-4 rounded-lg bg-red-50/80 border border-red-200 text-red-700">
                     @foreach ($errors->all() as $error)
-                        <p>{{ $error }}</p>
+                        <p>✧ {{ $error }}</p>
                     @endforeach
                 </div>
             @endif
 
             {{-- SECÇÃO DE PACOTES --}}
             <div class="mb-12">
-                <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-                    🎟️ Meus Pacotes Ativos
-                </h2>
+                <div class="flex items-center gap-2 mb-6">
+                    <span class="text-[#7B19E5] text-xl">✧</span>
+                    <h2 class="text-2xl font-title text-[#4A00B9]">Meus Pacotes Ativos</h2>
+                </div>
 
-                @if($pacotes->count() > 0)
+                @if(isset($pacotes) && $pacotes->count() > 0)
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         @foreach($pacotes as $meuPacote)
-                            <div class="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-5 shadow-sm relative overflow-hidden">
-                                <div class="relative z-10">
-                                    <span class="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded uppercase tracking-wide">Ativo</span>
-                                    <h3 class="text-lg font-black text-blue-900 mt-3 mb-1">{{ $meuPacote->pacote->nome }}</h3>
-                                    <p class="text-sm text-blue-700 mb-4">
+                            <div class="glass-card rounded-2xl shadow-xl overflow-hidden hover-lift">
+                                <div class="p-5 bg-white/70 backdrop-blur-sm border border-white/40">
+                                    <div class="flex justify-between items-start mb-3">
+                                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gradient-to-r from-green-500/20 to-green-600/20 text-green-700 border border-green-200">
+                                            ✧ Ativo
+                                        </span>
+                                    </div>
+                                    <h3 class="text-lg font-title text-[#4A00B9] mt-2 mb-1">{{ $meuPacote->pacote->nome }}</h3>
+                                    <p class="text-sm text-[#7B19E5] mb-4">
                                         Válido até: <span class="font-bold">{{ \Carbon\Carbon::parse($meuPacote->data_validade)->format('d/m/Y') }}</span>
                                     </p>
-                                    <div class="bg-white rounded-lg p-3 border border-blue-100 shadow-inner flex justify-between items-center">
+                                    <div class="bg-white/50 rounded-lg p-3 border border-[#FFD6F4] flex justify-between items-center">
                                         <span class="text-gray-600 text-sm font-medium">Sessões Restantes:</span>
-                                        <span class="text-2xl font-black text-blue-600">{{ $meuPacote->sessoes_restantes }}</span>
+                                        <span class="text-2xl font-black text-[#7B19E5]">{{ $meuPacote->sessoes_restantes }}</span>
                                     </div>
                                 </div>
                             </div>
                         @endforeach
                     </div>
                 @else
-                    <div class="bg-white border border-gray-200 rounded-xl p-6 text-center shadow-sm">
-                        <p class="text-gray-500">Não possuis nenhum pacote ativo.</p>
+                    <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
+                        <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40 text-center">
+                            <p class="text-gray-500">✧ Não possuis nenhum pacote ativo.</p>
+                        </div>
                     </div>
                 @endif
             </div>
 
-            <hr class="border-gray-200 mb-8">
-
             {{-- SECÇÃO DE AGENDAMENTOS --}}
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-gray-800">Meus Agendamentos</h2>
-                <a href="{{ route('cliente.agendar.novo') }}" class="bg-pink-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-pink-700 transition shadow-sm">
+                <div class="flex items-center gap-2">
+                    <span class="text-[#7B19E5] text-xl">✧</span>
+                    <h2 class="text-2xl font-title text-[#4A00B9]">Meus Agendamentos</h2>
+                </div>
+                <a href="{{ route('cliente.agendar.novo') }}" class="bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white px-6 py-2.5 text-sm rounded-full font-medium btn-primary shadow-md hover:shadow-lg transition-all">
                     + Novo Agendamento
                 </a>
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 @forelse($agendamentos as $agenda)
-                    <div class="bg-white overflow-hidden shadow-sm rounded-xl border border-gray-200 p-5 flex flex-col justify-between">
-                        <div>
+                    <div class="glass-card rounded-2xl shadow-xl overflow-hidden hover-lift">
+                        <div class="p-5 bg-white/70 backdrop-blur-sm border border-white/40 flex flex-col h-full">
                             <div class="flex justify-between items-start mb-3">
-                                <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded">
-                                    Fidelidade: {{ auth()->user()->contador_fidelidade }}/5
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-500/20 text-blue-700 border border-blue-200">
+                                    ✧ Fidelidade: {{ auth()->user()->contador_fidelidade ?? 0 }}/5
                                 </span>
 
                                 <span class="px-2 py-1 text-xs font-bold rounded-full 
@@ -76,47 +96,48 @@
                             </div>
 
                             <div class="mb-4">
-                                <p class="text-sm text-gray-500 font-semibold uppercase">
+                                <p class="text-sm text-[#7B19E5] font-semibold uppercase">
                                     {{ \Carbon\Carbon::parse($agenda->data_hora_inicio)->translatedFormat('d \d\e F') }}
                                 </p>
-                                <h3 class="text-lg font-bold text-gray-900">{{ $agenda->servico->nome }}</h3>
+                                <h3 class="text-lg font-title text-[#4A00B9]">{{ $agenda->servico->nome }}</h3>
                             </div>
 
-                            <div class="space-y-2 text-sm text-gray-600 mb-4">
-                                <p><strong>🕒 Horário:</strong> {{ \Carbon\Carbon::parse($agenda->data_hora_inicio)->format('H:i') }}</p>
-                                <p><strong>👤 Profissional:</strong> {{ $agenda->profissional->name }}</p>
-                                <p><strong>💰 Valor:</strong> R$ {{ number_format($agenda->valor_total, 2, ',', '.') }}</p>
+                            <div class="space-y-2 text-sm text-[#1A002B] mb-4">
+                                <p><strong class="text-[#7B19E5]">🕒 Horário:</strong> {{ \Carbon\Carbon::parse($agenda->data_hora_inicio)->format('H:i') }}</p>
+                                <p><strong class="text-[#7B19E5]">👤 Profissional:</strong> {{ $agenda->profissional->name }}</p>
+                                <p><strong class="text-[#7B19E5]">💰 Valor:</strong> R$ {{ number_format($agenda->valor_total, 2, ',', '.') }}</p>
                             </div>
-                        </div>
 
-                        {{-- BOTÃO DE AVALIAÇÃO OU STATUS FINAL --}}
-                        <div class="mt-4 pt-4 border-t border-gray-100">
-                            @if($agenda->status == 'executado')
-                                @if(!$agenda->avaliacao)
-                                    <button onclick="abrirModalAvaliacao({{ $agenda->id_agendamento }}, '{{ $agenda->servico->nome }}')" 
-                                            class="w-full bg-yellow-500 text-white py-2 rounded-lg font-bold hover:bg-yellow-600 transition flex items-center justify-center gap-2">
-                                        ⭐ Avaliar Atendimento
-                                    </button>
-                                @else
-                                    <div class="text-center p-2 bg-green-50 rounded-lg border border-green-100">
-                                        <span class="text-green-700 text-sm font-bold flex items-center justify-center gap-1">
-                                            ✅ Avaliado: {{ $agenda->avaliacao->nota }} / 5 estrelas
-                                        </span>
-                                    </div>
+                            <div class="mt-auto pt-4 border-t border-[#FFD6F4]">
+                                @if($agenda->status == 'executado')
+                                    @if(!$agenda->avaliacao)
+                                        <button onclick="abrirModalAvaliacao({{ $agenda->id_agendamento }}, '{{ $agenda->servico->nome }}')" 
+                                                class="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white py-2 rounded-full font-medium btn-primary shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2">
+                                            ⭐ Avaliar Atendimento
+                                        </button>
+                                    @else
+                                        <div class="text-center p-2 bg-green-50/50 rounded-lg border border-green-200">
+                                            <span class="text-green-700 text-sm font-bold flex items-center justify-center gap-1">
+                                                ✅ Avaliado: {{ $agenda->avaliacao->nota }} / 5 estrelas
+                                            </span>
+                                        </div>
+                                    @endif
+                                @elseif($agenda->status == 'confirmado')
+                                    <form action="{{ route('cliente.agendamento.cancelar', ['id' => $agenda->id_agendamento]) }}" method="POST" onsubmit="return confirm('Cancelar este horário?')">
+                                        @csrf
+                                        <button type="submit" class="w-full text-[#FF2EB6] border border-[#FF2EB6] py-2 rounded-full text-sm font-bold hover:bg-[#FF2EB6] hover:text-white transition-all">
+                                                ❌ Cancelar Agendamento
+                                        </button>
+                                    </form>
                                 @endif
-                            @elseif($agenda->status == 'confirmado')
-                                <form action="{{ route('cliente.agendamento.cancelar', ['id' => $agenda->id_agendamento]) }}" method="POST" onsubmit="return confirm('Cancelar este horário?')">
-                                    @csrf
-                                    <button type="submit" class="w-full text-red-600 border border-red-600 py-2 rounded-lg hover:bg-red-50 text-sm font-bold transition">
-                                        ❌ Cancelar Agendamento
-                                    </button>
-                                </form>
-                            @endif
+                            </div>
                         </div>
                     </div>
                 @empty
-                    <div class="col-span-full bg-white p-10 text-center rounded-xl shadow border border-gray-200">
-                        <p class="text-gray-500">Ainda não tens agendamentos.</p>
+                    <div class="glass-card rounded-2xl shadow-xl overflow-hidden col-span-full">
+                        <div class="p-10 bg-white/70 backdrop-blur-sm border border-white/40 text-center">
+                            <p class="text-gray-500">✧ Ainda não tens agendamentos.</p>
+                        </div>
                     </div>
                 @endforelse
             </div>
@@ -126,20 +147,22 @@
     {{-- MODAL DE AVALIAÇÃO --}}
     <div id="modalAvaliacao" class="fixed inset-0 z-50 hidden overflow-y-auto">
         <div class="flex items-center justify-center min-h-screen px-4">
-            <div class="fixed inset-0 bg-gray-500 opacity-75"></div>
+            <div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div>
 
-            <div class="relative bg-white rounded-xl shadow-xl max-w-lg w-full p-6 transition-all transform">
+            <div class="relative glass-card rounded-2xl shadow-xl max-w-lg w-full p-6 transition-all transform bg-white/95 backdrop-blur-sm">
                 <form action="{{ route('cliente.avaliar.salvar') }}" method="POST">
                     @csrf
                     <input type="hidden" name="agendamento_id" id="modal_agendamento_id">
                     
-                    <h3 class="text-xl font-bold text-gray-900 mb-1">Como foi o atendimento?</h3>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-[#7B19E5] text-xl">✧</span>
+                        <h3 class="text-xl font-title text-[#4A00B9]">Como foi o atendimento?</h3>
+                    </div>
                     <p class="text-sm text-gray-500 mb-6" id="modal_servico_nome"></p>
 
                     <div class="mb-6">
-                        <label class="block text-sm font-medium text-gray-700 mb-4 text-center">Seleciona a tua nota:</label>
+                        <label class="block text-sm font-medium text-[#4A00B9] mb-4 text-center">Seleciona a tua nota:</label>
                         
-                        {{-- Logica das Estrelas --}}
                         <div class="star-rating flex flex-row-reverse justify-center gap-2">
                             <input type="radio" id="star5" name="nota" value="5" class="hidden peer" required />
                             <label for="star5" class="cursor-pointer text-4xl text-gray-300 hover:text-yellow-400 peer-checked:text-yellow-400">★</label>
@@ -158,7 +181,6 @@
                         </div>
 
                         <style>
-                            /* Faz o preenchimento da esquerda para a direita */
                             .star-rating label:hover ~ label,
                             .star-rating input:checked ~ label {
                                 color: #FACC15;
@@ -167,13 +189,17 @@
                     </div>
 
                     <div class="mb-6">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Comentário (opcional):</label>
-                        <textarea name="comentario" rows="3" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-pink-500 focus:border-pink-500" placeholder="O que achaste do resultado?"></textarea>
+                        <label class="block text-sm font-medium text-[#4A00B9] mb-2">Comentário (opcional):</label>
+                        <textarea name="comentario" rows="3" class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all" placeholder="O que achaste do resultado?"></textarea>
                     </div>
 
                     <div class="flex flex-col sm:flex-row-reverse gap-3">
-                        <button type="submit" class="w-full bg-pink-600 text-white py-2 rounded-lg font-bold hover:bg-pink-700">Enviar</button>
-                        <button type="button" onclick="fecharModalAvaliacao()" class="w-full bg-gray-100 text-gray-700 py-2 rounded-lg font-bold hover:bg-gray-200">Cancelar</button>
+                        <button type="submit" class="bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white py-2 rounded-full font-medium btn-primary shadow-md hover:shadow-lg transition-all px-6">
+                            Enviar
+                        </button>
+                        <button type="button" onclick="fecharModalAvaliacao()" class="bg-gray-100 text-gray-700 py-2 rounded-full font-medium hover:bg-gray-200 transition-all px-6">
+                            Cancelar
+                        </button>
                     </div>
                 </form>
             </div>
@@ -192,3 +218,59 @@
         }
     </script>
 </x-app-layout>
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Playfair+Display:wght@700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+    
+    .font-title {
+        font-family: 'Playfair Display', serif;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+    }
+    
+    .glass-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 8px 32px rgba(123, 25, 229, 0.1);
+    }
+    
+    .btn-primary {
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        z-index: 1;
+    }
+    
+    .btn-primary::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s ease, height 0.6s ease;
+        z-index: -1;
+    }
+    
+    .btn-primary:hover::before {
+        width: 300px;
+        height: 300px;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+    }
+    
+    .hover-lift {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .hover-lift:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 25px -12px rgba(123, 25, 229, 0.25);
+    }
+</style>
