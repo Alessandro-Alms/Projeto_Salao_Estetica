@@ -507,12 +507,25 @@ class AgendamentoController extends Controller
         return $this->store($request);
     }
 
-    public function indexCliente()
+    public function indexCliente(Request $request)
     {
-        $agendamentos = Agendamento::where('cliente_id', auth()->id())
-            ->with(['profissional', 'servico'])
-            ->orderBy('data_hora_inicio', 'asc')
-            ->get();
+        $filtro = $request->get('filtro', '7');
+        
+        $query = Agendamento::where('cliente_id', auth()->id())
+            ->with(['profissional', 'servico', 'servicos'])
+            ->orderBy('data_hora_inicio', 'asc');
+        
+        // Aplicar filtro de período
+        if ($filtro !== 'todos') {
+            $dias = (int) $filtro;
+            $dataLimite = Carbon::now()->addDays($dias);
+            $query->whereBetween('data_hora_inicio', [
+                Carbon::now()->startOfDay(),
+                $dataLimite->endOfDay()
+            ]);
+        }
+        
+        $agendamentos = $query->get();
 
         $pacotes = auth()->user()->pacotesAtivos()->with('pacote')->get();
 

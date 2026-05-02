@@ -77,6 +77,28 @@
                     + Novo Agendamento
                 </a>
             </div>
+
+            {{-- FILTRO DE PERÍODO --}}
+            <div class="mb-6 flex gap-3 flex-wrap">
+                <form method="GET" action="{{ route('cliente.index') }}" class="flex gap-2">
+                    <input type="hidden" name="filtro" id="filtro_input" value="{{ request('filtro', '7') }}">
+                    
+                    <button type="button" onclick="filtrarAgendamentos(7)" 
+                            class="px-4 py-2 rounded-full text-sm font-medium transition-all {{ request('filtro', '7') == '7' ? 'bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white shadow-md' : 'bg-white/70 border border-[#FFD6F4] text-[#4A00B9] hover:bg-white/90' }}">
+                        📅 Próximos 7 dias
+                    </button>
+
+                    <button type="button" onclick="filtrarAgendamentos(30)" 
+                            class="px-4 py-2 rounded-full text-sm font-medium transition-all {{ request('filtro') == '30' ? 'bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white shadow-md' : 'bg-white/70 border border-[#FFD6F4] text-[#4A00B9] hover:bg-white/90' }}">
+                        📅 Próximos 30 dias
+                    </button>
+
+                    <button type="button" onclick="filtrarAgendamentos('todos')" 
+                            class="px-4 py-2 rounded-full text-sm font-medium transition-all {{ request('filtro') == 'todos' ? 'bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white shadow-md' : 'bg-white/70 border border-[#FFD6F4] text-[#4A00B9] hover:bg-white/90' }}">
+                        📅 Todos os agendamentos
+                    </button>
+                </form>
+            </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 @forelse($agendamentos as $agenda)
@@ -99,7 +121,15 @@
                                 <p class="text-sm text-[#7B19E5] font-semibold uppercase">
                                     {{ \Carbon\Carbon::parse($agenda->data_hora_inicio)->translatedFormat('d \d\e F') }}
                                 </p>
-                                <h3 class="text-lg font-title text-[#4A00B9]">{{ $agenda->servico->nome }}</h3>
+                                <h3 class="text-lg font-title text-[#4A00B9]">
+                                    @php
+                                        $servicos = $agenda->servicos()->pluck('nome')->toArray();
+                                        if (empty($servicos) && $agenda->servico) {
+                                            $servicos = [$agenda->servico->nome];
+                                        }
+                                        echo implode(', ', $servicos);
+                                    @endphp
+                                </h3>
                             </div>
 
                             <div class="space-y-2 text-sm text-[#1A002B] mb-4">
@@ -111,7 +141,14 @@
                             <div class="mt-auto pt-4 border-t border-[#FFD6F4]">
                                 @if($agenda->status == 'executado')
                                     @if(!$agenda->avaliacao)
-                                        <button onclick="abrirModalAvaliacao({{ $agenda->id_agendamento }}, '{{ $agenda->servico->nome }}')" 
+                                        @php
+                                            $nomesServicos = $agenda->servicos()->pluck('nome')->toArray();
+                                            if (empty($nomesServicos) && $agenda->servico) {
+                                                $nomesServicos = [$agenda->servico->nome];
+                                            }
+                                            $servicosStr = implode(', ', $nomesServicos);
+                                        @endphp
+                                        <button onclick="abrirModalAvaliacao({{ $agenda->id_agendamento }}, '{{ $servicosStr }}')" 
                                                 class="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white py-2 rounded-full font-medium btn-primary shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2">
                                             ⭐ Avaliar Atendimento
                                         </button>
@@ -207,6 +244,16 @@
     </div>
 
     <script>
+        function filtrarAgendamentos(periodo) {
+            const url = new URL(window.location);
+            if (periodo === 'todos') {
+                url.searchParams.set('filtro', 'todos');
+            } else {
+                url.searchParams.set('filtro', periodo);
+            }
+            window.location.href = url.toString();
+        }
+
         function abrirModalAvaliacao(id, servico) {
             document.getElementById('modal_agendamento_id').value = id;
             document.getElementById('modal_servico_nome').innerText = "Serviço: " + servico;
