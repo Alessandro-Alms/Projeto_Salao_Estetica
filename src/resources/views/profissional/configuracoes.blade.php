@@ -40,15 +40,10 @@
                                         <span class="block font-title text-[#4A00B9]">{{ $servico->nome }}</span>
                                         <span class="text-xs text-gray-500">Padrão: {{ $servico->duracao }} min</span>
                                     </div>
-                                    <div class="flex items-center gap-3">
-                                        <div>
-                                            <label class="block text-[10px] uppercase text-gray-400 font-medium">Comissão %</label>
-                                            <input type="number" step="0.01" name="servicos[{{ $servico->id_servico }}][comissao]" value="{{ $vinculo ? $vinculo->pivot->comissao_percentual : '50.00' }}" class="w-20 px-2 py-1 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all text-sm">
-                                        </div>
-                                        <div>
-                                            <label class="block text-[10px] uppercase text-gray-400 font-medium">Tempo (min)</label>
-                                            <input type="number" name="servicos[{{ $servico->id_servico }}][duracao]" value="{{ $vinculo ? $vinculo->pivot->duracao_customizada : $servico->duracao }}" class="w-20 px-2 py-1 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all text-sm">
-                                        </div>
+                                    <div>
+                                        <label class="block text-[10px] uppercase text-gray-400 font-medium mb-1">Tempo (min)</label>
+                                        <input type="number" name="servicos[{{ $servico->id_servico }}][duracao]" value="{{ $vinculo ? $vinculo->pivot->duracao_customizada : $servico->duracao }}" class="w-20 px-2 py-1 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all text-sm">
+                                        <p class="text-[10px] text-gray-500 mt-1">💰 Comissão: 50% (fixa)</p>
                                     </div>
                                 </div>
                             @endforeach

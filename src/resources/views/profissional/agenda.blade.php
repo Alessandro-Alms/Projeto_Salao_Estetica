@@ -148,11 +148,8 @@
 
                                                 {{-- Resumo Financeiro --}}
                                                 @php
-                                                    $pivot = \Illuminate\Support\Facades\DB::table('profissional_servico')
-                                                                ->where('profissional_id', auth()->id())
-                                                                ->where('servico_id', $agenda->servico_id)
-                                                                ->first();
-                                                    $porcentagemComissao = $pivot ? $pivot->comissao_percentual : 50; 
+                                                    // Comissão fixa: 50% para todos os serviços
+                                                    $porcentagemComissao = 50;
                                                     $taxaMatematica = $porcentagemComissao / 100;
                                                     $valorServico = $agenda->servico->preco ?? 0; 
                                                     $valorReceber = $valorServico * $taxaMatematica;

@@ -747,17 +747,18 @@ class AgendamentoController extends Controller
                 }
             }
             
-            // Carrega o profissional para buscar a regra de comissão dele
-            $profissional = User::find($agendamento->profissional_id);
-            $vinculo = $profissional->servicos->find($agendamento->servico_id);
+            // ⚠️ IMPORTANTE: A comissão SEMPRE deve ser calculada sobre o PREÇO BASE do serviço
+            // Descontos dados pelo SALÃO (fidelidade, pacotes, etc) NÃO afetam a comissão do profissional!
+            // O profissional recebe sua comissão sobre o preço original, não sobre o valor com desconto.
             
-            // Pega a comissão customizada da tabela pivot ou usa 50% como padrão
-            $porcentagemComissao = $vinculo->pivot->comissao_percentual ?? 50; 
+            $porcentagemComissao = 50;
             
-            // Pega o valor cheio do serviço (ignorando descontos de pacote ou fidelidade)
-            // Certifique-se de que a relação ->servico e a coluna ->preco estão corretas com o seu banco
+            // Usa SEMPRE o preço base do serviço, NUNCA o valor_total (que pode ter descontos)
             $precoBase = $agendamento->servico->preco;
             $valorComissao = $precoBase * ($porcentagemComissao / 100);
+            
+            // Exemplo: Se o serviço custa R$50,00 e ganhou desconto de 50%, o cliente paga R$25,00
+            // mas o profissional recebe comissão de R$25,00 (50% de R$50,00), não R$12,50
 
             // 3. Se chegou aqui, tudo certo! Mudamos o status do agendamento.
             $agendamento->status = 'executado';

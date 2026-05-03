@@ -148,21 +148,13 @@
                                             <span class="text-xs text-gray-500 block">Duração padrão: {{ $servico->duracao }} min</span>
                                         </div>
 
-                                        <div class="flex gap-4">
-                                            <div class="w-28">
-                                                <label class="block text-[10px] uppercase font-bold text-gray-500 mb-1">Comissão %</label>
-                                                <input type="number" step="0.01" 
-                                                    name="servicos[{{ $servico->id_servico }}][comissao]" 
-                                                    value="{{ $vinculo ? $vinculo->pivot->comissao_percentual : '50.00' }}" 
-                                                    class="w-full px-2 py-1.5 bg-white/50 border border-[#FFD6F4] rounded focus:outline-none focus:border-[#7B19E5] focus:ring-1 focus:ring-[#7B19E5]/20 text-sm transition-all">
-                                            </div>
-                                            <div class="w-28">
-                                                <label class="block text-[10px] uppercase font-bold text-gray-500 mb-1">Tempo (min)</label>
-                                                <input type="number" 
-                                                    name="servicos[{{ $servico->id_servico }}][duracao]" 
-                                                    value="{{ $vinculo ? $vinculo->pivot->duracao_customizada : $servico->duracao }}" 
-                                                    class="w-full px-2 py-1.5 bg-white/50 border border-[#FFD6F4] rounded focus:outline-none focus:border-[#7B19E5] focus:ring-1 focus:ring-[#7B19E5]/20 text-sm transition-all">
-                                            </div>
+                                        <div>
+                                            <label class="block text-[10px] uppercase font-bold text-gray-500 mb-1">Tempo (min)</label>
+                                            <input type="number" 
+                                                name="servicos[{{ $servico->id_servico }}][duracao]" 
+                                                value="{{ $vinculo ? $vinculo->pivot->duracao_customizada : $servico->duracao }}" 
+                                                class="w-full px-2 py-1.5 bg-white/50 border border-[#FFD6F4] rounded focus:outline-none focus:border-[#7B19E5] focus:ring-1 focus:ring-[#7B19E5]/20 text-sm transition-all">
+                                            <p class="text-[10px] text-gray-500 mt-1">💰 Comissão: 50% (fixa)</p>
                                         </div>
                                     </div>
                                 @endforeach

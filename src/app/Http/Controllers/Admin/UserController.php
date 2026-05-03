@@ -166,8 +166,9 @@ class UserController extends Controller
             $syncData = [];
             foreach ($request->servicos as $servicoId => $dados) {
                 if (isset($dados['ativo'])){
+                    // Comissão agora é fixa em 50% para todos os serviços
                     $syncData[$servicoId] = [
-                        'comissao_percentual' => $dados['comissao'] ?? 50.00,
+                        'comissao_percentual' => 50.00,
                         'duracao_customizada' => $dados['duracao'] ?? null,
                     ];
                 }
