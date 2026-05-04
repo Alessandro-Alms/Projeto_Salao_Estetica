@@ -75,6 +75,10 @@ Route::middleware(['auth', 'gerente_ou_recepcionista'])->prefix('admin')->name('
     // O prefixo 'admin' e o nome 'admin.' já são aplicados automaticamente por este grupo
     Route::get('/pacotes/venda', [ClientePacoteController::class, 'create'])->name('venda.create');
     Route::post('/pacotes/venda', [ClientePacoteController::class, 'store'])->name('venda.store');
+    
+    // Rotas de Financeiro (Gerente ou Recepcionista)
+    Route::get('/financeiro/fechamento', [FinanceiroController::class, 'fechamento'])->name('financeiro.fechamento');
+    Route::get('/financeiro/fechamento/pdf', [FinanceiroController::class, 'exportarFechamentoPdf'])->name('financeiro.fechamento.pdf');
 });
 
 // ==========================================
@@ -102,8 +106,9 @@ Route::middleware(['auth', 'gerente'])->prefix('admin')->name('admin.')->group(f
     Route::resource('bloqueios', BloqueioController::class)->except(['show', 'edit', 'update']);
     Route::patch('/usuarios/{id}/status', [UserController::class, 'alterarStatus'])->name('usuarios.status');
     
-    Route::get('/financeiro/fechamento', [FinanceiroController::class, 'fechamento'])->name('financeiro.fechamento');
+    // Rotas de Financeiro (Apenas Gerente)
     Route::get('/financeiro/comissoes', [FinanceiroController::class, 'comissoes'])->name('financeiro.comissoes');
+    
     Route::get('/pacotes', [PacoteController::class, 'index'])->name('pacotes.index');
     Route::post('/pacotes', [PacoteController::class, 'store'])->name('pacotes.store');
     Route::get('/pacotes/{id}/editar', [PacoteController::class, 'edit'])->name('pacotes.edit');

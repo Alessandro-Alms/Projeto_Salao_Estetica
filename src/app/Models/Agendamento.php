@@ -20,6 +20,11 @@ class Agendamento extends Model
         'comissao_paga_percentual'
     ];
 
+    protected $casts = [
+        'data_hora_inicio' => 'datetime',
+        'data_hora_fim' => 'datetime',
+    ];
+
     // Relacionamento: O agendamento pertence a um cliente
     public function cliente() {
         return $this->belongsTo(User::class, 'cliente_id');

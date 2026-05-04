@@ -7,6 +7,7 @@ use App\Models\Agendamento;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class FinanceiroController extends Controller
 {
@@ -50,9 +51,13 @@ class FinanceiroController extends Controller
         // Lucro líquido agora soma os pacotes vendidos no dia
         $lucroLiquido = ($totalServicos + $totalProdutos + $totalPacotes) - $totalComissoes;
 
+        // Buscar vendas do dia
+        $vendas = DB::table('vendas')->whereDate('created_at', $dataSelecionada)->get();
+
         return view('admin.financeiro.fechamento', compact(
             'totalServicos', 'totalProdutos', 'totalPacotes', 'totalComissoes', 
-            'lucroLiquido', 'dataSelecionada', 'exemploDataBanco'
+            'lucroLiquido', 'dataSelecionada', 'exemploDataBanco', 'agendamentos', 
+            'totalComissoesServicos', 'totalComissoesProdutos', 'vendas'
         ));
     }
 
@@ -116,5 +121,48 @@ class FinanceiroController extends Controller
         }
 
         return view('admin.financeiro.comissoes', compact('profissionais', 'comissoes', 'totalComissao', 'profissionalId'));
+    }
+
+    public function exportarFechamentoPdf(Request $request)
+    {
+        $dataSelecionada = $request->input('data', now()->format('Y-m-d'));
+
+        // Buscar agendamentos executados na data selecionada
+        $agendamentos = Agendamento::where('status', 'executado')
+            ->whereDate('updated_at', $dataSelecionada)
+            ->with(['profissional', 'servico'])
+            ->get();
+
+        // Calcular totais
+        $totalServicos = $agendamentos->sum('valor_total');
+        $totalComissoesServicos = $agendamentos->sum('valor_comissao');
+
+        $totalProdutos = DB::table('vendas')->whereDate('created_at', $dataSelecionada)->sum('valor_venda');
+        $totalComissoesProdutos = $totalProdutos * 0.10;
+
+        $totalPacotes = DB::table('cliente_pacotes')
+            ->join('pacotes', 'cliente_pacotes.pacote_id', '=', 'pacotes.id_pacote')
+            ->whereDate('cliente_pacotes.created_at', $dataSelecionada)
+            ->sum('pacotes.valor_total');
+
+        $totalComissoes = $totalComissoesServicos + $totalComissoesProdutos;
+        $lucroLiquido = ($totalServicos + $totalProdutos + $totalPacotes) - $totalComissoes;
+
+        // Preparar dados para a view
+        $data = [
+            'dataSelecionada' => $dataSelecionada,
+            'totalServicos' => $totalServicos,
+            'totalProdutos' => $totalProdutos,
+            'totalPacotes' => $totalPacotes,
+            'totalComissoes' => $totalComissoes,
+            'lucroLiquido' => $lucroLiquido,
+            'agendamentos' => $agendamentos,
+        ];
+
+        // Gerar PDF
+        $pdf = Pdf::loadView('admin.financeiro.fechamento-pdf', $data);
+
+        // Retornar PDF para download
+        return $pdf->download('fechamento-caixa-' . $dataSelecionada . '.pdf');
     }
 }

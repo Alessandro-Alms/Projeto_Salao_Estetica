@@ -15,9 +15,43 @@ use App\Models\ClientePacote;
 
 class AgendamentoController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return view('admin.agenda.index');
+        // Filtro de período (padrão: mês atual)
+        $dataInicio = $request->input('data_inicio', Carbon::now()->startOfMonth()->format('Y-m-d'));
+        $dataFim = $request->input('data_fim', Carbon::now()->endOfMonth()->format('Y-m-d'));
+
+        // Buscar todos os agendamentos do período
+        $agendamentos = Agendamento::with(['cliente', 'profissional', 'servico'])
+            ->whereBetween('data_hora_inicio', [
+                Carbon::parse($dataInicio)->startOfDay(),
+                Carbon::parse($dataFim)->endOfDay()
+            ])
+            ->orderBy('data_hora_inicio', 'asc')
+            ->get();
+
+        // Agrupar por data para o calendário
+        $agendamentosPorData = $agendamentos->groupBy(function($item) {
+            return $item->data_hora_inicio->format('Y-m-d');
+        });
+
+        // Estatísticas
+        $totalAgendamentos = $agendamentos->count();
+        $executados = $agendamentos->where('status', 'executado')->count();
+        $confirmados = $agendamentos->where('status', 'confirmado')->count();
+        $cancelados = $agendamentos->where('status', 'cancelado')->count();
+        $faltas = $agendamentos->where('status', 'falta')->count();
+
+        // Profissionais e clientes para dropdown
+        $profissionais = User::where('cargo', 'profissional')->orderBy('name')->get();
+        $clientes = User::where('cargo', 'cliente')->orderBy('name')->get();
+        $servicos = Servico::all();
+
+        return view('admin.agenda.index', compact(
+            'agendamentos', 'agendamentosPorData', 'dataInicio', 'dataFim',
+            'totalAgendamentos', 'executados', 'confirmados', 'cancelados', 'faltas',
+            'profissionais', 'clientes', 'servicos'
+        ));
     }
 
     // =========================================================
