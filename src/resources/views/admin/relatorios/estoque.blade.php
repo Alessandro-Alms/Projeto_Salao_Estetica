@@ -23,6 +23,13 @@
         </div>
 
         <div class="container mx-auto px-4">
+            <!-- Downloads -->
+            <div class="flex gap-2 mb-6 flex-wrap">
+                <a href="{{ route('admin.relatorios.estoque.download-excel') }}" class="flex items-center gap-2 bg-white/50 text-[#00B050] border border-[#FFD6F4] px-4 py-2 rounded-lg hover:bg-white/80 transition font-medium">
+                    📊 Exportar Excel
+                </a>
+            </div>
+
             <!-- Cards de resumo -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <!-- Alertas de Reposição -->

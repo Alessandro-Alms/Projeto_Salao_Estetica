@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -12,15 +11,18 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // COMENTE estas linhas abaixo para evitar o erro do 'Test User'
-        // User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        // ]);
-
-        // ADICIONE a chamada para o SEU Seeder pessoal aqui:
         $this->call([
             AdminUserSeeder::class,
+            UserSeeder::class,
+            ServicoSeeder::class,
+            ProdutoSeeder::class,
+            HorarioTrabalhoSeeder::class,
+            ProfissionalServicoSeeder::class,
+            PacoteSeeder::class,
+            AgendamentoSeeder::class,
+            AvaliacaoSeeder::class,
+            VendaSeeder::class,
+            ClientePacoteSeeder::class,
         ]);
     }
 }

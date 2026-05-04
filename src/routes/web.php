@@ -124,6 +124,20 @@ Route::middleware(['auth', 'gerente'])->prefix('admin')->name('admin.')->group(f
     Route::get('/relatorios/sazonalidade', [RelatorioController::class, 'sazonalidade'])->name('relatorios.sazonalidade');
     Route::get('/relatorios/avaliacoes', [RelatorioController::class, 'avaliacoes'])->name('relatorios.avaliacoes');
     Route::get('/relatorios/previsao', [RelatorioController::class, 'previsao'])->name('relatorios.previsao');
+    
+    // Downloads individuais por relatório
+    Route::get('/relatorios/faturamento/download-excel', [RelatorioController::class, 'downloadFaturamentoExcel'])->name('relatorios.faturamento.download-excel');
+    Route::get('/relatorios/comissoes/download-excel', [RelatorioController::class, 'downloadComissoesExcel'])->name('relatorios.comissoes.download-excel');
+    Route::get('/relatorios/comissoes/download-pdf', [RelatorioController::class, 'downloadComissoesPdf'])->name('relatorios.comissoes.download-pdf');
+    Route::get('/relatorios/produtos/download-excel', [RelatorioController::class, 'downloadProdutosExcel'])->name('relatorios.produtos.download-excel');
+    Route::get('/relatorios/estoque/download-excel', [RelatorioController::class, 'downloadEstoqueExcel'])->name('relatorios.estoque.download-excel');
+    Route::get('/relatorios/desempenho/download-excel', [RelatorioController::class, 'downloadDesempenhoExcel'])->name('relatorios.desempenho.download-excel');
+    Route::get('/relatorios/fidelizacao/download-excel', [RelatorioController::class, 'downloadFidelizacaoExcel'])->name('relatorios.fidelizacao.download-excel');
+    Route::get('/relatorios/cancelamentos/download-excel', [RelatorioController::class, 'downloadCancelamentosExcel'])->name('relatorios.cancelamentos.download-excel');
+    Route::get('/relatorios/financeiro/download-excel', [RelatorioController::class, 'downloadFinanceiroExcel'])->name('relatorios.financeiro.download-excel');
+    Route::get('/relatorios/sazonalidade/download-excel', [RelatorioController::class, 'downloadSazonalideExcel'])->name('relatorios.sazonalidade.download-excel');
+    Route::get('/relatorios/avaliacoes/download-excel', [RelatorioController::class, 'downloadAvaliacoesExcel'])->name('relatorios.avaliacoes.download-excel');
+    Route::get('/relatorios/ocupacao/download-excel', [RelatorioController::class, 'downloadOcupacaoExcel'])->name('relatorios.ocupacao.download-excel');
 });
 
 // ==========================================
