@@ -160,7 +160,10 @@
                                         </div>
                                     @endif
                                 @elseif($agenda->status == 'confirmado')
-                                    <form action="{{ route('cliente.agendamento.cancelar', ['id' => $agenda->id_agendamento]) }}" method="POST" onsubmit="return confirm('Cancelar este horário?')">
+                                    @php
+                                        $multaValor = $agenda->valor_total * 0.05;
+                                    @endphp
+                                    <form action="{{ route('cliente.agendamento.cancelar', ['id' => $agenda->id_agendamento]) }}" method="POST" onsubmit="return confirmarCancelamento('{{ number_format($multaValor, 2, ',', '.') }}')">
                                         @csrf
                                         <button type="submit" class="w-full text-[#FF2EB6] border border-[#FF2EB6] py-2 rounded-full text-sm font-bold hover:bg-[#FF2EB6] hover:text-white transition-all">
                                                 ❌ Cancelar Agendamento
@@ -262,6 +265,14 @@
 
         function fecharModalAvaliacao() {
             document.getElementById('modalAvaliacao').classList.add('hidden');
+        }
+
+        function confirmarCancelamento(multa) {
+            return confirm(
+                `Ao cancelar com menos de 24h, sera cobrada uma multa de 5% do servico.\n` +
+                `Valor estimado da multa: R$ ${multa}.\n\n` +
+                `Deseja mesmo cancelar?`
+            );
         }
     </script>
 </x-app-layout>

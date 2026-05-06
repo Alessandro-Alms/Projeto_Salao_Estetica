@@ -110,16 +110,19 @@
                     @php
                         $pctServicos = $faturamentoTotal > 0 ? ($receitaServicos / $faturamentoTotal) * 100 : 0;
                         $pctVendas = $faturamentoTotal > 0 ? ($receitaVendas / $faturamentoTotal) * 100 : 0;
+                        $pctMultas = $faturamentoTotal > 0 ? ($receitaMultas / $faturamentoTotal) * 100 : 0;
                     @endphp
 
                     <div class="mb-4 flex justify-between text-sm font-bold text-gray-600">
                         <span>Serviços ({{ number_format($pctServicos, 1) }}%)</span>
                         <span>Produtos/Avulsos ({{ number_format($pctVendas, 1) }}%)</span>
+                        <span>Multas ({{ number_format($pctMultas, 1) }}%)</span>
                     </div>
 
                     <div class="w-full bg-gray-200 rounded-full h-6 flex overflow-hidden mb-6">
                         <div class="bg-[#7B19E5] h-6" style="width: {{ $pctServicos }}%"></div>
                         <div class="bg-[#FF2EB6] h-6" style="width: {{ $pctVendas }}%"></div>
+                        <div class="bg-[#F59E0B] h-6" style="width: {{ $pctMultas }}%"></div>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -137,6 +140,14 @@
                                 <p class="text-xs text-gray-500">Produtos ou Pacotes</p>
                             </div>
                             <p class="text-xl font-black text-[#FF2EB6]">R$ {{ number_format($receitaVendas, 2, ',', '.') }}</p>
+                        </div>
+
+                        <div class="p-4 border border-[#F59E0B]/20 bg-[#F59E0B]/5 rounded-lg flex justify-between items-center">
+                            <div>
+                                <p class="text-sm font-bold text-[#F59E0B] uppercase">Multas</p>
+                                <p class="text-xs text-gray-500">Cancelamentos em atraso</p>
+                            </div>
+                            <p class="text-xl font-black text-[#F59E0B]">R$ {{ number_format($receitaMultas, 2, ',', '.') }}</p>
                         </div>
                     </div>
                 </div>

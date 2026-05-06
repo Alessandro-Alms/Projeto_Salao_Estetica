@@ -242,10 +242,15 @@
                 <span class="label">🎁 Pacotes Vendidos (Total Bruto)</span>
                 <span class="value">R$ {{ number_format($totalPacotes, 2, ',', '.') }}</span>
             </div>
+
+            <div class="row highlight positive">
+                <span class="label">⚠️ Multas de Cancelamento</span>
+                <span class="value">R$ {{ number_format($totalMultas, 2, ',', '.') }}</span>
+            </div>
             
             <div class="row total">
                 <span class="label">📊 FATURAMENTO TOTAL</span>
-                <span class="value positive">R$ {{ number_format($totalServicos + $totalProdutos + $totalPacotes, 2, ',', '.') }}</span>
+                <span class="value positive">R$ {{ number_format($totalServicos + $totalProdutos + $totalPacotes + $totalMultas, 2, ',', '.') }}</span>
             </div>
             
             <div style="margin-top: 15px;"></div>

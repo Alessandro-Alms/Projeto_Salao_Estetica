@@ -102,6 +102,7 @@
                             $pctServicos = $totalEntradas > 0 ? ($receitaServicos / $totalEntradas) * 100 : 0;
                             $pctProdutos = $totalEntradas > 0 ? ($receitaProdutos / $totalEntradas) * 100 : 0;
                             $pctPacotes = $totalEntradas > 0 ? ($receitaPacotes / $totalEntradas) * 100 : 0;
+                            $pctMultas = $totalEntradas > 0 ? ($receitaMultas / $totalEntradas) * 100 : 0;
                         @endphp
 
                         <div class="space-y-6">
@@ -136,6 +137,17 @@
                                     <div class="bg-[#A855F7] h-3 rounded-full" style="width: {{ $pctPacotes }}%"></div>
                                 </div>
                                 <p class="text-xs text-gray-400 mt-1 text-right">{{ number_format($pctPacotes, 1) }}% do total</p>
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between items-end mb-1">
+                                    <span class="text-sm font-bold text-gray-700">Multas de Cancelamento</span>
+                                    <span class="text-lg font-black text-[#F59E0B]">R$ {{ number_format($receitaMultas, 2, ',', '.') }}</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-3">
+                                    <div class="bg-[#F59E0B] h-3 rounded-full" style="width: {{ $pctMultas }}%"></div>
+                                </div>
+                                <p class="text-xs text-gray-400 mt-1 text-right">{{ number_format($pctMultas, 1) }}% do total</p>
                             </div>
                         </div>
                     </div>

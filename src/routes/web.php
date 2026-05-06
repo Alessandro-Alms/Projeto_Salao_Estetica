@@ -10,6 +10,7 @@ use App\Http\Controllers\FinanceiroController;
 use App\Http\Controllers\BloqueioController;
 use App\Http\Controllers\PacoteController;
 use App\Http\Controllers\ClientePacoteController;
+use App\Http\Controllers\VendaProdutoController;
 use App\Http\Controllers\RelatorioController;
 
 Route::get('/', function () {
@@ -75,6 +76,10 @@ Route::middleware(['auth', 'gerente_ou_recepcionista'])->prefix('admin')->name('
     // O prefixo 'admin' e o nome 'admin.' já são aplicados automaticamente por este grupo
     Route::get('/pacotes/venda', [ClientePacoteController::class, 'create'])->name('venda.create');
     Route::post('/pacotes/venda', [ClientePacoteController::class, 'store'])->name('venda.store');
+
+    // Vendas de produtos (recepcao)
+    Route::get('/vendas/produtos', [VendaProdutoController::class, 'create'])->name('vendas.produtos.create');
+    Route::post('/vendas/produtos', [VendaProdutoController::class, 'store'])->name('vendas.produtos.store');
     
     // Rotas de Financeiro (Gerente ou Recepcionista)
     Route::get('/financeiro/fechamento', [FinanceiroController::class, 'fechamento'])->name('financeiro.fechamento');

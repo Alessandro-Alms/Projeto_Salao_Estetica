@@ -63,7 +63,7 @@ return new class extends Migration
             $table->text('obs')->nullable();
             $table->decimal('valor_comissao', 10, 2)->nullable()->after('valor_total');
             $table->decimal('comissao_paga_percentual', 5, 2)->nullable()->after('valor_comissao');
-            
+            $table->decimal('multa_valor', 10, 2)->default(0)->after('valor_total');
             $table->timestamps();
         });
 
@@ -152,6 +152,21 @@ return new class extends Migration
             $table->text('comentario')->nullable();
             $table->timestamps();
         });
+        Schema::create('agendamento_servico', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('agendamento_id')
+                ->constrained('agendamentos', 'id_agendamento')
+                ->onDelete('cascade');
+            $table->foreignId('servico_id')
+                ->constrained('servicos', 'id_servico')
+                ->onDelete('cascade');
+            $table->integer('duracao')->nullable(); // Duração do serviço neste agendamento (em minutos)
+            $table->decimal('preco', 10, 2)->nullable(); // Preço do serviço neste agendamento
+            $table->timestamps();
+            
+            // Evitar duplicatas: um serviço só pode estar uma vez por agendamento
+            $table->unique(['agendamento_id', 'servico_id']);
+        });
     }
 
     public function down(): void
@@ -171,5 +186,6 @@ return new class extends Migration
         Schema::dropIfExists('cliente_pacotes');
         Schema::dropIfExists('pacotes');
         Schema::dropIfExists('avaliacoes');
+        Schema::dropIfExists('agendamento_servico');
     }
 };

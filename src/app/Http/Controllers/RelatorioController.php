@@ -68,12 +68,20 @@ class RelatorioController extends Controller
             ->selectRaw('COUNT(id_venda) as qtd, SUM(valor_venda) as total')
             ->first();
 
+        $multas = DB::table('agendamentos')
+            ->where('status', 'cancelado')
+            ->where('multa_valor', '>', 0)
+            ->whereBetween('updated_at', [$inicioQuery, $fimQuery])
+            ->selectRaw('COUNT(id_agendamento) as qtd, SUM(multa_valor) as total')
+            ->first();
+
         $receitaServicos = $agendamentos->total ?? 0;
         $receitaVendas = $vendas->total ?? 0;
-        $faturamentoTotal = $receitaServicos + $receitaVendas;
+        $receitaMultas = $multas->total ?? 0;
+        $faturamentoTotal = $receitaServicos + $receitaVendas + $receitaMultas;
 
         // Ticket Médio
-        $qtdTransacoes = ($agendamentos->qtd ?? 0) + ($vendas->qtd ?? 0);
+        $qtdTransacoes = ($agendamentos->qtd ?? 0) + ($vendas->qtd ?? 0) + ($multas->qtd ?? 0);
         $ticketMedio = $qtdTransacoes > 0 ? $faturamentoTotal / $qtdTransacoes : 0;
 
         // 2. Comparativo com o Período Anterior
@@ -89,8 +97,14 @@ class RelatorioController extends Controller
         $receitaAnteriorVendas = DB::table('vendas')
             ->whereBetween('created_at', [$inicioAnterior, $fimAnterior])
             ->sum('valor_venda');
+
+        $receitaAnteriorMultas = DB::table('agendamentos')
+            ->where('status', 'cancelado')
+            ->where('multa_valor', '>', 0)
+            ->whereBetween('updated_at', [$inicioAnterior, $fimAnterior])
+            ->sum('multa_valor');
             
-        $faturamentoAnterior = $receitaAnteriorAgendamentos + $receitaAnteriorVendas;
+        $faturamentoAnterior = $receitaAnteriorAgendamentos + $receitaAnteriorVendas + $receitaAnteriorMultas;
 
         // % de Crescimento
         $crescimento = 0;
@@ -101,7 +115,7 @@ class RelatorioController extends Controller
         }
 
         return view('admin.relatorios.faturamento', compact(
-            'dataInicio', 'dataFim', 'faturamentoTotal', 'receitaServicos', 'receitaVendas', 
+            'dataInicio', 'dataFim', 'faturamentoTotal', 'receitaServicos', 'receitaVendas', 'receitaMultas',
             'ticketMedio', 'qtdTransacoes', 'faturamentoAnterior', 'crescimento'
         ));
     }
@@ -307,6 +321,8 @@ public function ocupacao(Request $request)
         $evasoes = $todosAgendamentos->whereIn('status', ['cancelado', 'falta']);
         $totalEvasoes = $evasoes->count();
         $prejuizoTotal = $evasoes->sum('valor_total');
+        $totalMultasRecuperadas = $evasoes->sum('multa_valor');
+        $prejuizoLiquido = $prejuizoTotal - $totalMultasRecuperadas;
         
         $taxaEvasao = $totalGeral > 0 ? ($totalEvasoes / $totalGeral) * 100 : 0;
 
@@ -319,6 +335,8 @@ public function ocupacao(Request $request)
         $horariosCriticos = $horariosCriticosRaw->map(function($total, $hora) {
             return (object) ['hora' => $hora, 'total' => $total];
         })->sortByDesc('total')->take(5);
+
+        $piorHora = $horariosCriticos->first();
 
         // 4. Clientes Ofensores (Os que mais faltam)
         $ofensoresRaw = $evasoes->groupBy('cliente_id')->map(function($items) {
@@ -351,8 +369,9 @@ public function ocupacao(Request $request)
             ->take(5);
 
         return view('admin.relatorios.cancelamentos', compact(
-            'dataInicio', 'dataFim', 'totalGeral', 'totalEvasoes', 'prejuizoTotal', 
-            'taxaEvasao', 'horariosCriticos', 'ofensores', 'motivos'
+            'dataInicio', 'dataFim', 'totalGeral', 'totalEvasoes', 'prejuizoTotal',
+            'totalMultasRecuperadas', 'prejuizoLiquido', 'taxaEvasao', 'horariosCriticos',
+            'piorHora', 'ofensores', 'motivos'
         ));
     }
     public function financeiro(Request $request)
@@ -384,7 +403,13 @@ public function ocupacao(Request $request)
             ->whereBetween('cliente_pacotes.data_compra', [$inicioDate, $fimDate])
             ->sum('pacotes.valor_total') ?? 0;
 
-        $totalEntradas = $receitaServicos + $receitaProdutos + $receitaPacotes;
+        $receitaMultas = DB::table('agendamentos')
+            ->where('status', 'cancelado')
+            ->where('multa_valor', '>', 0)
+            ->whereBetween('updated_at', [$inicioQuery, $fimQuery])
+            ->sum('multa_valor') ?? 0;
+
+        $totalEntradas = $receitaServicos + $receitaProdutos + $receitaPacotes + $receitaMultas;
 
         // --- 2. SAÍDAS (DESPESAS CONHECIDAS PELA BD) ---
         // Comissões geradas nos agendamentos executados
@@ -400,7 +425,7 @@ public function ocupacao(Request $request)
 
         return view('admin.relatorios.financeiro', compact(
             'dataInicio', 'dataFim', 
-            'receitaServicos', 'receitaProdutos', 'receitaPacotes', 'totalEntradas',
+            'receitaServicos', 'receitaProdutos', 'receitaPacotes', 'receitaMultas', 'totalEntradas',
             'despesaComissoes', 'totalSaidas', 'saldoLiquido'
         ));
     }
@@ -709,11 +734,19 @@ public function ocupacao(Request $request)
             ->selectRaw('COUNT(id_venda) as qtd, SUM(valor_venda) as total')
             ->first();
 
+        $multas = DB::table('agendamentos')
+            ->where('status', 'cancelado')
+            ->where('multa_valor', '>', 0)
+            ->whereBetween('updated_at', [$inicioQuery, $fimQuery])
+            ->selectRaw('COUNT(id_agendamento) as qtd, SUM(multa_valor) as total')
+            ->first();
+
         $receitaServicos = $agendamentos->total ?? 0;
         $receitaVendas = $vendas->total ?? 0;
-        $faturamentoTotal = $receitaServicos + $receitaVendas;
+        $receitaMultas = $multas->total ?? 0;
+        $faturamentoTotal = $receitaServicos + $receitaVendas + $receitaMultas;
 
-        $qtdTransacoes = ($agendamentos->qtd ?? 0) + ($vendas->qtd ?? 0);
+        $qtdTransacoes = ($agendamentos->qtd ?? 0) + ($vendas->qtd ?? 0) + ($multas->qtd ?? 0);
         $ticketMedio = $qtdTransacoes > 0 ? $faturamentoTotal / $qtdTransacoes : 0;
 
         $diasPeriodo = Carbon::parse($dataInicio)->diffInDays(Carbon::parse($dataFim)) + 1;
@@ -728,8 +761,14 @@ public function ocupacao(Request $request)
         $receitaAnteriorVendas = DB::table('vendas')
             ->whereBetween('created_at', [$inicioAnterior, $fimAnterior])
             ->sum('valor_venda');
+
+        $receitaAnteriorMultas = DB::table('agendamentos')
+            ->where('status', 'cancelado')
+            ->where('multa_valor', '>', 0)
+            ->whereBetween('updated_at', [$inicioAnterior, $fimAnterior])
+            ->sum('multa_valor');
             
-        $faturamentoAnterior = $receitaAnteriorAgendamentos + $receitaAnteriorVendas;
+        $faturamentoAnterior = $receitaAnteriorAgendamentos + $receitaAnteriorVendas + $receitaAnteriorMultas;
 
         $crescimento = 0;
         if ($faturamentoAnterior > 0) {
@@ -738,7 +777,7 @@ public function ocupacao(Request $request)
             $crescimento = 100;
         }
 
-        $dados = compact('receitaServicos', 'receitaVendas', 'faturamentoTotal', 'ticketMedio', 
+        $dados = compact('receitaServicos', 'receitaVendas', 'receitaMultas', 'faturamentoTotal', 'ticketMedio', 
                          'qtdTransacoes', 'faturamentoAnterior', 'crescimento');
 
         return Excel::download(new \App\Exports\FaturamentoExport($dataInicio, $dataFim, $dados), 
@@ -931,6 +970,7 @@ public function ocupacao(Request $request)
         $evasoes = $todosAgendamentos->whereIn('status', ['cancelado', 'falta']);
         $totalEvasoes = $evasoes->count();
         $prejuizoTotal = $evasoes->sum('valor_total');
+        $totalMultasRecuperadas = $evasoes->sum('multa_valor');
         $taxaEvasao = $totalGeral > 0 ? ($totalEvasoes / $totalGeral) * 100 : 0;
 
         $ofensoresRaw = $evasoes->groupBy('cliente_id')->map(function($items) {
@@ -955,7 +995,7 @@ public function ocupacao(Request $request)
             return $ofensor;
         });
 
-        return Excel::download(new \App\Exports\CancelamentosExport($dataInicio, $dataFim, $ofensores, $totalEvasoes, $prejuizoTotal, $taxaEvasao), 
+        return Excel::download(new \App\Exports\CancelamentosExport($dataInicio, $dataFim, $ofensores, $totalEvasoes, $prejuizoTotal, $totalMultasRecuperadas, $taxaEvasao), 
                                'cancelamentos_' . $dataInicio . '_' . $dataFim . '.xlsx');
     }
 
@@ -982,7 +1022,13 @@ public function ocupacao(Request $request)
             ->whereBetween('cliente_pacotes.data_compra', [$dataInicio, $dataFim])
             ->sum('pacotes.valor_total') ?? 0;
 
-        $totalEntradas = $receitaServicos + $receitaProdutos + $receitaPacotes;
+        $receitaMultas = DB::table('agendamentos')
+            ->where('status', 'cancelado')
+            ->where('multa_valor', '>', 0)
+            ->whereBetween('updated_at', [$inicioQuery, $fimQuery])
+            ->sum('multa_valor') ?? 0;
+
+        $totalEntradas = $receitaServicos + $receitaProdutos + $receitaPacotes + $receitaMultas;
 
         $despesaComissoes = DB::table('agendamentos')
             ->where('status', 'executado')
@@ -992,7 +1038,7 @@ public function ocupacao(Request $request)
         $totalSaidas = $despesaComissoes;
         $saldoLiquido = $totalEntradas - $totalSaidas;
 
-        $dados = compact('receitaServicos', 'receitaProdutos', 'receitaPacotes', 'totalEntradas',
+        $dados = compact('receitaServicos', 'receitaProdutos', 'receitaPacotes', 'receitaMultas', 'totalEntradas',
                          'despesaComissoes', 'totalSaidas', 'saldoLiquido');
 
         return Excel::download(new \App\Exports\FinanceiroExport($dataInicio, $dataFim, $dados), 

@@ -14,15 +14,17 @@ class CancelamentosExport implements FromArray, WithHeadings, WithStyles
     protected $ofensores;
     protected $totalEvasoes;
     protected $prejuizoTotal;
+    protected $totalMultasRecuperadas;
     protected $taxaEvasao;
 
-    public function __construct($dataInicio, $dataFim, $ofensores, $totalEvasoes, $prejuizoTotal, $taxaEvasao)
+    public function __construct($dataInicio, $dataFim, $ofensores, $totalEvasoes, $prejuizoTotal, $totalMultasRecuperadas, $taxaEvasao)
     {
         $this->dataInicio = $dataInicio;
         $this->dataFim = $dataFim;
         $this->ofensores = $ofensores;
         $this->totalEvasoes = $totalEvasoes;
         $this->prejuizoTotal = $prejuizoTotal;
+        $this->totalMultasRecuperadas = $totalMultasRecuperadas;
         $this->taxaEvasao = $taxaEvasao;
     }
 
@@ -35,6 +37,8 @@ class CancelamentosExport implements FromArray, WithHeadings, WithStyles
         $dados[] = [];
         $dados[] = ['Total de Faltas/Cancelamentos', $this->totalEvasoes];
         $dados[] = ['Prejuízo Estimado', 'R$ ' . number_format($this->prejuizoTotal, 2, ',', '.')];
+        $dados[] = ['Multas Recuperadas', 'R$ ' . number_format($this->totalMultasRecuperadas, 2, ',', '.')];
+        $dados[] = ['Prejuízo Líquido', 'R$ ' . number_format($this->prejuizoTotal - $this->totalMultasRecuperadas, 2, ',', '.')];
         $dados[] = ['Taxa de Evasão', number_format($this->taxaEvasao, 2, ',', '.') . '%'];
         $dados[] = [];
         $dados[] = ['CLIENTES COM MAIS FALTAS'];

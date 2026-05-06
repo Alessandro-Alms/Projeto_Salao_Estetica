@@ -39,6 +39,10 @@ class FinanceiroController extends Controller
         $totalProdutos = DB::table('vendas')->whereDate('created_at', $dataSelecionada)->sum('valor_venda');
         $totalComissoesProdutos = $totalProdutos * 0.10; 
 
+        $totalMultas = Agendamento::where('status', 'cancelado')
+            ->whereDate('updated_at', $dataSelecionada)
+            ->sum('multa_valor');
+
         // Calcula PACOTES vendidos no dia (Adicionado!)
         // Nota: Adapte "preco" para o nome da coluna de valor que está na sua tabela de pacotes, caso seja diferente.
         $totalPacotes = DB::table('cliente_pacotes')
@@ -49,13 +53,13 @@ class FinanceiroController extends Controller
         $totalComissoes = $totalComissoesServicos + $totalComissoesProdutos; 
         
         // Lucro líquido agora soma os pacotes vendidos no dia
-        $lucroLiquido = ($totalServicos + $totalProdutos + $totalPacotes) - $totalComissoes;
+        $lucroLiquido = ($totalServicos + $totalProdutos + $totalPacotes + $totalMultas) - $totalComissoes;
 
         // Buscar vendas do dia
         $vendas = DB::table('vendas')->whereDate('created_at', $dataSelecionada)->get();
 
         return view('admin.financeiro.fechamento', compact(
-            'totalServicos', 'totalProdutos', 'totalPacotes', 'totalComissoes', 
+            'totalServicos', 'totalProdutos', 'totalPacotes', 'totalMultas', 'totalComissoes',
             'lucroLiquido', 'dataSelecionada', 'exemploDataBanco', 'agendamentos', 
             'totalComissoesServicos', 'totalComissoesProdutos', 'vendas'
         ));
@@ -145,8 +149,12 @@ class FinanceiroController extends Controller
             ->whereDate('cliente_pacotes.created_at', $dataSelecionada)
             ->sum('pacotes.valor_total');
 
+        $totalMultas = Agendamento::where('status', 'cancelado')
+            ->whereDate('updated_at', $dataSelecionada)
+            ->sum('multa_valor');
+
         $totalComissoes = $totalComissoesServicos + $totalComissoesProdutos;
-        $lucroLiquido = ($totalServicos + $totalProdutos + $totalPacotes) - $totalComissoes;
+        $lucroLiquido = ($totalServicos + $totalProdutos + $totalPacotes + $totalMultas) - $totalComissoes;
 
         // Preparar dados para a view
         $data = [
@@ -154,6 +162,7 @@ class FinanceiroController extends Controller
             'totalServicos' => $totalServicos,
             'totalProdutos' => $totalProdutos,
             'totalPacotes' => $totalPacotes,
+            'totalMultas' => $totalMultas,
             'totalComissoes' => $totalComissoes,
             'lucroLiquido' => $lucroLiquido,
             'agendamentos' => $agendamentos,

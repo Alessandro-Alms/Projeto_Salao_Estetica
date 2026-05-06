@@ -78,7 +78,7 @@
                     <!-- Faturamento Bruto -->
                     <div class="mb-6 pb-6 border-b border-[#FFD6F4]">
                         <h4 class="font-title text-[#7B19E5] mb-3 text-sm uppercase">💰 Faturamento Bruto</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
                             <div class="p-4 bg-blue-50/50 rounded-lg border border-blue-200">
                                 <p class="text-xs text-gray-600 mb-1">Serviços Executados</p>
                                 <p class="text-lg font-bold text-blue-600">R$ {{ number_format($totalServicos, 2, ',', '.') }}</p>
@@ -91,11 +91,15 @@
                                 <p class="text-xs text-gray-600 mb-1">Pacotes Vendidos</p>
                                 <p class="text-lg font-bold text-pink-600">R$ {{ number_format($totalPacotes, 2, ',', '.') }}</p>
                             </div>
+                            <div class="p-4 bg-amber-50/50 rounded-lg border border-amber-200">
+                                <p class="text-xs text-gray-600 mb-1">Multas de Cancelamento</p>
+                                <p class="text-lg font-bold text-amber-600">R$ {{ number_format($totalMultas, 2, ',', '.') }}</p>
+                            </div>
                         </div>
                         <div class="mt-3 p-3 bg-gradient-to-r from-[#7B19E5]/10 to-[#FF2EB6]/10 rounded-lg border border-[#FFD6F4]">
                             <div class="flex justify-between">
                                 <span class="font-semibold text-[#4A00B9]">Total Faturamento Bruto:</span>
-                                <span class="font-bold text-[#7B19E5]">R$ {{ number_format($totalServicos + $totalProdutos + $totalPacotes, 2, ',', '.') }}</span>
+                                <span class="font-bold text-[#7B19E5]">R$ {{ number_format($totalServicos + $totalProdutos + $totalPacotes + $totalMultas, 2, ',', '.') }}</span>
                             </div>
                         </div>
                     </div>
@@ -155,7 +159,7 @@
                             </div>
                             <div class="p-3 bg-white/50 rounded-lg border border-[#FFD6F4] text-center">
                                 <p class="text-xs text-gray-600 mb-1">% Comissão</p>
-                                <p class="text-2xl font-bold text-[#7B19E5]">{{ ($totalServicos + $totalProdutos + $totalPacotes > 0) ? number_format(($totalComissoes / ($totalServicos + $totalProdutos + $totalPacotes)) * 100, 1, ',', '.') : '0' }}%</p>
+                                <p class="text-2xl font-bold text-[#7B19E5]">{{ ($totalServicos + $totalProdutos + $totalPacotes + $totalMultas > 0) ? number_format(($totalComissoes / ($totalServicos + $totalProdutos + $totalPacotes + $totalMultas)) * 100, 1, ',', '.') : '0' }}%</p>
                             </div>
                         </div>
                     </div>

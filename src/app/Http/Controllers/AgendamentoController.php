@@ -702,14 +702,30 @@ class AgendamentoController extends Controller
         // Busca o agendamento ou dá erro 404
         $agendamento = Agendamento::findOrFail($id_agendamento);
 
+        if ($agendamento->status === 'cancelado') {
+            return back()->withErrors(['data_hora' => 'Este agendamento já foi cancelado.'])->withInput();
+        }
+
         $agora = Carbon::now();
         $datainicio = Carbon::parse($agendamento->data_hora_inicio);
         $diferencaHoras = $agora->diffInHours($datainicio, false);
 
+        $valorBase = $agendamento->valor_total ?? ($agendamento->servico->preco ?? 0);
+        $multaValor = 0;
+
         if ($diferencaHoras < 24) {
-            return back()->withErrors(['data_hora' => 'Agendamentos só podem ser cancelados com pelo menos 24 horas de antecedência.'])->withInput();
+            $multaValor = round($valorBase * 0.05, 2);
         }
-        $agendamento->update(['status' => 'cancelado']);
+
+        $agendamento->update([
+            'status' => 'cancelado',
+            'multa_valor' => $multaValor,
+        ]);
+
+        if ($multaValor > 0) {
+            $multaFormatada = number_format($multaValor, 2, ',', '.');
+            return back()->with('status', "Agendamento cancelado. Multa de R$ {$multaFormatada} aplicada.");
+        }
 
         return back()->with('status', 'Agendamento cancelado com sucesso!');
     }
@@ -832,6 +848,16 @@ class AgendamentoController extends Controller
     public function confirmarPresenca($id)
     {
         $agendamento = Agendamento::findOrFail($id);
+
+        $toleranciaMinutos = 15;
+        $inicio = Carbon::parse($agendamento->data_hora_inicio);
+        $limiteCheckin = $inicio->copy()->addMinutes($toleranciaMinutos);
+
+        if (now()->greaterThan($limiteCheckin)) {
+            return back()->withErrors([
+                'presenca' => "Check-in indisponivel: tolerancia de {$toleranciaMinutos} minutos excedida."
+            ]);
+        }
 
         // Se o status for 'confirmado', mudamos para 'presente'
         if ($agendamento->status == 'confirmado') {

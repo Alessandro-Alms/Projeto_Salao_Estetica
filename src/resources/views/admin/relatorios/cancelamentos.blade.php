@@ -52,7 +52,7 @@
             </div>
 
             <!-- Cards de resumo -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 <!-- Taxa de Evasão -->
                 <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
                     <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
@@ -74,9 +74,21 @@
                                 <p class="text-sm bg-white/20 px-3 py-1 rounded-full inline-block mt-2">
                                     Valor de serviços que não ocorreram
                                 </p>
+                                <p class="text-xs opacity-80 mt-2">Prejuízo líquido: R$ {{ number_format($prejuizoLiquido, 2, ',', '.') }}</p>
                             </div>
                             <div class="opacity-30 text-3xl">✧</div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Multas Recuperadas -->
+                <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
+                    <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
+                        <h3 class="text-gray-500 font-bold uppercase text-sm mb-2">Multas Recuperadas</h3>
+                        <div class="flex items-end gap-2">
+                            <p class="text-4xl font-black text-[#7B19E5]">R$ {{ number_format($totalMultasRecuperadas, 2, ',', '.') }}</p>
+                        </div>
+                        <p class="text-sm text-gray-500 mt-2">Valores recebidos por cancelamento</p>
                     </div>
                 </div>
 

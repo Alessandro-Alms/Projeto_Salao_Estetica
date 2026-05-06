@@ -29,6 +29,7 @@ class FinanceiroExport implements FromArray, WithHeadings, WithStyles
         $dados[] = ['Receita de Serviços', 'R$ ' . number_format($this->dados['receitaServicos'], 2, ',', '.')];
         $dados[] = ['Receita de Produtos', 'R$ ' . number_format($this->dados['receitaProdutos'], 2, ',', '.')];
         $dados[] = ['Receita de Pacotes', 'R$ ' . number_format($this->dados['receitaPacotes'], 2, ',', '.')];
+        $dados[] = ['Receita de Multas', 'R$ ' . number_format($this->dados['receitaMultas'], 2, ',', '.')];
         $dados[] = ['Total de Entradas', 'R$ ' . number_format($this->dados['totalEntradas'], 2, ',', '.')];
         $dados[] = [];
         
@@ -53,9 +54,9 @@ class FinanceiroExport implements FromArray, WithHeadings, WithStyles
     {
         return [
             1 => ['font' => ['bold' => true, 'size' => 12, 'color' => ['rgb' => 'FFFFFF'], 'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '1F4E78']]]],
-            5 => ['font' => ['bold' => true, 'size' => 11, 'color' => ['rgb' => 'FFFFFF'], 'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '00B050']]]],
+            6 => ['font' => ['bold' => true, 'size' => 11, 'color' => ['rgb' => 'FFFFFF'], 'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '00B050']]]],
             10 => ['font' => ['bold' => true, 'size' => 11]],
-            14 => ['font' => ['bold' => true, 'size' => 12, 'color' => ['rgb' => 'FFFFFF'], 'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '92D050']]]],
+            12 => ['font' => ['bold' => true, 'size' => 12, 'color' => ['rgb' => 'FFFFFF'], 'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '92D050']]]],
         ];
     }
 }

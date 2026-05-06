@@ -17,7 +17,8 @@ class Agendamento extends Model
         'status', 
         'obs',
         'valor_comissao',
-        'comissao_paga_percentual'
+        'comissao_paga_percentual',
+        'multa_valor'
     ];
 
     protected $casts = [

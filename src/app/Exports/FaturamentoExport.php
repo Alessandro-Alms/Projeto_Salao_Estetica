@@ -31,6 +31,7 @@ class FaturamentoExport implements FromArray, WithHeadings, WithStyles
         
         $dados[] = ['Receita de Serviços', 'R$ ' . number_format($this->dados['receitaServicos'], 2, ',', '.')];
         $dados[] = ['Receita de Produtos/Avulsos', 'R$ ' . number_format($this->dados['receitaVendas'], 2, ',', '.')];
+        $dados[] = ['Receita de Multas', 'R$ ' . number_format($this->dados['receitaMultas'], 2, ',', '.')];
         $dados[] = ['Faturamento Total', 'R$ ' . number_format($this->dados['faturamentoTotal'], 2, ',', '.')];
         $dados[] = [];
         
@@ -55,9 +56,10 @@ class FaturamentoExport implements FromArray, WithHeadings, WithStyles
             1 => ['font' => ['bold' => true, 'size' => 14]],
             3 => ['font' => ['bold' => true]],
             4 => ['font' => ['bold' => true]],
-            5 => ['font' => ['bold' => true, 'color' => ['rgb' => '00B050']]],
-            8 => ['font' => ['bold' => true]],
+            5 => ['font' => ['bold' => true]],
+            6 => ['font' => ['bold' => true, 'color' => ['rgb' => '00B050']]],
             9 => ['font' => ['bold' => true]],
+            10 => ['font' => ['bold' => true]],
         ];
     }
 }
