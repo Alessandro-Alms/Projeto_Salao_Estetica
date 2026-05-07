@@ -11,9 +11,52 @@ use App\Models\HorarioTrabalho;
 use App\Models\Servico;
 use App\Models\Agendamento;
 use Illuminate\Support\Facades\DB;
+use Illuminate\View\View;
 
 class UserController extends Controller
 {
+    public function dashboard(Request $request): View
+    {
+        $user = $request->user();
+        $mediaAvaliacao = null;
+        $totalAvaliacoes = 0;
+        $comentariosAvaliacao = collect();
+
+        if ($user && $user->cargo === 'profissional') {
+            $mediaAvaliacao = DB::table('avaliacoes')
+                ->where('profissional_id', $user->id)
+                ->avg('nota');
+
+            $mediaAvaliacao = $mediaAvaliacao ? round($mediaAvaliacao, 1) : null;
+
+            $totalAvaliacoes = DB::table('avaliacoes')
+                ->where('profissional_id', $user->id)
+                ->count();
+
+            $comentariosAvaliacao = DB::table('avaliacoes')
+                ->join('users as clientes', 'avaliacoes.cliente_id', '=', 'clientes.id')
+                ->where('avaliacoes.profissional_id', $user->id)
+                ->whereNotNull('avaliacoes.comentario')
+                ->where('avaliacoes.comentario', '!=', '')
+                ->orderByDesc('avaliacoes.created_at')
+                ->limit(5)
+                ->select(
+                    'avaliacoes.nota',
+                    'avaliacoes.comentario',
+                    'avaliacoes.created_at',
+                    'clientes.name as cliente_nome'
+                )
+                ->get();
+        }
+
+        return view('dashboard', compact(
+            'user',
+            'mediaAvaliacao',
+            'totalAvaliacoes',
+            'comentariosAvaliacao'
+        ));
+    }
+
     public function index(Request $request)
     {
         $consulta = User::query();
