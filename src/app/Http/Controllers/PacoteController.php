@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Pacote;
 use App\Models\Servico;
+use Illuminate\Support\Facades\DB;
 
 class PacoteController extends Controller
 {
@@ -75,6 +76,13 @@ class PacoteController extends Controller
     public function destroy($id)
     {
         $pacote = Pacote::findOrFail($id);
+
+        $temVenda = DB::table('cliente_pacotes')->where('pacote_id', $pacote->id_pacote)->exists();
+
+        if ($temVenda) {
+            return redirect()->route('admin.pacotes.index')->with('error', 'Não é possível excluir um pacote que já foi vendido. Marque como inativo para preservar o histórico.');
+        }
+
         $pacote->delete();
 
         return redirect()->route('admin.pacotes.index')->with('success', 'Pacote excluído com sucesso!');

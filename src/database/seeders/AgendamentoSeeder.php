@@ -2,54 +2,89 @@
 
 namespace Database\Seeders;
 
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class AgendamentoSeeder extends Seeder
 {
     public function run(): void
     {
-        $clientes = DB::table('users')->where('cargo', 'cliente')->pluck('id')->toArray();
-        $profissionais = DB::table('users')->where('cargo', 'profissional')->pluck('id')->toArray();
-        $servicosData = DB::table('servicos')->pluck('preco', 'id_servico')->toArray();
+        $clientes = DB::table('users')->where('cargo', 'cliente')->orderBy('id')->pluck('id')->values();
+        $profissionais = DB::table('users')->where('cargo', 'profissional')->orderBy('id')->pluck('id')->values();
+        $servicos = DB::table('servicos')->orderBy('id_servico')->get()->values();
 
-        // Cria agendamentos nos últimos 30 dias
-        for ($i = 0; $i < 40; $i++) {
-            $cliente = $clientes[array_rand($clientes)];
-            $profissional = $profissionais[array_rand($profissionais)];
-            
-            // Seleciona um serviço aleatório corretamente
-            $servicoId = array_rand($servicosData);
-            $preco = $servicosData[$servicoId];
+        if ($clientes->isEmpty() || $profissionais->isEmpty() || $servicos->isEmpty()) {
+            return;
+        }
 
-            // Data aleatória nos últimos 30 dias
-            $data = Carbon::now()->subDays(rand(0, 30))->setHour(rand(8, 17))->setMinute(0);
+        $statusPorAgenda = [
+            'executado',
+            'executado',
+            'executado',
+            'confirmado',
+            'confirmado',
+            'presente',
+            'cancelado',
+            'falta',
+            'confirmado',
+            'executado',
+        ];
 
-            // Calcula duração (simplificado)
-            $duracao = rand(30, 120);
+        foreach ($statusPorAgenda as $index => $status) {
+            $servico = $servicos[$index % $servicos->count()];
+            $inicio = $this->dataParaStatus($status, $index);
+            $fim = $inicio->copy()->addMinutes((int) $servico->duracao);
+            $valorComissao = $status === 'executado' ? round(((float) $servico->preco) * 0.50, 2) : null;
 
-            $comissaoPercentual = rand(45, 55) / 100;
-            $comissao = $preco * $comissaoPercentual;
-
-            // Status varia: alguns executados, alguns confirmados, alguns cancelados
-            $statusOpcoes = ['executado', 'executado', 'executado', 'confirmado', 'cancelado', 'falta'];
-            $status = $statusOpcoes[array_rand($statusOpcoes)];
-
-            DB::table('agendamentos')->insert([
-                'cliente_id' => $cliente,
-                'profissional_id' => $profissional,
-                'servico_id' => $servicoId,
-                'data_hora_inicio' => $data,
-                'data_hora_fim' => $data->copy()->addMinutes($duracao),
-                'valor_total' => $preco,
-                'valor_comissao' => $comissao,
-                'comissao_paga_percentual' => $comissaoPercentual * 100,
+            $agendamentoId = DB::table('agendamentos')->insertGetId([
+                'cliente_id' => $clientes[$index % $clientes->count()],
+                'profissional_id' => $profissionais[$index % $profissionais->count()],
+                'servico_id' => $servico->id_servico,
+                'data_hora_inicio' => $inicio,
+                'data_hora_fim' => $fim,
+                'valor_total' => $status === 'cancelado' ? (float) $servico->preco : (float) $servico->preco,
+                'valor_comissao' => $valorComissao,
+                'comissao_paga_percentual' => $valorComissao ? 50.00 : null,
+                'multa_valor' => $status === 'cancelado' ? round(((float) $servico->preco) * 0.05, 2) : 0,
                 'status' => $status,
-                'obs' => $status === 'cancelado' ? 'Cliente cancelou' : ($status === 'falta' ? 'Cliente não compareceu' : null),
-                'created_at' => $data,
-                'updated_at' => $data,
+                'obs' => $this->observacaoParaStatus($status),
+                'created_at' => $inicio,
+                'updated_at' => $inicio,
+            ]);
+
+            DB::table('agendamento_servico')->insert([
+                'agendamento_id' => $agendamentoId,
+                'servico_id' => $servico->id_servico,
+                'duracao' => $servico->duracao,
+                'preco' => $servico->preco,
+                'created_at' => now(),
+                'updated_at' => now(),
             ]);
         }
+    }
+
+    private function dataParaStatus(string $status, int $index): Carbon
+    {
+        if (in_array($status, ['executado', 'cancelado', 'falta'], true)) {
+            return Carbon::now()
+                ->subDays(10 - $index)
+                ->setTime(9 + ($index % 5), 0, 0);
+        }
+
+        return Carbon::now()
+            ->addDays($index + 1)
+            ->setTime(9 + ($index % 5), 0, 0);
+    }
+
+    private function observacaoParaStatus(string $status): ?string
+    {
+        return match ($status) {
+            'executado' => 'Atendimento realizado para testes.',
+            'cancelado' => 'Cancelamento de exemplo com multa.',
+            'falta' => 'Falta registrada para teste.',
+            'presente' => 'Cliente presente aguardando finalizacao.',
+            default => null,
+        };
     }
 }

@@ -1,0 +1,53 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\ClientePacote;
+use App\Models\Pacote;
+use Carbon\Carbon;
+
+class ClientePacoteService
+{
+    public function venderPacote(int $clienteId, int $pacoteId): ClientePacote
+    {
+        $pacote = Pacote::findOrFail($pacoteId);
+
+        return ClientePacote::create([
+            'cliente_id' => $clienteId,
+            'pacote_id' => $pacote->id_pacote,
+            'sessoes_restantes' => $pacote->quantidade_sessoes,
+            'data_compra' => now(),
+            'data_validade' => now()->addDays($pacote->validade_dias),
+            'status' => 'ativo',
+        ]);
+    }
+
+    public function consumirSessao(int $clientePacoteId, int $clienteId, int $servicoId): ClientePacote
+    {
+        $clientePacote = ClientePacote::with('pacote')
+            ->where('id', $clientePacoteId)
+            ->where('cliente_id', $clienteId)
+            ->where('status', 'ativo')
+            ->where('sessoes_restantes', '>', 0)
+            ->whereDate('data_validade', '>=', Carbon::today())
+            ->first();
+
+        if (!$clientePacote) {
+            throw new \RuntimeException('Pacote inválido, vencido ou sem sessões disponíveis.');
+        }
+
+        if ((int) $clientePacote->pacote->servico_id !== $servicoId) {
+            throw new \RuntimeException('Este pacote não pertence ao serviço deste agendamento.');
+        }
+
+        $clientePacote->sessoes_restantes -= 1;
+
+        if ($clientePacote->sessoes_restantes === 0) {
+            $clientePacote->status = 'finalizado';
+        }
+
+        $clientePacote->save();
+
+        return $clientePacote;
+    }
+}

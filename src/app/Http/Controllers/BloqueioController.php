@@ -3,8 +3,12 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Agendamento;
 use App\Models\BloqueioHorario;
 use App\Models\User;
+use App\Services\AgendaService;
+use Carbon\Carbon;
+use Illuminate\Validation\Rule;
 
 class BloqueioController extends Controller
 {
@@ -22,16 +26,34 @@ class BloqueioController extends Controller
         return view('admin.bloqueios.criar', compact('profissionais'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, AgendaService $agendaService)
     {
         $validado = $request->validate([
-            'profissional_id' => ['nullable', 'exists:users,id'],
+            'profissional_id' => ['nullable', Rule::exists('users', 'id')->where('cargo', 'profissional')],
             'data_hora_inicio' => ['required', 'date'],
             'data_hora_fim' => ['required', 'date', 'after:data_hora_inicio'],
             'motivo' => ['nullable', 'string', 'max:255'],
         ], [
             'data_hora_fim.after' => 'A data final deve ser depois da data de início.',
         ]);
+
+        $inicio = Carbon::parse($validado['data_hora_inicio']);
+        $fim = Carbon::parse($validado['data_hora_fim']);
+
+        if (!empty($validado['profissional_id'])) {
+            $temAgendamento = $agendaService->existeConflitoAgendamento((int) $validado['profissional_id'], $inicio, $fim);
+        } else {
+            $temAgendamento = Agendamento::where('status', '!=', 'cancelado')
+                ->where('data_hora_inicio', '<', $fim)
+                ->where('data_hora_fim', '>', $inicio)
+                ->exists();
+        }
+
+        if ($temAgendamento) {
+            return back()->withErrors([
+                'data_hora_inicio' => 'Existe agendamento ativo nesse período. Reagende ou cancele os horários antes de criar o bloqueio.'
+            ])->withInput();
+        }
 
         BloqueioHorario::create($validado);
 

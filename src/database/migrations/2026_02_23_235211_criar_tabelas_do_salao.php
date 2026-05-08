@@ -171,21 +171,18 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('agendamentos', function (Blueprint $table) {
-            $table->dropColumn('valor_comissao');
-        });
+        Schema::dropIfExists('agendamento_servico');
+        Schema::dropIfExists('avaliacoes');
+        Schema::dropIfExists('cliente_pacotes');
+        Schema::dropIfExists('pacotes');
+        Schema::dropIfExists('bloqueios_horarios');
+        Schema::dropIfExists('horarios_trabalho');
+        Schema::dropIfExists('profissional_servico');
         Schema::dropIfExists('vendas');
         Schema::dropIfExists('atendimentos');
-        Schema::dropIfExists('agendamentos');   
+        Schema::dropIfExists('agendamentos');
         Schema::dropIfExists('produtos');
         Schema::dropIfExists('servicos');
         Schema::dropIfExists('users');
-        Schema::dropIfExists('profissional_servico');
-        Schema::dropIfExists('horarios_trabalho');
-        Schema::dropIfExists('bloqueios_horarios');
-        Schema::dropIfExists('cliente_pacotes');
-        Schema::dropIfExists('pacotes');
-        Schema::dropIfExists('avaliacoes');
-        Schema::dropIfExists('agendamento_servico');
     }
 };

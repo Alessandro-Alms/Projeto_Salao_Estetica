@@ -8,23 +8,27 @@ class Venda extends Model
 {
     protected $primaryKey = 'id_venda';
     protected $fillable = [
-    'user_id', 
-    'id_produto', 
-    'id_servico',   
-    'quantidade', 
-    'valor_venda'
+        'profissional_id',
+        'produto_id',
+        'servico_id',
+        'quantidade',
+        'valor_venda',
     ];
 
-    // Quem realizou a venda (gerente/recepcionista)
+    // Quem realizou a venda.
     public function vendedor() {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class, 'profissional_id');
+    }
+
+    public function profissional() {
+        return $this->belongsTo(User::class, 'profissional_id');
     }
 
     public function produto() {
-        return $this->belongsTo(Produto::class, 'id_produto');
+        return $this->belongsTo(Produto::class, 'produto_id', 'id_produto');
     }
 
     public function servico() {
-        return $this->belongsTo(Servico::class, 'id_servico');
+        return $this->belongsTo(Servico::class, 'servico_id', 'id_servico');
     }
 }

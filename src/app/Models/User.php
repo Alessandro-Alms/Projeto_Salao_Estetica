@@ -59,11 +59,11 @@ class User extends Authenticatable
         return $this->hasMany(HorarioTrabalho::class, 'profissional_id');
     }
     public function agendamentos(){
-        $foreignKey = $this->cargo === 'profissional' ? 'cliente_id' : 'profissional_id';
+        $foreignKey = $this->cargo === 'profissional' ? 'profissional_id' : 'cliente_id';
         return $this->hasMany(Agendamento::class, $foreignKey);
     }
     public function atendimentos(){
-        $foreignKey = $this->cargo === 'profissional' ? 'cliente_id' : 'profissional_id';
+        $foreignKey = $this->cargo === 'profissional' ? 'profissional_id' : 'cliente_id';
         return $this->hasMany(Atendimento::class, $foreignKey);
     }
     public function agendamentosComoCliente()
@@ -84,7 +84,7 @@ class User extends Authenticatable
     }
     public function vendas()
     {
-        return $this->hasMany(Venda::class, 'user_id');
+        return $this->hasMany(Venda::class, 'profissional_id');
     }
     // Busca os pacotes ativos que o cliente comprou e ainda tem sessão
     public function pacotesAtivos()

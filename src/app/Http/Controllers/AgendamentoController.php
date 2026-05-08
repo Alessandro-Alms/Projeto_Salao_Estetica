@@ -11,7 +11,10 @@ use App\Models\HorarioTrabalho;
 use App\Models\Produto; 
 use Illuminate\Support\Facades\DB;
 use App\Models\BloqueioHorario;
-use App\Models\ClientePacote;
+use App\Services\AgendaService;
+use App\Services\ClientePacoteService;
+use App\Services\FinanceiroService;
+use App\Services\VendaProdutoService;
 
 class AgendamentoController extends Controller
 {
@@ -22,7 +25,7 @@ class AgendamentoController extends Controller
         $dataFim = $request->input('data_fim', Carbon::now()->endOfMonth()->format('Y-m-d'));
 
         // Buscar todos os agendamentos do período
-        $agendamentos = Agendamento::with(['cliente', 'profissional', 'servico'])
+        $agendamentos = Agendamento::with(['cliente', 'profissional', 'servico', 'servicos'])
             ->whereBetween('data_hora_inicio', [
                 Carbon::parse($dataInicio)->startOfDay(),
                 Carbon::parse($dataFim)->endOfDay()
@@ -417,27 +420,13 @@ class AgendamentoController extends Controller
         // =========================================================================
         $resultadoAgendamento = DB::transaction(function () use ($request, $inicio, $fim, $servicos_ids, $servicosPrincipais, $valorTotal) {
             
+            $agendaService = app(AgendaService::class);
+
             // 1. Trava a "agenda" deste profissional
             User::where('id', $request->profissional_id)->lockForUpdate()->first();
 
             // 2. Validação: Conflito (Colisão)
-            $conflito = Agendamento::where('profissional_id', $request->profissional_id)
-                ->where('status', '!=', 'cancelado')
-                ->where(function ($query) use ($inicio, $fim) {
-                    $query->where(function ($q) use ($inicio, $fim) {
-                        $q->where('data_hora_inicio', '>=', $inicio)
-                        ->where('data_hora_inicio', '<', $fim);
-                    })
-                    ->orWhere(function ($q) use ($inicio, $fim) {
-                        $q->where('data_hora_fim', '>', $inicio)
-                        ->where('data_hora_fim', '<=', $fim);
-                    })
-                    ->orWhere(function ($q) use ($inicio, $fim) {
-                        $q->where('data_hora_inicio', '<=', $inicio)
-                        ->where('data_hora_fim', '>=', $fim);
-                    });
-                })->exists();
-
+            $conflito = $agendaService->existeConflitoAgendamento($request->profissional_id, $inicio, $fim);
             // Se achou conflito, aborta a missão
             if ($conflito) {
                 return 'conflito'; 
@@ -557,44 +546,40 @@ class AgendamentoController extends Controller
         }
 
         // Verificar conflito com agendamentos existentes
-        $conflito = Agendamento::where('profissional_id', $profissional->id)
-            ->where('status', '!=', 'cancelado')
-            ->where(function ($q) use ($data_hora, $data_hora_fim) {
-                $q->where(function ($q2) use ($data_hora, $data_hora_fim) {
-                    $q2->where('data_hora_inicio', '>=', $data_hora)
-                        ->where('data_hora_inicio', '<', $data_hora_fim);
-                })
-                ->orWhere(function ($q2) use ($data_hora, $data_hora_fim) {
-                    $q2->where('data_hora_fim', '>', $data_hora)
-                        ->where('data_hora_fim', '<=', $data_hora_fim);
-                })
-                ->orWhere(function ($q2) use ($data_hora, $data_hora_fim) {
-                    $q2->where('data_hora_inicio', '<=', $data_hora)
-                        ->where('data_hora_fim', '>=', $data_hora_fim);
-                });
-            })
-            ->exists();
-
+        $agendaService = app(AgendaService::class);
+        $conflito = $agendaService->existeConflitoAgendamento($profissional->id, $data_hora, $data_hora_fim);
         if ($conflito) {
             return back()->withErrors(['hora' => 'Este horário já está ocupado.'])->withInput();
         }
 
-        // Salvar agendamento
-        $agendamento = Agendamento::create([
-            'cliente_id' => $request->cliente_id,
-            'profissional_id' => $request->profissional_id,
-            'servico_id' => $request->servico_id,
-            'data_hora_inicio' => $data_hora,
-            'data_hora_fim' => $data_hora_fim,
-            'status' => 'confirmado',
-            'valor_total' => $servico->preco,
-        ]);
+        $resultadoAgendamento = DB::transaction(function () use ($request, $data_hora, $data_hora_fim, $servico, $agendaService) {
+            User::where('id', $request->profissional_id)->lockForUpdate()->first();
 
-        // Adicionar na tabela pivot
-        $agendamento->servicos()->attach($request->servico_id, [
-            'duracao' => $servico->duracao,
-            'preco' => $servico->preco
-        ]);
+            if ($agendaService->existeConflitoAgendamento($request->profissional_id, $data_hora, $data_hora_fim)) {
+                return 'conflito';
+            }
+
+            $agendamento = Agendamento::create([
+                'cliente_id' => $request->cliente_id,
+                'profissional_id' => $request->profissional_id,
+                'servico_id' => $request->servico_id,
+                'data_hora_inicio' => $data_hora,
+                'data_hora_fim' => $data_hora_fim,
+                'status' => 'confirmado',
+                'valor_total' => $servico->preco,
+            ]);
+
+            $agendamento->servicos()->attach($request->servico_id, [
+                'duracao' => $servico->duracao,
+                'preco' => $servico->preco
+            ]);
+
+            return 'sucesso';
+        });
+
+        if ($resultadoAgendamento === 'conflito') {
+            return back()->withErrors(['hora' => 'Este horário acabou de ser reservado por outra pessoa. Escolha outro horário.'])->withInput();
+        }
 
         return redirect()->route('admin.agenda.index')->with('status', 'Agendamento realizado com sucesso!');
     }
@@ -626,7 +611,7 @@ class AgendamentoController extends Controller
         $filtro = $request->get('filtro', '7');
         
         $query = Agendamento::where('profissional_id', auth()->id())
-                            ->with(['cliente', 'servico', 'servicos'])
+                            ->with(['cliente.pacotesAtivos.pacote', 'servico', 'servicos'])
                             ->orderBy('data_hora_inicio', 'asc');
         
         // Aplicar filtro de período
@@ -677,7 +662,7 @@ class AgendamentoController extends Controller
         $filtro = $request->get('filtro', '7');
         
         $query = Agendamento::where('cliente_id', auth()->id())
-            ->with(['profissional', 'servico', 'servicos'])
+            ->with(['profissional', 'servico', 'servicos', 'avaliacao'])
             ->orderBy('data_hora_inicio', 'asc');
         
         // Aplicar filtro de período
@@ -701,6 +686,10 @@ class AgendamentoController extends Controller
     {
         // Busca o agendamento ou dá erro 404
         $agendamento = Agendamento::findOrFail($id_agendamento);
+
+        if (!$this->usuarioPodeAlterarAgendamento($agendamento)) {
+            abort(403, 'VocÃª nÃ£o tem permissÃ£o para cancelar este agendamento.');
+        }
 
         if ($agendamento->status === 'cancelado') {
             return back()->withErrors(['data_hora' => 'Este agendamento já foi cancelado.'])->withInput();
@@ -735,46 +724,44 @@ class AgendamentoController extends Controller
         $agendamento = Agendamento::findOrFail($id_agendamento);
         $cliente = User::findOrFail($agendamento->cliente_id);
 
+        if (!$this->usuarioPodeGerenciarAgendamento($agendamento)) {
+            abort(403, 'VocÃª nÃ£o tem permissÃ£o para finalizar este agendamento.');
+        }
+
+        if (in_array($agendamento->status, ['executado', 'cancelado', 'falta'], true)) {
+            return back()->withErrors(['status' => 'Este agendamento nÃ£o pode ser finalizado no status atual.']);
+        }
+
         // Iniciamos uma transação para garantir que ou faz TUDO ou não faz NADA
         return DB::transaction(function () use ($request, $agendamento, $cliente) { 
+            $vendaProdutoService = app(VendaProdutoService::class);
             
             // 1. Verificação Prévia de Estoque
             if ($request->has('produtos')) {
-                foreach ($request->produtos as $item) {
-                    if (!empty($item['id'])) {
-                        $produto = Produto::find($item['id']);
-                        $qtdPedida = $item['quantidade'] ?? 1;
+                $erroEstoque = $vendaProdutoService->validarEstoque($request->produtos);
 
-                        if (!$produto || $produto->quantidade_estoque < $qtdPedida) {
-                            // Se um único produto falhar, paramos tudo e NADA é salvo no banco
-                            return back()->withErrors([
-                                'estoque' => "Estoque insuficiente para o produto: " . ($produto->nome ?? 'Desconhecido')
-                            ])->withInput();
-                        }
-                    }
+                if ($erroEstoque) {
+                    return back()->withErrors(['estoque' => $erroEstoque])->withInput();
                 }
             }
             // Lógica de Pacotes
             if ($request->has('usar_pacote') && $request->usar_pacote != null) {
-                $clientePacote = ClientePacote::find($request->usar_pacote);
-
-                if ($clientePacote && $clientePacote->sessoes_restantes > 0) {
-                    // Desconta 1 sessão
-                    $clientePacote->sessoes_restantes -= 1;
-                    
-                    // Se zerou as sessões, finaliza a carteirinha
-                    if ($clientePacote->sessoes_restantes == 0) {
-                        $clientePacote->status = 'finalizado';
-                    }
-                    $clientePacote->save();
-
-                    // Zera o valor para não somar no caixa do salão (já foi pago na compra)
-                    $agendamento->valor_total = 0; 
-                    
-                    // Adiciona um aviso na observação
-                    $obsPacote = " (Abatido 1 sessão do pacote: " . $clientePacote->pacote->nome . ")";
-                    $request->merge(['observacao' => $request->input('observacao') . $obsPacote]);
+                try {
+                    $clientePacote = app(ClientePacoteService::class)->consumirSessao(
+                        (int) $request->usar_pacote,
+                        (int) $agendamento->cliente_id,
+                        (int) $agendamento->servico_id
+                    );
+                } catch (\RuntimeException $exception) {
+                    return back()->withErrors(['usar_pacote' => $exception->getMessage()])->withInput();
                 }
+
+                // Zera o valor para não somar no caixa do salão (já foi pago na compra)
+                $agendamento->valor_total = 0; 
+                
+                // Adiciona um aviso na observação
+                $obsPacote = " (Abatido 1 sessão do pacote: " . $clientePacote->pacote->nome . ")";
+                $request->merge(['observacao' => $request->input('observacao') . $obsPacote]);
             }
 
  
@@ -801,11 +788,12 @@ class AgendamentoController extends Controller
             // Descontos dados pelo SALÃO (fidelidade, pacotes, etc) NÃO afetam a comissão do profissional!
             // O profissional recebe sua comissão sobre o preço original, não sobre o valor com desconto.
             
-            $porcentagemComissao = 50;
+            $financeiroService = app(FinanceiroService::class);
+            $porcentagemComissao = FinanceiroService::COMISSAO_SERVICO_PERCENTUAL;
             
             // Usa SEMPRE o preço base do serviço, NUNCA o valor_total (que pode ter descontos)
             $precoBase = $agendamento->servico->preco;
-            $valorComissao = $precoBase * ($porcentagemComissao / 100);
+            $valorComissao = $financeiroService->calcularComissaoServico((float) $precoBase);
             
             // Exemplo: Se o serviço custa R$50,00 e ganhou desconto de 50%, o cliente paga R$25,00
             // mas o profissional recebe comissão de R$25,00 (50% de R$50,00), não R$12,50
@@ -819,25 +807,7 @@ class AgendamentoController extends Controller
 
             // 4. Registrar as Vendas e Baixar Estoque
             if ($request->has('produtos')) {
-                foreach ($request->produtos as $item) {
-                    if (!empty($item['id'])) {
-                        $produto = Produto::find($item['id']);
-                        $qtd = $item['quantidade'] ?? 1;
-
-                        // Baixa o estoque
-                        $produto->decrement('quantidade_estoque', $qtd);
-
-                        // Registra a venda
-                        DB::table('vendas')->insert([
-                            'profissional_id' => auth()->id(),
-                            'produto_id' => $produto->id_produto,
-                            'quantidade' => $qtd,
-                            'valor_venda' => $produto->valor_unitario * $qtd,
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ]);
-                    }
-                }
+                $vendaProdutoService->registrarVendas(auth()->id(), $request->produtos);
             }
 
             // 5. Retornamos usando a $mensagem dinâmica que criamos ali em cima!
@@ -848,6 +818,10 @@ class AgendamentoController extends Controller
     public function confirmarPresenca($id)
     {
         $agendamento = Agendamento::findOrFail($id);
+
+        if (!$this->usuarioPodeAlterarAgendamento($agendamento)) {
+            abort(403, 'VocÃª nÃ£o tem permissÃ£o para confirmar presenÃ§a neste agendamento.');
+        }
 
         $toleranciaMinutos = 15;
         $inicio = Carbon::parse($agendamento->data_hora_inicio);
@@ -871,6 +845,15 @@ class AgendamentoController extends Controller
     public function marcarFalta($id)
     {
         $agendamento = Agendamento::findOrFail($id);
+
+        if (!$this->usuarioPodeGerenciarAgendamento($agendamento)) {
+            abort(403, 'VocÃª nÃ£o tem permissÃ£o para marcar falta neste agendamento.');
+        }
+
+        if (in_array($agendamento->status, ['executado', 'cancelado'], true)) {
+            return back()->withErrors(['status' => 'NÃ£o Ã© possÃ­vel marcar falta em um agendamento executado ou cancelado.']);
+        }
+
         $agendamento->update(['status' => 'falta']);
 
         $cliente = $agendamento->cliente; 
@@ -907,5 +890,35 @@ class AgendamentoController extends Controller
         ]);
 
         return back()->with('success', 'Obrigado por avaliar nosso serviço!');
+    }
+
+    private function usuarioPodeAlterarAgendamento(Agendamento $agendamento): bool
+    {
+        $usuario = auth()->user();
+
+        if (!$usuario) {
+            return false;
+        }
+
+        if ($agendamento->cliente_id === $usuario->id) {
+            return true;
+        }
+
+        return $this->usuarioPodeGerenciarAgendamento($agendamento);
+    }
+
+    private function usuarioPodeGerenciarAgendamento(Agendamento $agendamento): bool
+    {
+        $usuario = auth()->user();
+
+        if (!$usuario) {
+            return false;
+        }
+
+        if (in_array($usuario->cargo, ['gerente', 'recepcionista'], true)) {
+            return true;
+        }
+
+        return $usuario->cargo === 'profissional' && $agendamento->profissional_id === $usuario->id;
     }
 }

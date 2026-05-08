@@ -10,19 +10,8 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        // Usuários administrativos
         User::create([
-            'name' => 'Gerente Principal',
-            'email' => 'gerente@salao.com',
-            'password' => Hash::make('senha123'),
-            'cpf' => '12345678901',
-            'telefone' => '85987654321',
-            'cargo' => 'gerente',
-            'status' => 'ativo',
-        ]);
-
-        User::create([
-            'name' => 'Recepcionista',
+            'name' => 'Recepcionista Teste',
             'email' => 'recepcao@salao.com',
             'password' => Hash::make('senha123'),
             'cpf' => '98765432101',
@@ -31,7 +20,6 @@ class UserSeeder extends Seeder
             'status' => 'ativo',
         ]);
 
-        // Profissionais
         $profissionais = [
             ['name' => 'Carolina Silva', 'email' => 'carolina@salao.com', 'cpf' => '11111111111', 'telefone' => '85988881111'],
             ['name' => 'Mariana Costa', 'email' => 'mariana@salao.com', 'cpf' => '22222222222', 'telefone' => '85988882222'],
@@ -40,33 +28,36 @@ class UserSeeder extends Seeder
             ['name' => 'Juliana Pereira', 'email' => 'juliana@salao.com', 'cpf' => '55555555555', 'telefone' => '85988885555'],
         ];
 
-        foreach ($profissionais as $prof) {
+        foreach ($profissionais as $profissional) {
             User::create([
-                'name' => $prof['name'],
-                'email' => $prof['email'],
+                'name' => $profissional['name'],
+                'email' => $profissional['email'],
                 'password' => Hash::make('senha123'),
-                'cpf' => $prof['cpf'],
-                'telefone' => $prof['telefone'],
+                'cpf' => $profissional['cpf'],
+                'telefone' => $profissional['telefone'],
                 'cargo' => 'profissional',
                 'status' => 'ativo',
             ]);
         }
 
-        // Clientes
-        $nomes = ['Ana Silva', 'Beatriz Costa', 'Camila Santos', 'Diana Oliveira', 'Elisa Ferreira', 
-                  'Fabiana Gomes', 'Gabriela Martins', 'Helena Souza', 'Iris Rocha', 'Joana Alves',
-                  'Karina Dias', 'Larissa Mendes', 'Marilia Neves', 'Natalia Campos', 'Oona Ribeiro'];
-        
-        foreach ($nomes as $index => $nome) {
+        $clientes = [
+            ['name' => 'Ana Silva', 'email' => 'ana.cliente@email.com', 'cpf' => '66666666661', 'telefone' => '85999990001', 'contador_fidelidade' => 0],
+            ['name' => 'Bianca Costa', 'email' => 'bianca.cliente@email.com', 'cpf' => '66666666662', 'telefone' => '85999990002', 'contador_fidelidade' => 2],
+            ['name' => 'Camila Santos', 'email' => 'camila.cliente@email.com', 'cpf' => '66666666663', 'telefone' => '85999990003', 'contador_fidelidade' => 4],
+            ['name' => 'Daniela Oliveira', 'email' => 'daniela.cliente@email.com', 'cpf' => '66666666664', 'telefone' => '85999990004', 'contador_fidelidade' => 5],
+            ['name' => 'Elisa Ferreira', 'email' => 'elisa.cliente@email.com', 'cpf' => '66666666665', 'telefone' => '85999990005', 'contador_fidelidade' => 1],
+        ];
+
+        foreach ($clientes as $cliente) {
             User::create([
-                'name' => $nome,
-                'email' => 'cliente' . ($index + 1) . '@email.com',
+                'name' => $cliente['name'],
+                'email' => $cliente['email'],
                 'password' => Hash::make('senha123'),
-                'cpf' => str_pad($index + 1, 11, '6'),
-                'telefone' => '8599' . str_pad($index + 1, 6, '0'),
+                'cpf' => $cliente['cpf'],
+                'telefone' => $cliente['telefone'],
                 'cargo' => 'cliente',
                 'status' => 'ativo',
-                'contador_fidelidade' => rand(0, 50),
+                'contador_fidelidade' => $cliente['contador_fidelidade'],
             ]);
         }
     }

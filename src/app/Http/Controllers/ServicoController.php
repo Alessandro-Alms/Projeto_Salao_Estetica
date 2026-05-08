@@ -23,12 +23,12 @@ class ServicoController extends Controller
     }
     public function store(Request $request)
     {
-        $request->validate([
+        $validado = $request->validate([
             'nome' => ['required', 'string', 'max:100'],
             'preco' => ['required', 'numeric', 'min:0'],
             'duracao' => ['required', 'integer', 'min:1'],
         ]);
-        Servico::create($request->all());
+        Servico::create($validado);
 
         return redirect()->route('admin.servicos.index')->with('success', 'Serviço cadastrado!');
     }
@@ -68,16 +68,17 @@ class ServicoController extends Controller
     
     public function destroy($id)
     {
-        $servico = \App\Models\Servico::findOrFail($id);
+        $servico = Servico::findOrFail($id);
 
         // 1. Verifica se existe no histórico de agendamentos
-        $temAgendamento = \App\Models\Agendamento::where('servico_id', $id)->exists();
+        $temAgendamento = Agendamento::where('servico_id', $id)->exists()
+            || DB::table('agendamento_servico')->where('servico_id', $id)->exists();
 
         // 2. Verifica se está vinculado a algum pacote
-        $temPacote = \Illuminate\Support\Facades\DB::table('pacotes')->where('servico_id', $id)->exists();
+        $temPacote = DB::table('pacotes')->where('servico_id', $id)->exists();
 
         // 3. Verifica se algum profissional faz este serviço (tabela pivô)
-        $temProfissional = \Illuminate\Support\Facades\DB::table('profissional_servico')->where('servico_id', $id)->exists();
+        $temProfissional = DB::table('profissional_servico')->where('servico_id', $id)->exists();
 
         // Se qualquer um dos três for verdadeiro, nós barramos a exclusão na hora!
         if ($temAgendamento || $temPacote || $temProfissional) {

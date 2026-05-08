@@ -123,7 +123,7 @@
                                 </p>
                                 <h3 class="text-lg font-title text-[#4A00B9]">
                                     @php
-                                        $servicos = $agenda->servicos()->pluck('nome')->toArray();
+                                        $servicos = $agenda->servicos->pluck('nome')->toArray();
                                         if (empty($servicos) && $agenda->servico) {
                                             $servicos = [$agenda->servico->nome];
                                         }
@@ -142,13 +142,13 @@
                                 @if($agenda->status == 'executado')
                                     @if(!$agenda->avaliacao)
                                         @php
-                                            $nomesServicos = $agenda->servicos()->pluck('nome')->toArray();
+                                            $nomesServicos = $agenda->servicos->pluck('nome')->toArray();
                                             if (empty($nomesServicos) && $agenda->servico) {
                                                 $nomesServicos = [$agenda->servico->nome];
                                             }
                                             $servicosStr = implode(', ', $nomesServicos);
                                         @endphp
-                                        <button onclick="abrirModalAvaliacao({{ $agenda->id_agendamento }}, '{{ $servicosStr }}')" 
+                                        <button onclick="abrirModalAvaliacao({{ $agenda->id_agendamento }}, @js($servicosStr))" 
                                                 class="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white py-2 rounded-full font-medium btn-primary shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2">
                                             ⭐ Avaliar Atendimento
                                         </button>

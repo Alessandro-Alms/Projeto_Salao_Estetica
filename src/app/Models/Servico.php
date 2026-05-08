@@ -24,11 +24,13 @@ class Servico extends Model
     {
         return $this->belongsToMany(
             User::class,    
-            'servico_usuario', 
+            'profissional_servico', 
             'servico_id', 
-            'usuario_id'
+            'profissional_id',
+            'id_servico',
+            'id'
         )
-        ->withPivot('duracao_customizada', 'percentual_comissao')
+        ->withPivot('comissao_percentual', 'duracao_customizada')
         ->withTimestamps();
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Produto;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ProdutoController extends Controller
 {
@@ -81,6 +82,10 @@ class ProdutoController extends Controller
         if ($produto->quantidade_estoque > 0) {
             return redirect()->route('admin.produtos.index')->with('error', 'Não é possível deletar um produto que ainda possui estoque!');
         }
+        if (DB::table('vendas')->where('produto_id', $produto->id_produto)->exists()) {
+            return redirect()->route('admin.produtos.index')->with('error', 'Não é possível deletar um produto com histórico de vendas. Mantenha o cadastro para preservar relatórios.');
+        }
+
         $produto->delete();
 
         return redirect()->route('admin.produtos.index')->with('status', 'Produto deletado com sucesso!');

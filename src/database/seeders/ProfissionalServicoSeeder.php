@@ -9,30 +9,27 @@ class ProfissionalServicoSeeder extends Seeder
 {
     public function run(): void
     {
-        // Pega todos os profissionais
         $profissionais = DB::table('users')
             ->where('cargo', 'profissional')
+            ->orderBy('id')
             ->pluck('id')
-            ->toArray();
+            ->values();
 
-        // Pega todos os serviços
         $servicos = DB::table('servicos')
-            ->pluck('id_servico')
-            ->toArray();
-
-        // Cada profissional pode fazer certos serviços
-        // Vamos variar para não todos fazerem tudo
-        $comissoesPadrao = [50.00, 45.00, 55.00, 50.00, 48.00];
+            ->orderBy('id_servico')
+            ->pluck('duracao', 'id_servico');
 
         foreach ($profissionais as $index => $profissionalId) {
-            // Seleciona serviços aleatórios para cada profissional
-            $servicosSelecionados = array_slice($servicos, 0, rand(15, count($servicos)));
-            
-            foreach ($servicosSelecionados as $servicoId) {
+            foreach ($servicos as $servicoId => $duracao) {
+                if (($servicoId + $index) % 5 === 0) {
+                    continue;
+                }
+
                 DB::table('profissional_servico')->insert([
                     'profissional_id' => $profissionalId,
                     'servico_id' => $servicoId,
-                    'comissao_percentual' => $comissoesPadrao[$index % count($comissoesPadrao)],
+                    'comissao_percentual' => 50.00,
+                    'duracao_customizada' => $duracao,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);

@@ -10,6 +10,7 @@ use Carbon\CarbonPeriod;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\RelatorioExport;
+use App\Services\FinanceiroService;
 
 class RelatorioController extends Controller
 {
@@ -48,78 +49,20 @@ class RelatorioController extends Controller
             'desempenhoProfissionais', 'dataInicio', 'dataFim'
         ));
     }
-    public function faturamento(Request $request)
+    public function faturamento(Request $request, FinanceiroService $financeiroService)
     {
         $dataInicio = $request->input('data_inicio', Carbon::now()->startOfMonth()->format('Y-m-d'));
         $dataFim = $request->input('data_fim', Carbon::now()->endOfMonth()->format('Y-m-d'));
 
-        $inicioQuery = $dataInicio . ' 00:00:00';
-        $fimQuery = $dataFim . ' 23:59:59';
-
-        // 1. Receitas do Período Atual
-        $agendamentos = DB::table('agendamentos')
-            ->where('status', 'executado')
-            ->whereBetween('data_hora_inicio', [$inicioQuery, $fimQuery])
-            ->selectRaw('COUNT(id_agendamento) as qtd, SUM(valor_total) as total')
-            ->first();
-
-        $vendas = DB::table('vendas')
-            ->whereBetween('created_at', [$inicioQuery, $fimQuery])
-            ->selectRaw('COUNT(id_venda) as qtd, SUM(valor_venda) as total')
-            ->first();
-
-        $multas = DB::table('agendamentos')
-            ->where('status', 'cancelado')
-            ->where('multa_valor', '>', 0)
-            ->whereBetween('updated_at', [$inicioQuery, $fimQuery])
-            ->selectRaw('COUNT(id_agendamento) as qtd, SUM(multa_valor) as total')
-            ->first();
-
-        $receitaServicos = $agendamentos->total ?? 0;
-        $receitaVendas = $vendas->total ?? 0;
-        $receitaMultas = $multas->total ?? 0;
-        $faturamentoTotal = $receitaServicos + $receitaVendas + $receitaMultas;
-
-        // Ticket Médio
-        $qtdTransacoes = ($agendamentos->qtd ?? 0) + ($vendas->qtd ?? 0) + ($multas->qtd ?? 0);
-        $ticketMedio = $qtdTransacoes > 0 ? $faturamentoTotal / $qtdTransacoes : 0;
-
-        // 2. Comparativo com o Período Anterior
-        $diasPeriodo = Carbon::parse($dataInicio)->diffInDays(Carbon::parse($dataFim)) + 1;
-        $inicioAnterior = Carbon::parse($dataInicio)->subDays($diasPeriodo)->format('Y-m-d') . ' 00:00:00';
-        $fimAnterior = Carbon::parse($dataFim)->subDays($diasPeriodo)->format('Y-m-d') . ' 23:59:59';
-
-        $receitaAnteriorAgendamentos = DB::table('agendamentos')
-            ->where('status', 'executado')
-            ->whereBetween('data_hora_inicio', [$inicioAnterior, $fimAnterior])
-            ->sum('valor_total');
-            
-        $receitaAnteriorVendas = DB::table('vendas')
-            ->whereBetween('created_at', [$inicioAnterior, $fimAnterior])
-            ->sum('valor_venda');
-
-        $receitaAnteriorMultas = DB::table('agendamentos')
-            ->where('status', 'cancelado')
-            ->where('multa_valor', '>', 0)
-            ->whereBetween('updated_at', [$inicioAnterior, $fimAnterior])
-            ->sum('multa_valor');
-            
-        $faturamentoAnterior = $receitaAnteriorAgendamentos + $receitaAnteriorVendas + $receitaAnteriorMultas;
-
-        // % de Crescimento
-        $crescimento = 0;
-        if ($faturamentoAnterior > 0) {
-            $crescimento = (($faturamentoTotal - $faturamentoAnterior) / $faturamentoAnterior) * 100;
-        } elseif ($faturamentoTotal > 0) {
-            $crescimento = 100;
-        }
+        extract($financeiroService->resumoFaturamentoPeriodo($dataInicio, $dataFim));
 
         return view('admin.relatorios.faturamento', compact(
             'dataInicio', 'dataFim', 'faturamentoTotal', 'receitaServicos', 'receitaVendas', 'receitaMultas',
             'ticketMedio', 'qtdTransacoes', 'faturamentoAnterior', 'crescimento'
         ));
     }
-public function ocupacao(Request $request)
+
+    public function ocupacao(Request $request)
     {
         $dataInicio = $request->input('data_inicio', Carbon::now()->startOfMonth()->format('Y-m-d'));
         $dataFim = $request->input('data_fim', Carbon::now()->endOfMonth()->format('Y-m-d'));
@@ -374,96 +317,35 @@ public function ocupacao(Request $request)
             'piorHora', 'ofensores', 'motivos'
         ));
     }
-    public function financeiro(Request $request)
+    public function financeiro(Request $request, FinanceiroService $financeiroService)
     {
         $dataInicio = $request->input('data_inicio', Carbon::now()->startOfMonth()->format('Y-m-d'));
         $dataFim = $request->input('data_fim', Carbon::now()->endOfMonth()->format('Y-m-d'));
 
-        $inicioQuery = $dataInicio . ' 00:00:00';
-        $fimQuery = $dataFim . ' 23:59:59';
-        $inicioDate = $dataInicio;
-        $fimDate = $dataFim;
-
-        // --- 1. ENTRADAS (RECEITAS) ---
-        // A) Serviços (Agendamentos Executados)
-        $receitaServicos = DB::table('agendamentos')
-            ->where('status', 'executado')
-            ->whereBetween('data_hora_inicio', [$inicioQuery, $fimQuery])
-            ->sum('valor_total') ?? 0;
-
-        // B) Vendas (Produtos físicos - onde produto_id não é nulo)
-        $receitaProdutos = DB::table('vendas')
-            ->whereNotNull('produto_id')
-            ->whereBetween('created_at', [$inicioQuery, $fimQuery])
-            ->sum('valor_venda') ?? 0;
-
-        // C) Pacotes (Cruzando cliente_pacotes com a tabela de pacotes)
-        $receitaPacotes = DB::table('cliente_pacotes')
-            ->join('pacotes', 'cliente_pacotes.pacote_id', '=', 'pacotes.id_pacote')
-            ->whereBetween('cliente_pacotes.data_compra', [$inicioDate, $fimDate])
-            ->sum('pacotes.valor_total') ?? 0;
-
-        $receitaMultas = DB::table('agendamentos')
-            ->where('status', 'cancelado')
-            ->where('multa_valor', '>', 0)
-            ->whereBetween('updated_at', [$inicioQuery, $fimQuery])
-            ->sum('multa_valor') ?? 0;
-
-        $totalEntradas = $receitaServicos + $receitaProdutos + $receitaPacotes + $receitaMultas;
-
-        // --- 2. SAÍDAS (DESPESAS CONHECIDAS PELA BD) ---
-        // Comissões geradas nos agendamentos executados
-        $despesaComissoes = DB::table('agendamentos')
-            ->where('status', 'executado')
-            ->whereBetween('data_hora_inicio', [$inicioQuery, $fimQuery])
-            ->sum('valor_comissao') ?? 0;
-
-        $totalSaidas = $despesaComissoes;
-
-        // --- 3. SALDO FINAL ---
-        $saldoLiquido = $totalEntradas - $totalSaidas;
+        extract($financeiroService->resumoFinanceiroPeriodo($dataInicio, $dataFim));
 
         return view('admin.relatorios.financeiro', compact(
-            'dataInicio', 'dataFim', 
+            'dataInicio', 'dataFim',
             'receitaServicos', 'receitaProdutos', 'receitaPacotes', 'receitaMultas', 'totalEntradas',
             'despesaComissoes', 'totalSaidas', 'saldoLiquido'
         ));
     }
-    public function comissoes(Request $request)
+    public function comissoes(Request $request, FinanceiroService $financeiroService)
     {
         $dataInicio = $request->input('data_inicio', Carbon::now()->startOfMonth()->format('Y-m-d'));
         $dataFim = $request->input('data_fim', Carbon::now()->endOfMonth()->format('Y-m-d'));
 
-        $inicioQuery = $dataInicio . ' 00:00:00';
-        $fimQuery = $dataFim . ' 23:59:59';
-
-        // Traz os profissionais e a soma das suas comissões
-        $comissoes = DB::table('agendamentos')
-            ->join('users', 'agendamentos.profissional_id', '=', 'users.id')
-            ->where('agendamentos.status', 'executado')
-            ->whereBetween('agendamentos.data_hora_inicio', [$inicioQuery, $fimQuery])
-            ->select(
-                'users.id',
-                'users.name',
-                'users.telefone',
-                DB::raw('COUNT(agendamentos.id_agendamento) as total_servicos'),
-                DB::raw('SUM(agendamentos.valor_total) as receita_gerada'),
-                DB::raw('SUM(agendamentos.valor_comissao) as comissao_a_pagar')
-            )
-            ->groupBy('users.id', 'users.name', 'users.telefone')
-            ->orderByDesc('comissao_a_pagar')
-            ->get();
-
-        // Cálculos para os Cards de Destaque
+        $comissoes = $financeiroService->resumoComissoesPeriodo($dataInicio, $dataFim);
         $totalGeralComissoes = $comissoes->sum('comissao_a_pagar');
         $totalServicosRealizados = $comissoes->sum('total_servicos');
-        $maiorComissao = $comissoes->first(); // Como está ordenado de forma decrescente, o primeiro é o que ganha mais
+        $maiorComissao = $comissoes->first();
 
         return view('admin.relatorios.comissoes', compact(
-            'dataInicio', 'dataFim', 'comissoes', 
+            'dataInicio', 'dataFim', 'comissoes',
             'totalGeralComissoes', 'totalServicosRealizados', 'maiorComissao'
         ));
     }
+
     public function estoque(Request $request)
     {
         // Traz todos os produtos, ordenando pelos que estão com menos estoque primeiro
@@ -714,133 +596,38 @@ public function ocupacao(Request $request)
     // DOWNLOADS INDIVIDUAIS POR RELATÓRIO
     // ==========================================
 
-    public function downloadFaturamentoExcel(Request $request)
+    public function downloadFaturamentoExcel(Request $request, FinanceiroService $financeiroService)
     {
         $dataInicio = $request->input('data_inicio', Carbon::now()->startOfMonth()->format('Y-m-d'));
         $dataFim = $request->input('data_fim', Carbon::now()->endOfMonth()->format('Y-m-d'));
+        $dados = $financeiroService->resumoFaturamentoPeriodo($dataInicio, $dataFim);
 
-        $inicioQuery = $dataInicio . ' 00:00:00';
-        $fimQuery = $dataFim . ' 23:59:59';
-
-        // Recalcular os dados (mesma lógica do método faturamento)
-        $agendamentos = DB::table('agendamentos')
-            ->where('status', 'executado')
-            ->whereBetween('data_hora_inicio', [$inicioQuery, $fimQuery])
-            ->selectRaw('COUNT(id_agendamento) as qtd, SUM(valor_total) as total')
-            ->first();
-
-        $vendas = DB::table('vendas')
-            ->whereBetween('created_at', [$inicioQuery, $fimQuery])
-            ->selectRaw('COUNT(id_venda) as qtd, SUM(valor_venda) as total')
-            ->first();
-
-        $multas = DB::table('agendamentos')
-            ->where('status', 'cancelado')
-            ->where('multa_valor', '>', 0)
-            ->whereBetween('updated_at', [$inicioQuery, $fimQuery])
-            ->selectRaw('COUNT(id_agendamento) as qtd, SUM(multa_valor) as total')
-            ->first();
-
-        $receitaServicos = $agendamentos->total ?? 0;
-        $receitaVendas = $vendas->total ?? 0;
-        $receitaMultas = $multas->total ?? 0;
-        $faturamentoTotal = $receitaServicos + $receitaVendas + $receitaMultas;
-
-        $qtdTransacoes = ($agendamentos->qtd ?? 0) + ($vendas->qtd ?? 0) + ($multas->qtd ?? 0);
-        $ticketMedio = $qtdTransacoes > 0 ? $faturamentoTotal / $qtdTransacoes : 0;
-
-        $diasPeriodo = Carbon::parse($dataInicio)->diffInDays(Carbon::parse($dataFim)) + 1;
-        $inicioAnterior = Carbon::parse($dataInicio)->subDays($diasPeriodo)->format('Y-m-d') . ' 00:00:00';
-        $fimAnterior = Carbon::parse($dataFim)->subDays($diasPeriodo)->format('Y-m-d') . ' 23:59:59';
-
-        $receitaAnteriorAgendamentos = DB::table('agendamentos')
-            ->where('status', 'executado')
-            ->whereBetween('data_hora_inicio', [$inicioAnterior, $fimAnterior])
-            ->sum('valor_total');
-            
-        $receitaAnteriorVendas = DB::table('vendas')
-            ->whereBetween('created_at', [$inicioAnterior, $fimAnterior])
-            ->sum('valor_venda');
-
-        $receitaAnteriorMultas = DB::table('agendamentos')
-            ->where('status', 'cancelado')
-            ->where('multa_valor', '>', 0)
-            ->whereBetween('updated_at', [$inicioAnterior, $fimAnterior])
-            ->sum('multa_valor');
-            
-        $faturamentoAnterior = $receitaAnteriorAgendamentos + $receitaAnteriorVendas + $receitaAnteriorMultas;
-
-        $crescimento = 0;
-        if ($faturamentoAnterior > 0) {
-            $crescimento = (($faturamentoTotal - $faturamentoAnterior) / $faturamentoAnterior) * 100;
-        } elseif ($faturamentoTotal > 0) {
-            $crescimento = 100;
-        }
-
-        $dados = compact('receitaServicos', 'receitaVendas', 'receitaMultas', 'faturamentoTotal', 'ticketMedio', 
-                         'qtdTransacoes', 'faturamentoAnterior', 'crescimento');
-
-        return Excel::download(new \App\Exports\FaturamentoExport($dataInicio, $dataFim, $dados), 
+        return Excel::download(new \App\Exports\FaturamentoExport($dataInicio, $dataFim, $dados),
                                'faturamento_' . $dataInicio . '_' . $dataFim . '.xlsx');
     }
 
-    public function downloadComissoesExcel(Request $request)
+    public function downloadComissoesExcel(Request $request, FinanceiroService $financeiroService)
     {
         $dataInicio = $request->input('data_inicio', Carbon::now()->startOfMonth()->format('Y-m-d'));
         $dataFim = $request->input('data_fim', Carbon::now()->endOfMonth()->format('Y-m-d'));
+        $comissoes = $financeiroService->resumoComissoesPeriodo($dataInicio, $dataFim);
 
-        $inicioQuery = $dataInicio . ' 00:00:00';
-        $fimQuery = $dataFim . ' 23:59:59';
-
-        $comissoes = DB::table('agendamentos')
-            ->join('users', 'agendamentos.profissional_id', '=', 'users.id')
-            ->where('agendamentos.status', 'executado')
-            ->whereBetween('agendamentos.data_hora_inicio', [$inicioQuery, $fimQuery])
-            ->select(
-                'users.id',
-                'users.name',
-                'users.telefone',
-                DB::raw('COUNT(agendamentos.id_agendamento) as total_servicos'),
-                DB::raw('SUM(agendamentos.valor_total) as receita_gerada'),
-                DB::raw('SUM(agendamentos.valor_comissao) as comissao_a_pagar')
-            )
-            ->groupBy('users.id', 'users.name', 'users.telefone')
-            ->orderByDesc('comissao_a_pagar')
-            ->get();
-
-        return Excel::download(new \App\Exports\ComissoesExport($dataInicio, $dataFim, $comissoes), 
+        return Excel::download(new \App\Exports\ComissoesExport($dataInicio, $dataFim, $comissoes),
                                'comissoes_' . $dataInicio . '_' . $dataFim . '.xlsx');
     }
 
-    public function downloadComissoesPdf(Request $request)
+    public function downloadComissoesPdf(Request $request, FinanceiroService $financeiroService)
     {
         $dataInicio = $request->input('data_inicio', Carbon::now()->startOfMonth()->format('Y-m-d'));
         $dataFim = $request->input('data_fim', Carbon::now()->endOfMonth()->format('Y-m-d'));
-
-        $inicioQuery = $dataInicio . ' 00:00:00';
-        $fimQuery = $dataFim . ' 23:59:59';
-
-        $comissoes = DB::table('agendamentos')
-            ->join('users', 'agendamentos.profissional_id', '=', 'users.id')
-            ->where('agendamentos.status', 'executado')
-            ->whereBetween('agendamentos.data_hora_inicio', [$inicioQuery, $fimQuery])
-            ->select(
-                'users.name',
-                DB::raw('COUNT(agendamentos.id_agendamento) as total_servicos'),
-                DB::raw('SUM(agendamentos.valor_total) as receita_gerada'),
-                DB::raw('SUM(agendamentos.valor_comissao) as comissao_a_pagar')
-            )
-            ->groupBy('users.id', 'users.name')
-            ->orderByDesc('comissao_a_pagar')
-            ->get();
-
+        $comissoes = $financeiroService->resumoComissoesPeriodo($dataInicio, $dataFim);
         $totalGeralComissoes = $comissoes->sum('comissao_a_pagar');
         $totalServicosRealizados = $comissoes->sum('total_servicos');
 
         $pdf = Pdf::loadView('admin.relatorios.comissoes-pdf', compact(
             'dataInicio', 'dataFim', 'comissoes', 'totalGeralComissoes', 'totalServicosRealizados'
         ));
-        
+
         return $pdf->download('comissoes_' . $dataInicio . '_' . $dataFim . '.pdf');
     }
 
@@ -999,52 +786,15 @@ public function ocupacao(Request $request)
                                'cancelamentos_' . $dataInicio . '_' . $dataFim . '.xlsx');
     }
 
-    public function downloadFinanceiroExcel(Request $request)
+    public function downloadFinanceiroExcel(Request $request, FinanceiroService $financeiroService)
     {
         $dataInicio = $request->input('data_inicio', Carbon::now()->startOfMonth()->format('Y-m-d'));
         $dataFim = $request->input('data_fim', Carbon::now()->endOfMonth()->format('Y-m-d'));
+        $dados = $financeiroService->resumoFinanceiroPeriodo($dataInicio, $dataFim);
 
-        $inicioQuery = $dataInicio . ' 00:00:00';
-        $fimQuery = $dataFim . ' 23:59:59';
-
-        $receitaServicos = DB::table('agendamentos')
-            ->where('status', 'executado')
-            ->whereBetween('data_hora_inicio', [$inicioQuery, $fimQuery])
-            ->sum('valor_total') ?? 0;
-
-        $receitaProdutos = DB::table('vendas')
-            ->whereNotNull('produto_id')
-            ->whereBetween('created_at', [$inicioQuery, $fimQuery])
-            ->sum('valor_venda') ?? 0;
-
-        $receitaPacotes = DB::table('cliente_pacotes')
-            ->join('pacotes', 'cliente_pacotes.pacote_id', '=', 'pacotes.id_pacote')
-            ->whereBetween('cliente_pacotes.data_compra', [$dataInicio, $dataFim])
-            ->sum('pacotes.valor_total') ?? 0;
-
-        $receitaMultas = DB::table('agendamentos')
-            ->where('status', 'cancelado')
-            ->where('multa_valor', '>', 0)
-            ->whereBetween('updated_at', [$inicioQuery, $fimQuery])
-            ->sum('multa_valor') ?? 0;
-
-        $totalEntradas = $receitaServicos + $receitaProdutos + $receitaPacotes + $receitaMultas;
-
-        $despesaComissoes = DB::table('agendamentos')
-            ->where('status', 'executado')
-            ->whereBetween('data_hora_inicio', [$inicioQuery, $fimQuery])
-            ->sum('valor_comissao') ?? 0;
-
-        $totalSaidas = $despesaComissoes;
-        $saldoLiquido = $totalEntradas - $totalSaidas;
-
-        $dados = compact('receitaServicos', 'receitaProdutos', 'receitaPacotes', 'receitaMultas', 'totalEntradas',
-                         'despesaComissoes', 'totalSaidas', 'saldoLiquido');
-
-        return Excel::download(new \App\Exports\FinanceiroExport($dataInicio, $dataFim, $dados), 
+        return Excel::download(new \App\Exports\FinanceiroExport($dataInicio, $dataFim, $dados),
                                'financeiro_' . $dataInicio . '_' . $dataFim . '.xlsx');
     }
-
     public function downloadSazonalideExcel(Request $request)
     {
         $dataInicio = $request->input('data_inicio', Carbon::now()->startOfMonth()->format('Y-m-d'));

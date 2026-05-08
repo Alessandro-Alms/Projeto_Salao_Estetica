@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Produto;
+use App\Services\VendaProdutoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -14,34 +15,21 @@ class VendaProdutoController extends Controller
         return view('admin.vendas.produtos', compact('produtos'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, VendaProdutoService $vendaProdutoService)
     {
         $dados = $request->validate([
             'produto_id' => ['required', 'exists:produtos,id_produto'],
             'quantidade' => ['required', 'integer', 'min:1'],
         ]);
 
-        return DB::transaction(function () use ($dados) {
-            $produto = Produto::lockForUpdate()->findOrFail($dados['produto_id']);
+        return DB::transaction(function () use ($dados, $vendaProdutoService) {
             $quantidade = (int) $dados['quantidade'];
 
-            // Garante estoque antes de registrar a venda.
-            if ($produto->quantidade_estoque < $quantidade) {
-                return back()->withErrors([
-                    'quantidade' => 'Estoque insuficiente para a quantidade solicitada.'
-                ])->withInput();
+            try {
+                $vendaProdutoService->registrarVenda(auth()->id(), (int) $dados['produto_id'], $quantidade);
+            } catch (\RuntimeException $exception) {
+                return back()->withErrors(['quantidade' => $exception->getMessage()])->withInput();
             }
-
-            $produto->decrement('quantidade_estoque', $quantidade);
-
-            DB::table('vendas')->insert([
-                'profissional_id' => auth()->id(),
-                'produto_id' => $produto->id_produto,
-                'quantidade' => $quantidade,
-                'valor_venda' => $produto->valor_unitario * $quantidade,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
 
             return redirect()->route('admin.vendas.produtos.create')
                 ->with('status', 'Venda registrada com sucesso!');
