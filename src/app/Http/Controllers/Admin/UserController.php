@@ -4,18 +4,23 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Agendamento;
+use App\Models\BloqueioHorario;
 use App\Models\ClientePacote;
 use App\Models\HorarioTrabalho;
 use App\Models\Servico;
 use App\Models\User;
 use App\Services\FinanceiroService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class UserController extends Controller
 {
+    private const MOTIVO_INDISPONIBILIDADE_PROFISSIONAL = 'Indisponibilidade informada pelo profissional';
+
     public function dashboard(Request $request): View
     {
         $user = $request->user();
@@ -237,8 +242,21 @@ class UserController extends Controller
     {
         $usuario = auth()->user()->load(['servicos', 'horariosTrabalho']);
         $servicos = Servico::all();
+        $inicioDisponibilidade = now()->startOfDay();
+        $fimDisponibilidade = now()->addMonths(3)->endOfDay();
+        $bloqueiosFuturos = BloqueioHorario::where('profissional_id', $usuario->id)
+            ->where('data_hora_fim', '>=', $inicioDisponibilidade)
+            ->where('data_hora_inicio', '<=', $fimDisponibilidade)
+            ->orderBy('data_hora_inicio')
+            ->get();
 
-        return view('profissional.configuracoes', compact('usuario', 'servicos'));
+        return view('profissional.configuracoes', compact(
+            'usuario',
+            'servicos',
+            'bloqueiosFuturos',
+            'inicioDisponibilidade',
+            'fimDisponibilidade'
+        ));
     }
 
     public function atualizarconfiguracoesservicos(Request $request)
@@ -258,6 +276,65 @@ class UserController extends Controller
         }
 
         return back()->with('sucesso', 'Configurações e horários atualizados com sucesso!');
+    }
+
+    public function bloquearDiaDisponibilidade(Request $request)
+    {
+        $usuario = auth()->user();
+        $hoje = now()->startOfDay();
+        $limite = now()->addMonths(3)->endOfDay();
+
+        $dados = $request->validate([
+            'data' => ['required', 'date', 'after_or_equal:' . $hoje->toDateString(), 'before_or_equal:' . $limite->toDateString()],
+        ], [
+            'data.after_or_equal' => 'Escolha uma data a partir de hoje.',
+            'data.before_or_equal' => 'A disponibilidade pode ser ajustada somente para os proximos 3 meses.',
+        ]);
+
+        $inicio = Carbon::parse($dados['data'])->startOfDay();
+        $fim = Carbon::parse($dados['data'])->endOfDay();
+
+        if ($this->profissionalTemAgendamentoNoPeriodo($usuario->id, $inicio, $fim)) {
+            throw ValidationException::withMessages([
+                'data' => 'Esse dia ja tem agendamento ativo. Reagende ou cancele antes de desativar a disponibilidade.',
+            ]);
+        }
+
+        BloqueioHorario::updateOrCreate(
+            [
+                'profissional_id' => $usuario->id,
+                'data_hora_inicio' => $inicio,
+                'data_hora_fim' => $fim,
+            ],
+            [
+                'motivo' => self::MOTIVO_INDISPONIBILIDADE_PROFISSIONAL,
+            ]
+        );
+
+        return back()->with('sucesso', 'Dia desativado na agenda com sucesso!');
+    }
+
+    public function removerBloqueioDisponibilidade(BloqueioHorario $bloqueio)
+    {
+        $usuario = auth()->user();
+
+        if ((int) $bloqueio->profissional_id !== (int) $usuario->id) {
+            abort(403);
+        }
+
+        if ($bloqueio->motivo !== self::MOTIVO_INDISPONIBILIDADE_PROFISSIONAL) {
+            abort(403);
+        }
+
+        if (Carbon::parse($bloqueio->data_hora_fim)->isPast()) {
+            return back()->withErrors([
+                'data' => 'Nao e possivel remover bloqueios que ja passaram.',
+            ]);
+        }
+
+        $bloqueio->delete();
+
+        return back()->with('sucesso', 'Dia reativado na agenda com sucesso!');
     }
 
     public function alterarStatus(Request $request, $id)
@@ -383,5 +460,14 @@ class UserController extends Controller
                 ]
             );
         }
+    }
+
+    private function profissionalTemAgendamentoNoPeriodo(int $profissionalId, Carbon $inicio, Carbon $fim): bool
+    {
+        return Agendamento::where('profissional_id', $profissionalId)
+            ->where('status', '!=', 'cancelado')
+            ->where('data_hora_inicio', '<', $fim)
+            ->where('data_hora_fim', '>', $inicio)
+            ->exists();
     }
 }

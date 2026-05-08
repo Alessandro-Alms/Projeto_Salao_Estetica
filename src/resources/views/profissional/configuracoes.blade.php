@@ -14,9 +14,15 @@
 
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             
-            @if(session('success'))
+            @if(session('success') || session('sucesso'))
                 <div class="mb-6 p-4 rounded-lg bg-green-50/80 border border-green-200 text-green-700">
-                    ✧ {{ session('success') }}
+                    ✧ {{ session('success') ?? session('sucesso') }}
+                </div>
+            @endif
+
+            @if($errors->any())
+                <div class="mb-6 p-4 rounded-lg bg-red-50/80 border border-red-200 text-red-700">
+                    {{ $errors->first() }}
                 </div>
             @endif
 
@@ -98,6 +104,64 @@
                     </button>
                 </div>
             </form>
+
+            <div class="glass-card rounded-2xl shadow-xl overflow-hidden mb-6">
+                <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
+                    <div class="flex items-center gap-2 mb-5">
+                        <span class="text-[#7B19E5] text-xl">✧</span>
+                        <h3 class="text-lg font-title text-[#4A00B9]">Disponibilidade dos Proximos 3 Meses</h3>
+                    </div>
+
+                    <form method="POST" action="{{ route('profissional.servicos.bloqueios.store') }}" class="flex flex-wrap items-end gap-3 mb-5">
+                        @csrf
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">Dia sem atendimento</label>
+                            <input
+                                type="date"
+                                name="data"
+                                min="{{ $inicioDisponibilidade->toDateString() }}"
+                                max="{{ $fimDisponibilidade->toDateString() }}"
+                                value="{{ old('data') }}"
+                                class="px-3 py-2 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all text-sm"
+                                required
+                            >
+                        </div>
+                        <button type="submit" class="bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white px-6 py-2 text-sm rounded-full font-medium btn-primary shadow-lg hover:shadow-xl transition-all">
+                            Desativar Dia
+                        </button>
+                    </form>
+
+                    <div class="space-y-3">
+                        @forelse($bloqueiosFuturos as $bloqueio)
+                            @php
+                                $inicioBloqueio = \Carbon\Carbon::parse($bloqueio->data_hora_inicio);
+                                $fimBloqueio = \Carbon\Carbon::parse($bloqueio->data_hora_fim);
+                            @endphp
+                            <div class="flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl bg-white/50 border border-[#FFD6F4]">
+                                <div>
+                                    <div class="font-semibold text-[#1A002B]">{{ $inicioBloqueio->format('d/m/Y') }}</div>
+                                    <div class="text-xs text-gray-500">
+                                        {{ $inicioBloqueio->format('H:i') }} as {{ $fimBloqueio->format('H:i') }} - {{ $bloqueio->motivo ?? 'Indisponivel' }}
+                                    </div>
+                                </div>
+                                @if($bloqueio->motivo === 'Indisponibilidade informada pelo profissional')
+                                    <form method="POST" action="{{ route('profissional.servicos.bloqueios.destroy', $bloqueio->id_bloqueio) }}">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="px-4 py-2 text-xs rounded-full border border-[#FFD6F4] text-[#4A00B9] hover:bg-white/70 transition">
+                                            Reativar
+                                        </button>
+                                    </form>
+                                @endif
+                            </div>
+                        @empty
+                            <div class="p-3 rounded-xl bg-white/50 border border-[#FFD6F4] text-sm text-gray-500">
+                                Nenhum dia desativado nos proximos 3 meses.
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </x-app-layout>

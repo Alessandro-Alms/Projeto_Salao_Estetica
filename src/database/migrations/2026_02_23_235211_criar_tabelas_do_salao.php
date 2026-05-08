@@ -59,6 +59,9 @@ return new class extends Migration
             $table->dateTime('data_hora_inicio');
             $table->dateTime('data_hora_fim');
             $table->decimal('valor_total', 10, 2)->nullable();
+            $table->decimal('valor_base', 10, 2)->nullable();
+            $table->decimal('acrescimo_especial', 10, 2)->default(0);
+            $table->string('motivo_acrescimo')->nullable();
             $table->enum('status', ['confirmado', 'cancelado', 'falta', 'executado', 'presente'])->default('confirmado');
             $table->text('obs')->nullable();
             $table->decimal('valor_comissao', 10, 2)->nullable()->after('valor_total');

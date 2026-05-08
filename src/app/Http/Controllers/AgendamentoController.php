@@ -128,24 +128,11 @@ class AgendamentoController extends Controller
                 return false;
             }
             
-            // Verificar se invade almoço
-            if ($horaInicio < $escala->almoco_fim && $horaFim > $escala->almoco_inicio) {
+            // Horario de almoco agora fica disponivel como atendimento especial com acrescimo.
+            // Bloqueio geral (feriado) vira atendimento especial; bloqueio do profissional continua bloqueando.
+            $bloqueioProfissional = app(AgendaService::class)->buscarBloqueioProfissionalConflitante($prof->id, $dataHora, $dataHoraFim);
+            if ($bloqueioProfissional) {
                 return false;
-            }
-            
-            // Verificar bloqueios (folgas, feriados)
-            $bloqueios = BloqueioHorario::where(function ($q) use ($prof) {
-                $q->whereNull('profissional_id')->orWhere('profissional_id', $prof->id);
-            })->whereDate('data_hora_inicio', '<=', $dataHora)
-              ->whereDate('data_hora_fim', '>=', $dataHora)
-              ->get();
-            
-            foreach ($bloqueios as $bloqueio) {
-                $bqInicio = Carbon::parse($bloqueio->data_hora_inicio);
-                $bqFim = Carbon::parse($bloqueio->data_hora_fim);
-                if ($dataHora < $bqFim && $dataHoraFim > $bqInicio) {
-                    return false;
-                }
             }
             
             // Verificar agendamentos existentes
@@ -231,17 +218,14 @@ class AgendamentoController extends Controller
                 ->where('status', '!=', 'cancelado')
                 ->get();
 
-            $bloqueios = BloqueioHorario::where(function ($q) use ($prof) {
-                $q->whereNull('profissional_id')->orWhere('profissional_id', $prof->id);
-            })->whereDate('data_hora_inicio', '<=', $data)
-              ->whereDate('data_hora_fim', '>=', $data)
-              ->get();
+            $bloqueios = BloqueioHorario::where('profissional_id', $prof->id)
+                ->whereDate('data_hora_inicio', '<=', $data)
+                ->whereDate('data_hora_fim', '>=', $data)
+                ->get();
 
             // 4. Montar horários para este profissional
             $horaAtual = Carbon::parse($data . ' ' . $escala->hora_inicio);
             $horaFimExpediente = Carbon::parse($data . ' ' . $escala->hora_fim);
-            $horaAlmocoInicio = Carbon::parse($data . ' ' . $escala->almoco_inicio);
-            $horaAlmocoFim = Carbon::parse($data . ' ' . $escala->almoco_fim);
 
             while ($horaAtual < $horaFimExpediente) {
                 $horaFimEstimado = $horaAtual->copy()->addMinutes($duracaoUsada);
@@ -252,10 +236,7 @@ class AgendamentoController extends Controller
                     $ocupado = true;
                 }
 
-                // Regra B: O serviço invade o horário de almoço?
-                if (!$ocupado && $horaAtual < $horaAlmocoFim && $horaFimEstimado > $horaAlmocoInicio) {
-                    $ocupado = true;
-                }
+                // Regra B: almoço não ocupa mais; será atendimento especial com acréscimo.
 
                 // Regra C: Conflita com agendamentos existentes?
                 if (!$ocupado) {
@@ -377,6 +358,7 @@ class AgendamentoController extends Controller
         }
 
         $fim = $inicio->copy()->addMinutes($duracao);
+        $agendaService = app(AgendaService::class);
 
         // Validação: Horário de Trabalho e Almoço
         $escala = HorarioTrabalho::where('profissional_id', $profissional->id)
@@ -395,30 +377,22 @@ class AgendamentoController extends Controller
             return back()->withErrors(['data_hora' => 'O horário escolhido está fora do expediente do profissional.'])->withInput();
         }
 
-        // Verifica se o atendimento invade o almoço 
-        if ($horaInicio < $escala->almoco_fim && $horaFim > $escala->almoco_inicio) {
-            return back()->withErrors(['data_hora' => 'Este horário coincide ou invade o intervalo de almoço do profissional.'])->withInput();
+        $invadeAlmoco = $agendaService->invadeAlmoco($escala, $inicio, $fim);
+
+        $bloqueioProfissional = $agendaService->buscarBloqueioProfissionalConflitante($profissional->id, $inicio, $fim);
+        if ($bloqueioProfissional) {
+            return back()->withErrors(['data_hora' => 'O profissional nao atende neste periodo: ' . $bloqueioProfissional->motivo])->withInput();
         }
 
-        // Validação: Bloqueios (Folgas e Feriados) 
-        $bloqueios = BloqueioHorario::where(function ($q) use ($request) {
-            $q->whereNull('profissional_id')
-              ->orWhere('profissional_id', $request->profissional_id);
-        })->get();
-
-        foreach ($bloqueios as $bloqueio) {
-            $bloqueioInicio = Carbon::parse($bloqueio->data_hora_inicio);
-            $bloqueioFim = Carbon::parse($bloqueio->data_hora_fim);
-
-            if ($inicio < $bloqueioFim && $fim > $bloqueioInicio) {
-                return back()->withErrors(['data_hora' => 'O horário escolhido coincide com um bloqueio de agenda: ' . $bloqueio->motivo])->withInput();
-            }
-        }
-
+        $dadosValor = $agendaService->calcularAtendimentoEspecial(
+            (float) $valorTotal,
+            $invadeAlmoco,
+            $agendaService->buscarBloqueioGeralConflitante($inicio, $fim)
+        );
         // =========================================================================
         // BLINDAGEM CONTRA OVERBOOKING (Fila de Banco de Dados)
         // =========================================================================
-        $resultadoAgendamento = DB::transaction(function () use ($request, $inicio, $fim, $servicos_ids, $servicosPrincipais, $valorTotal) {
+        $resultadoAgendamento = DB::transaction(function () use ($request, $inicio, $fim, $servicos_ids, $servicosPrincipais, $dadosValor) {
             
             $agendaService = app(AgendaService::class);
 
@@ -440,7 +414,10 @@ class AgendamentoController extends Controller
                 'data_hora_inicio' => $inicio,
                 'data_hora_fim' => $fim,
                 'status' => 'confirmado',
-                'valor_total' => $valorTotal,
+                'valor_total' => $dadosValor['valor_total'],
+                'valor_base' => $dadosValor['valor_base'],
+                'acrescimo_especial' => $dadosValor['acrescimo_especial'],
+                'motivo_acrescimo' => $dadosValor['motivo_acrescimo'],
             ]);
 
             // 4. Adicionar serviços na tabela pivot agendamento_servico
@@ -527,32 +504,27 @@ class AgendamentoController extends Controller
             return back()->withErrors(['hora' => 'O horário está fora do expediente do profissional.'])->withInput();
         }
 
-        // Verificar almoço
-        if ($horaInicio < $escala->almoco_fim && $horaFim > $escala->almoco_inicio) {
-            return back()->withErrors(['hora' => 'Este horário coincide com o intervalo de almoço.'])->withInput();
+        $agendaService = app(AgendaService::class);
+        $invadeAlmoco = $agendaService->invadeAlmoco($escala, $data_hora, $data_hora_fim);
+
+        $bloqueioProfissional = $agendaService->buscarBloqueioProfissionalConflitante($profissional->id, $data_hora, $data_hora_fim);
+        if ($bloqueioProfissional) {
+            return back()->withErrors(['data' => 'O profissional nao atende neste periodo: ' . $bloqueioProfissional->motivo])->withInput();
         }
 
-        // Verificar bloqueios
-        $bloqueios = BloqueioHorario::where(function ($q) use ($profissional) {
-            $q->whereNull('profissional_id')->orWhere('profissional_id', $profissional->id);
-        })->get();
-
-        foreach ($bloqueios as $bloqueio) {
-            $bqInicio = Carbon::parse($bloqueio->data_hora_inicio);
-            $bqFim = Carbon::parse($bloqueio->data_hora_fim);
-            if ($data_hora < $bqFim && $data_hora_fim > $bqInicio) {
-                return back()->withErrors(['data' => 'Este período está bloqueado: ' . $bloqueio->motivo])->withInput();
-            }
-        }
+        $dadosValor = $agendaService->calcularAtendimentoEspecial(
+            (float) $servico->preco,
+            $invadeAlmoco,
+            $agendaService->buscarBloqueioGeralConflitante($data_hora, $data_hora_fim)
+        );
 
         // Verificar conflito com agendamentos existentes
-        $agendaService = app(AgendaService::class);
         $conflito = $agendaService->existeConflitoAgendamento($profissional->id, $data_hora, $data_hora_fim);
         if ($conflito) {
             return back()->withErrors(['hora' => 'Este horário já está ocupado.'])->withInput();
         }
 
-        $resultadoAgendamento = DB::transaction(function () use ($request, $data_hora, $data_hora_fim, $servico, $agendaService) {
+        $resultadoAgendamento = DB::transaction(function () use ($request, $data_hora, $data_hora_fim, $servico, $agendaService, $dadosValor) {
             User::where('id', $request->profissional_id)->lockForUpdate()->first();
 
             if ($agendaService->existeConflitoAgendamento($request->profissional_id, $data_hora, $data_hora_fim)) {
@@ -566,7 +538,10 @@ class AgendamentoController extends Controller
                 'data_hora_inicio' => $data_hora,
                 'data_hora_fim' => $data_hora_fim,
                 'status' => 'confirmado',
-                'valor_total' => $servico->preco,
+                'valor_total' => $dadosValor['valor_total'],
+                'valor_base' => $dadosValor['valor_base'],
+                'acrescimo_especial' => $dadosValor['acrescimo_especial'],
+                'motivo_acrescimo' => $dadosValor['motivo_acrescimo'],
             ]);
 
             $agendamento->servicos()->attach($request->servico_id, [

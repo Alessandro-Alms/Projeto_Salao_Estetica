@@ -156,6 +156,8 @@ Route::middleware(['auth', 'gerente'])->prefix('admin')->name('admin.')->group(f
 Route::middleware(['auth', 'profissional'])->prefix('profissional')->name('profissional.')->group(function () {
     Route::get('/configuracoes', [UserController::class, 'configuracoesservicos'])->name('servicos.editar');
     Route::put('/configuracoes', [UserController::class, 'atualizarconfiguracoesservicos'])->name('servicos.atualizar');
+    Route::post('/configuracoes/bloqueios', [UserController::class, 'bloquearDiaDisponibilidade'])->name('servicos.bloqueios.store');
+    Route::delete('/configuracoes/bloqueios/{bloqueio}', [UserController::class, 'removerBloqueioDisponibilidade'])->name('servicos.bloqueios.destroy');
     Route::post('/agendamento/{id_agendamento}/executado', [AgendamentoController::class, 'marcarComoExecutado'])->name('agendamento.executado');
     Route::get('/minha-agenda', [AgendamentoController::class, 'agendaProfissional'])->name('agenda');
     Route::get('/extrato', [UserController::class, 'extrato'])->name('extrato');

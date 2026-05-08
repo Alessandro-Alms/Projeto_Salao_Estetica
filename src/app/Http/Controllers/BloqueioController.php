@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Agendamento;
 use App\Models\BloqueioHorario;
 use App\Models\User;
 use App\Services\AgendaService;
@@ -40,16 +39,10 @@ class BloqueioController extends Controller
         $inicio = Carbon::parse($validado['data_hora_inicio']);
         $fim = Carbon::parse($validado['data_hora_fim']);
 
-        if (!empty($validado['profissional_id'])) {
-            $temAgendamento = $agendaService->existeConflitoAgendamento((int) $validado['profissional_id'], $inicio, $fim);
-        } else {
-            $temAgendamento = Agendamento::where('status', '!=', 'cancelado')
-                ->where('data_hora_inicio', '<', $fim)
-                ->where('data_hora_fim', '>', $inicio)
-                ->exists();
-        }
-
-        if ($temAgendamento) {
+        if (
+            !empty($validado['profissional_id'])
+            && $agendaService->existeConflitoAgendamento((int) $validado['profissional_id'], $inicio, $fim)
+        ) {
             return back()->withErrors([
                 'data_hora_inicio' => 'Existe agendamento ativo nesse período. Reagende ou cancele os horários antes de criar o bloqueio.'
             ])->withInput();
