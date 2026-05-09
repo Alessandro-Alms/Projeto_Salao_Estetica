@@ -57,7 +57,7 @@
                     <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
                         <h3 class="text-gray-500 font-bold uppercase text-sm mb-2">Dias de Pico (Alta)</h3>
                         <p class="text-4xl font-black text-[#FF2EB6]">{{ $diasDeAlta }}</p>
-                        <p class="text-sm text-gray-500 mt-2">Prepara a tua equipa nestes dias</p>
+                        <p class="text-sm text-gray-500 mt-2">Prepara a tua equipe nestes dias</p>
                     </div>
                 </div>
 
@@ -119,19 +119,19 @@
                                         <td class="p-4 text-center">
                                             @if($dia->tendencia == 'Alta Demanda')
                                                 <span class="text-[#7B19E5] font-bold text-sm flex items-center justify-center gap-1">
-                                                    📈 Alta (Reforçar equipa)
+                                                    ✧ Alta (Reforçar equipa)
                                                 </span>
                                             @elseif($dia->tendencia == 'Baixa Demanda')
                                                 <span class="text-[#FF2EB6] font-bold text-sm flex items-center justify-center gap-1">
-                                                    📉 Baixa (Fazer promoções)
+                                                    ✦ Baixa (Fazer promoções)
                                                 </span>
                                             @elseif($dia->tendencia == 'Feriado / Baixa')
                                                 <span class="text-[#FF2EB6] font-bold text-sm flex items-center justify-center gap-1">
-                                                    🏖️ Alerta Feriado
+                                                    ✧ Alerta Feriado
                                                 </span>
                                             @else
                                                 <span class="text-gray-500 font-medium text-sm">
-                                                    ⚖️ Normal
+                                                    ✦ Normal
                                                 </span>
                                             @endif
                                         </td>

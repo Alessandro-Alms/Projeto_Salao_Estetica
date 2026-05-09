@@ -23,7 +23,7 @@
 
                         @if($usuario->cargo === 'recepcionista' || $usuario->cargo === 'gerente')
                         <div class="mb-6 p-4 bg-amber-50/80 backdrop-blur-sm rounded-lg border border-amber-200 text-amber-700 text-sm shadow-sm">
-                            <strong>Aviso:</strong> Este usuário possui acesso administrativo ao sistema. Certifique-se de manter o e-mail atualizado.
+                            <strong>✧ Aviso:</strong> Este usuário possui acesso administrativo ao sistema. Certifique-se de manter o e-mail atualizado.
                         </div>
                         @endif
 
@@ -98,7 +98,7 @@
                         @if($usuario->cargo === 'cliente')
                         <div class="mt-8 p-6 bg-white/40 rounded-xl border border-[#FFD6F4]">
                             <h3 class="text-lg font-title text-[#4A00B9] mb-4 flex items-center">
-                                <span class="mr-2">👤</span> Perfil do Cliente
+                                <span class="mr-2">✧</span> Perfil do Cliente
                             </h3>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
@@ -125,13 +125,13 @@
                             {{-- Bloco de Horários --}}
                             <div class="mb-6 p-5 bg-white/60 rounded-xl border border-[#FFD6F4] shadow-sm">
                                 <h3 class="text-md font-bold text-[#4A00B9] mb-2 flex items-center">
-                                    <span class="mr-2">📅</span> Horário de Atendimento
+                                    <span class="mr-2">✧</span> Horário de Atendimento
                                 </h3>
                                 <p class="text-sm text-gray-600">O horário padrão é das 08:00 às 18:00. <br>Exceções e turnos específicos serão configurados na próxima etapa.</p>
                             </div>
                             
                             <h3 class="text-lg font-title text-[#4A00B9] mb-4 flex items-center">
-                                <span class="mr-2">✂️</span> Serviços e Comissões do Profissional
+                                <span class="mr-2">✦</span> Serviços e Comissões do Profissional
                             </h3>
                             
                             <div class="space-y-3">

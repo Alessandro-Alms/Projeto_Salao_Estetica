@@ -47,7 +47,7 @@
             <!-- Downloads -->
             <div class="flex gap-2 mb-6 flex-wrap">
                 <a href="{{ route('admin.relatorios.cancelamentos.download-excel', ['data_inicio' => $dataInicio, 'data_fim' => $dataFim]) }}" class="flex items-center gap-2 bg-white/50 text-[#00B050] border border-[#FFD6F4] px-4 py-2 rounded-lg hover:bg-white/80 transition font-medium">
-                    📊 Exportar Excel
+                    ✧ Exportar Excel
                 </a>
             </div>
 
@@ -188,7 +188,7 @@
                                                         WhatsApp
                                                     </a>
                                                 @endif
-                                            </td>
+                                            <td>
                                         </tr>
                                     @empty
                                         <tr>

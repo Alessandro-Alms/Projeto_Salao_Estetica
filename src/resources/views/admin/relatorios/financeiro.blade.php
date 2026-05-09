@@ -62,7 +62,7 @@
             <!-- Downloads -->
             <div class="flex gap-2 mb-6 flex-wrap">
                 <a href="{{ route('admin.relatorios.financeiro.download-excel', ['data_inicio' => $dataInicio, 'data_fim' => $dataFim]) }}" class="flex items-center gap-2 bg-white/50 text-[#00B050] border border-[#FFD6F4] px-4 py-2 rounded-lg hover:bg-white/80 transition font-medium">
-                    📊 Exportar Excel
+                    ✧ Exportar Excel
                 </a>
             </div>
 
@@ -249,7 +249,7 @@
                         </div>
                         
                         <div class="mt-6 p-4 bg-[#7B19E5]/5 text-[#7B19E5] text-sm rounded-xl border border-[#FFD6F4]">
-                            <strong class="text-[#7B19E5]">💡 Nota:</strong> Atualmente o sistema calcula automaticamente as despesas geradas pelas comissões de serviços executados. Para calcular o lucro real e total do salão, futuramente podes adicionar um módulo de contas a pagar (fornecedores, impostos e custos fixos).
+                            <strong class="text-[#7B19E5]">✧ Nota:</strong> Atualmente o sistema calcula automaticamente as despesas geradas pelas comissões de serviços executados. Para calcular o lucro real e total do salão, futuramente podes adicionar um módulo de contas a pagar (fornecedores, impostos e custos fixos).
                         </div>
                     </div>
                 </div>

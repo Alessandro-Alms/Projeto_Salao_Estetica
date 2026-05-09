@@ -46,10 +46,10 @@
 
                     <div class="flex gap-2">
                         <a href="{{ route('admin.relatorios.exportarPdf', ['data_inicio' => $dataInicio, 'data_fim' => $dataFim]) }}" class="flex items-center gap-2 bg-white/50 text-[#7B19E5] border border-[#FFD6F4] px-4 py-2 rounded-lg hover:bg-white/80 transition font-medium">
-                            📄 Exportar PDF
+                            ✧ Exportar PDF
                         </a>
                         <a href="{{ route('admin.relatorios.exportarExcel', ['data_inicio' => $dataInicio, 'data_fim' => $dataFim]) }}" class="flex items-center gap-2 bg-white/50 text-[#FF2EB6] border border-[#FFD6F4] px-4 py-2 rounded-lg hover:bg-white/80 transition font-medium">
-                            📊 Exportar Excel
+                            ✧ Exportar Excel
                         </a>
                     </div>
                 </div>
@@ -187,7 +187,7 @@
                 <a href="{{ route('admin.relatorios.desempenho', $query) }}" class="glass-card rounded-2xl shadow-xl overflow-hidden hover-lift group block">
                     <div class="p-5 bg-white/70 backdrop-blur-sm border border-white/40">
                         <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">⭐</div>
-                        <h3 class="font-title text-[#4A00B9] text-lg mb-1 group-hover:text-[#7B19E5] transition-colors">Desempenho da Equipa</h3>
+                        <h3 class="font-title text-[#4A00B9] text-lg mb-1 group-hover:text-[#7B19E5] transition-colors">Desempenho da Equipe</h3>
                         <p class="text-xs text-gray-500">Ranking de profissionais por serviços feitos, avaliações e valores gerados.</p>
                     </div>
                 </a>

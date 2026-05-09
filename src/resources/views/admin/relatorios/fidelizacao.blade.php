@@ -47,7 +47,7 @@
             <!-- Downloads -->
             <div class="flex gap-2 mb-6 flex-wrap">
                 <a href="{{ route('admin.relatorios.fidelizacao.download-excel', ['data_inicio' => $dataInicio, 'data_fim' => $dataFim]) }}" class="flex items-center gap-2 bg-white/50 text-[#00B050] border border-[#FFD6F4] px-4 py-2 rounded-lg hover:bg-white/80 transition font-medium">
-                    📊 Exportar Excel
+                    ✧ Exportar Excel
                 </a>
             </div>
 
@@ -131,7 +131,7 @@
                                         <td class="p-3">
                                             <p class="font-bold text-[#1A002B]">{{ $cliente->name }}</p>
                                             <p class="text-xs text-gray-500">{{ $cliente->telefone ?: 'Sem contacto' }}</p>
-                                        <td>
+                                        </td>
                                         <td class="p-3 text-center">
                                             <span class="bg-[#7B19E5]/10 text-[#7B19E5] px-2 py-1 rounded-full text-xs font-bold">
                                                 {{ $cliente->contador_fidelidade }} pts
