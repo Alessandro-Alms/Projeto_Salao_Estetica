@@ -110,7 +110,7 @@ return new class extends Migration
             $table->time('hora_fim')->default('18:00');
             $table->boolean('trabalha')->default(true); // Para marcar folgas fixas
             $table->timestamps();
-            $table->time('almoco_inicio')->nullable()->default('12:00');
+            $table->time('almoco_inicio')->nullable()->default('11:00');
             $table->time('almoco_fim')->nullable()->default('13:00');
         });
         // Tabela de Bloqueios de Horários (Feriados, Folgas, Atestados)

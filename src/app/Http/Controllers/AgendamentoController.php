@@ -65,8 +65,9 @@ class AgendamentoController extends Controller
     {
         // Passo 1: Carrega apenas os serviços para a tela inicial
         $servicos = Servico::all();
+        $limiteAgendamento = now()->addMonths(3)->endOfDay();
         // Agora usa a nova view com o layout Google Calendar
-        return view('cliente.agendar_novo', compact('servicos')); 
+        return view('cliente.agendar_novo', compact('servicos', 'limiteAgendamento')); 
     }
 
     public function getProfissionaisAjax(Request $request)
@@ -105,11 +106,16 @@ class AgendamentoController extends Controller
         
         // Passo 2: Se data_hora foi fornecida, filtra apenas profissionais livres naquele horário
         $dataHora = Carbon::parse($dataHoraString);
+        if ($dataHora->greaterThan(now()->addMonths(3)->endOfDay())) {
+            return response()->json([]);
+        }
+
         $dataHoraFim = $dataHora->copy()->addMinutes($duracao);
         $diaSemana = $dataHora->dayOfWeek;
+        $agendaService = app(AgendaService::class);
         
         // Filtra profissionais que estão LIVRES naquele horário
-        $profissionaisLivres = $profissionaisCandidatos->filter(function($prof) use ($dataHora, $dataHoraFim, $diaSemana, $servicosIds) {
+        $profissionaisLivres = $profissionaisCandidatos->filter(function($prof) use ($dataHora, $dataHoraFim, $diaSemana, $servicosIds, $agendaService) {
             
             // Verificar se o profissional trabalha neste dia da semana
             $escala = HorarioTrabalho::where('profissional_id', $prof->id)
@@ -120,17 +126,17 @@ class AgendamentoController extends Controller
                 return false;
             }
             
-            $horaInicio = $dataHora->format('H:i:s');
-            $horaFim = $dataHoraFim->format('H:i:s');
-            
-            // Verificar se está dentro do expediente
-            if ($horaInicio < $escala->hora_inicio || $horaFim > $escala->hora_fim) {
+            if (
+                $dataHora->lt($agendaService->inicioExpediente($escala, $dataHora))
+                || $dataHora->gt($agendaService->fimExpediente($escala, $dataHora))
+                || $dataHoraFim->gt($agendaService->limiteSaidaExpediente($escala, $dataHora))
+            ) {
                 return false;
             }
             
             // Horario de almoco agora fica disponivel como atendimento especial com acrescimo.
             // Bloqueio geral (feriado) vira atendimento especial; bloqueio do profissional continua bloqueando.
-            $bloqueioProfissional = app(AgendaService::class)->buscarBloqueioProfissionalConflitante($prof->id, $dataHora, $dataHoraFim);
+            $bloqueioProfissional = $agendaService->buscarBloqueioProfissionalConflitante($prof->id, $dataHora, $dataHoraFim);
             if ($bloqueioProfissional) {
                 return false;
             }
@@ -151,7 +157,32 @@ class AgendamentoController extends Controller
             return true;
         });
         
-        return response()->json(array_values($profissionaisLivres->toArray()));
+        $valorBase = (float) Servico::whereIn('id_servico', $servicosIds)->sum('preco');
+        $bloqueioGeral = $agendaService->buscarBloqueioGeralConflitante($dataHora, $dataHoraFim);
+
+        $profissionaisComResumo = $profissionaisLivres->map(function ($prof) use ($dataHora, $dataHoraFim, $diaSemana, $agendaService, $bloqueioGeral, $valorBase) {
+            $escala = HorarioTrabalho::where('profissional_id', $prof->id)
+                ->where('dia_semana', $diaSemana)
+                ->first();
+            $invadeAlmoco = $agendaService->invadeAlmoco($escala, $dataHora, $dataHoraFim);
+            $excedeSaidaExpediente = $agendaService->excedeSaidaExpediente($escala, $dataHora, $dataHoraFim);
+            $dadosValor = $agendaService->calcularAtendimentoEspecial($valorBase, $invadeAlmoco, $bloqueioGeral, $excedeSaidaExpediente);
+
+            return [
+                'id' => $prof->id,
+                'name' => $prof->name,
+                'valor_base' => $dadosValor['valor_base'],
+                'acrescimo_especial' => $dadosValor['acrescimo_especial'],
+                'valor_total' => $dadosValor['valor_total'],
+                'motivo_acrescimo' => $dadosValor['motivo_acrescimo'],
+                'percentual_acrescimo' => $agendaService->percentualAtendimentoEspecial($invadeAlmoco, $bloqueioGeral, $excedeSaidaExpediente),
+                'invade_almoco' => $invadeAlmoco,
+                'excede_saida_expediente' => $excedeSaidaExpediente,
+                'feriado_ou_bloqueio' => (bool) $bloqueioGeral,
+            ];
+        });
+
+        return response()->json($profissionaisComResumo->values());
     }
 
     public function getHorariosAjax(Request $request)
@@ -167,6 +198,10 @@ class AgendamentoController extends Controller
         }
 
         $inicioDia = Carbon::parse($data);
+        if ($inicioDia->greaterThan(now()->addMonths(3)->endOfDay())) {
+            return response()->json([]);
+        }
+
         $diaSemana = $inicioDia->dayOfWeek;
 
         // Se profissional foi especificado, usa aquele
@@ -188,6 +223,8 @@ class AgendamentoController extends Controller
         if ($profissionais->isEmpty()) {
             return response()->json([]);
         }
+
+        $agendaService = app(AgendaService::class);
 
         // Array para armazenar status de cada horário por profissional
         $horariosStatus = []; // hora => [prof1 => ocupado?, prof2 => ocupado?, ...]
@@ -226,13 +263,14 @@ class AgendamentoController extends Controller
             // 4. Montar horários para este profissional
             $horaAtual = Carbon::parse($data . ' ' . $escala->hora_inicio);
             $horaFimExpediente = Carbon::parse($data . ' ' . $escala->hora_fim);
+            $horaLimiteSaida = $agendaService->limiteSaidaExpediente($escala, $inicioDia);
 
-            while ($horaAtual < $horaFimExpediente) {
+            while ($horaAtual <= $horaFimExpediente) {
                 $horaFimEstimado = $horaAtual->copy()->addMinutes($duracaoUsada);
                 $ocupado = false;
 
-                // Regra A: O serviço termina depois do expediente?
-                if ($horaFimEstimado > $horaFimExpediente) {
+                // Regra A: O serviço pode terminar ate 30 minutos depois do expediente, com acrescimo.
+                if ($horaFimEstimado > $horaLimiteSaida) {
                     $ocupado = true;
                 }
 
@@ -265,6 +303,24 @@ class AgendamentoController extends Controller
                     $ocupado = true;
                 }
 
+                $bloqueioGeral = $agendaService->buscarBloqueioGeralConflitante($horaAtual, $horaFimEstimado);
+                $invadeAlmoco = $agendaService->invadeAlmoco($escala, $horaAtual, $horaFimEstimado);
+                $excedeSaidaExpediente = $agendaService->excedeSaidaExpediente($escala, $horaAtual, $horaFimEstimado);
+                $percentualAcrescimo = $ocupado ? 0 : $agendaService->percentualAtendimentoEspecial($invadeAlmoco, $bloqueioGeral, $excedeSaidaExpediente);
+                $motivosAcrescimo = [];
+
+                if (!$ocupado && $invadeAlmoco) {
+                    $motivosAcrescimo[] = 'horario de almoco';
+                }
+
+                if (!$ocupado && $bloqueioGeral) {
+                    $motivosAcrescimo[] = $bloqueioGeral->motivo ?: 'feriado/bloqueio geral';
+                }
+
+                if (!$ocupado && $excedeSaidaExpediente) {
+                    $motivosAcrescimo[] = 'saida do expediente';
+                }
+
                 $hora_str = $horaAtual->format('H:i');
 
                 // Inicializar array de status para este horário se não existir
@@ -273,7 +329,11 @@ class AgendamentoController extends Controller
                 }
 
                 // Armazenar status deste profissional para este horário
-                $horariosStatus[$hora_str][$prof->id] = $ocupado;
+                $horariosStatus[$hora_str][$prof->id] = [
+                    'ocupado' => $ocupado,
+                    'percentual_acrescimo' => $percentualAcrescimo,
+                    'motivos_acrescimo' => $motivosAcrescimo,
+                ];
 
                 $horaAtual->addMinutes(30);
             }
@@ -283,11 +343,21 @@ class AgendamentoController extends Controller
         $resultado = [];
         foreach ($horariosStatus as $hora => $statusPorProf) {
             // Se pelo menos um profissional está livre neste horário
-            $temProfissionalLivre = in_array(false, $statusPorProf, true);
+            $profissionaisLivresNoHorario = collect($statusPorProf)->filter(fn ($status) => !$status['ocupado']);
+            $temProfissionalLivre = $profissionaisLivresNoHorario->isNotEmpty();
+            $percentualAcrescimo = $profissionaisLivresNoHorario->max('percentual_acrescimo') ?? 0;
+            $motivosAcrescimo = $profissionaisLivresNoHorario
+                ->flatMap(fn ($status) => $status['motivos_acrescimo'])
+                ->unique()
+                ->values()
+                ->all();
             
             $resultado[] = [
                 'hora' => $hora,
-                'ocupado' => !$temProfissionalLivre // Ocupado só se TODOS estão ocupados
+                'ocupado' => !$temProfissionalLivre,
+                'percentual_acrescimo' => $percentualAcrescimo,
+                'motivos_acrescimo' => $motivosAcrescimo,
+                'atendimento_especial' => $temProfissionalLivre && $percentualAcrescimo > 0,
             ];
         }
 
@@ -318,9 +388,10 @@ class AgendamentoController extends Controller
         $request->validate([
             'cliente_id' => ['required','exists:users,id'],
             'profissional_id' => ['required','exists:users,id'],
-            'data_hora' => ['required','date','after:now'],
+            'data_hora' => ['required','date','after:now','before_or_equal:' . now()->addMonths(3)->endOfDay()->toDateTimeString()],
         ], [
             'data_hora.after' => 'O agendamento deve ser para uma data futura.',
+            'data_hora.before_or_equal' => 'O agendamento deve ser feito dentro dos proximos 3 meses.',
         ]);
 
         if (!$servicos_ids || empty($servicos_ids)) {
@@ -369,15 +440,16 @@ class AgendamentoController extends Controller
             return back()->withErrors(['data_hora' => 'O profissional não trabalha neste dia da semana.'])->withInput();
         }
 
-        $horaInicio = $inicio->format('H:i:s');
-        $horaFim = $fim->format('H:i:s');
-
-        // Verifica expediente geral
-        if ($horaInicio < $escala->hora_inicio || $horaFim > $escala->hora_fim) {
-            return back()->withErrors(['data_hora' => 'O horário escolhido está fora do expediente do profissional.'])->withInput();
+        if (
+            $inicio->lt($agendaService->inicioExpediente($escala, $inicio))
+            || $inicio->gt($agendaService->fimExpediente($escala, $inicio))
+            || $fim->gt($agendaService->limiteSaidaExpediente($escala, $inicio))
+        ) {
+            return back()->withErrors(['data_hora' => 'O horario escolhido esta fora do expediente permitido do profissional.'])->withInput();
         }
 
         $invadeAlmoco = $agendaService->invadeAlmoco($escala, $inicio, $fim);
+        $excedeSaidaExpediente = $agendaService->excedeSaidaExpediente($escala, $inicio, $fim);
 
         $bloqueioProfissional = $agendaService->buscarBloqueioProfissionalConflitante($profissional->id, $inicio, $fim);
         if ($bloqueioProfissional) {
@@ -387,7 +459,8 @@ class AgendamentoController extends Controller
         $dadosValor = $agendaService->calcularAtendimentoEspecial(
             (float) $valorTotal,
             $invadeAlmoco,
-            $agendaService->buscarBloqueioGeralConflitante($inicio, $fim)
+            $agendaService->buscarBloqueioGeralConflitante($inicio, $fim),
+            $excedeSaidaExpediente
         );
         // =========================================================================
         // BLINDAGEM CONTRA OVERBOOKING (Fila de Banco de Dados)
@@ -472,6 +545,9 @@ class AgendamentoController extends Controller
 
         // Combinar data e hora
         $data_hora = Carbon::parse($request->data . ' ' . $request->hora);
+        if ($data_hora->greaterThan(now()->addMonths(3)->endOfDay())) {
+            return back()->withErrors(['data' => 'O agendamento deve ser feito dentro dos proximos 3 meses.'])->withInput();
+        }
 
         // Buscar serviço
         $servico = Servico::findOrFail($request->servico_id);
@@ -496,16 +572,16 @@ class AgendamentoController extends Controller
         $duracaoServico = $vinculo->pivot->duracao_customizada ?? $servico->duracao;
         $data_hora_fim = $data_hora->copy()->addMinutes($duracaoServico);
 
-        $horaInicio = $data_hora->format('H:i:s');
-        $horaFim = $data_hora_fim->format('H:i:s');
-
-        // Verificar expediente
-        if ($horaInicio < $escala->hora_inicio || $horaFim > $escala->hora_fim) {
-            return back()->withErrors(['hora' => 'O horário está fora do expediente do profissional.'])->withInput();
-        }
-
         $agendaService = app(AgendaService::class);
+        if (
+            $data_hora->lt($agendaService->inicioExpediente($escala, $data_hora))
+            || $data_hora->gt($agendaService->fimExpediente($escala, $data_hora))
+            || $data_hora_fim->gt($agendaService->limiteSaidaExpediente($escala, $data_hora))
+        ) {
+            return back()->withErrors(['hora' => 'O horario esta fora do expediente permitido do profissional.'])->withInput();
+        }
         $invadeAlmoco = $agendaService->invadeAlmoco($escala, $data_hora, $data_hora_fim);
+        $excedeSaidaExpediente = $agendaService->excedeSaidaExpediente($escala, $data_hora, $data_hora_fim);
 
         $bloqueioProfissional = $agendaService->buscarBloqueioProfissionalConflitante($profissional->id, $data_hora, $data_hora_fim);
         if ($bloqueioProfissional) {
@@ -515,7 +591,8 @@ class AgendamentoController extends Controller
         $dadosValor = $agendaService->calcularAtendimentoEspecial(
             (float) $servico->preco,
             $invadeAlmoco,
-            $agendaService->buscarBloqueioGeralConflitante($data_hora, $data_hora_fim)
+            $agendaService->buscarBloqueioGeralConflitante($data_hora, $data_hora_fim),
+            $excedeSaidaExpediente
         );
 
         // Verificar conflito com agendamentos existentes
@@ -897,3 +974,4 @@ class AgendamentoController extends Controller
         return $usuario->cargo === 'profissional' && $agendamento->profissional_id === $usuario->id;
     }
 }
+

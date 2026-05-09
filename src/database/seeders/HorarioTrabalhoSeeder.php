@@ -23,7 +23,7 @@ class HorarioTrabalhoSeeder extends Seeder
                     'dia_semana' => $dia,
                     'hora_inicio' => '08:00',
                     'hora_fim' => '18:00',
-                    'almoco_inicio' => '12:00',
+                    'almoco_inicio' => '11:00',
                     'almoco_fim' => '13:00',
                     'trabalha' => true,
                     'created_at' => now(),

@@ -84,7 +84,7 @@
                                     <div class="flex items-center gap-2">
                                         <div>
                                             <label class="text-xs text-gray-500">Início Almoço</label>
-                                            <input type="time" name="horarios[{{ $num }}][almoco_inicio]" value="{{ $h->almoco_inicio ?? '12:00' }}" class="px-2 py-1 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all text-sm">
+                                            <input type="time" name="horarios[{{ $num }}][almoco_inicio]" value="{{ $h->almoco_inicio ?? '11:00' }}" class="px-2 py-1 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all text-sm">
                                         </div>
                                         <div>
                                             <label class="text-xs text-gray-500">Fim Almoço</label>
@@ -157,6 +157,55 @@
                         @empty
                             <div class="p-3 rounded-xl bg-white/50 border border-[#FFD6F4] text-sm text-gray-500">
                                 Nenhum dia desativado nos proximos 3 meses.
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card rounded-2xl shadow-xl overflow-hidden mb-6">
+                <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
+                    <div class="flex items-center gap-2 mb-5">
+                        <span class="text-[#FF2EB6] text-xl">✦</span>
+                        <h3 class="text-lg font-title text-[#4A00B9]">Feriados dos Proximos 3 Meses</h3>
+                    </div>
+
+                    <div class="space-y-3">
+                        @forelse($feriadosGeraisFuturos as $feriado)
+                            @php
+                                $dataFeriado = \Carbon\Carbon::parse($feriado->data_hora_inicio)->toDateString();
+                                $bloqueioFeriado = $bloqueiosFeriadosProfissional->get($dataFeriado);
+                                $trabalhaNoFeriado = !$bloqueioFeriado;
+                            @endphp
+                            <div class="flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl bg-white/50 border border-[#FFD6F4]">
+                                <div>
+                                    <div class="font-semibold text-[#1A002B]">
+                                        {{ \Carbon\Carbon::parse($feriado->data_hora_inicio)->format('d/m/Y') }} - {{ $feriado->motivo ?? 'Feriado' }}
+                                    </div>
+                                    <div class="text-xs {{ $trabalhaNoFeriado ? 'text-green-700' : 'text-red-600' }}">
+                                        {{ $trabalhaNoFeriado ? 'Ativo na sua agenda: clientes podem agendar com acrescimo.' : 'Desativado na sua agenda: voce nao atende nesse feriado.' }}
+                                    </div>
+                                </div>
+
+                                <form method="POST" action="{{ route('profissional.servicos.feriados.status', $feriado->id_bloqueio) }}" class="flex gap-2">
+                                    @csrf
+                                    @method('PATCH')
+                                    @if($trabalhaNoFeriado)
+                                        <input type="hidden" name="status" value="desativado">
+                                        <button type="submit" class="px-4 py-2 text-xs rounded-full border border-red-200 text-red-600 hover:bg-red-50 transition">
+                                            Desativar
+                                        </button>
+                                    @else
+                                        <input type="hidden" name="status" value="ativo">
+                                        <button type="submit" class="px-4 py-2 text-xs rounded-full border border-green-200 text-green-700 hover:bg-green-50 transition">
+                                            Ativar
+                                        </button>
+                                    @endif
+                                </form>
+                            </div>
+                        @empty
+                            <div class="p-3 rounded-xl bg-white/50 border border-[#FFD6F4] text-sm text-gray-500">
+                                Nenhum feriado geral cadastrado nos proximos 3 meses.
                             </div>
                         @endforelse
                     </div>

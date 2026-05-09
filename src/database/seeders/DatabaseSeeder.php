@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             ProfissionalServicoSeeder::class,
             PacoteSeeder::class,
             AgendamentoSeeder::class,
+            BloqueioHorarioSeeder::class,
             AvaliacaoSeeder::class,
             VendaSeeder::class,
             ClientePacoteSeeder::class,

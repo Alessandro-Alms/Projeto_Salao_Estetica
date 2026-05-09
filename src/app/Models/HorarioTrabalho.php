@@ -12,6 +12,8 @@ class HorarioTrabalho extends Model
         'dia_semana',
         'hora_inicio',
         'hora_fim',
+        'almoco_inicio',
+        'almoco_fim',
         'trabalha'
     ];
 

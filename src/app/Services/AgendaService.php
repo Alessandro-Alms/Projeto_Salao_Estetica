@@ -11,6 +11,18 @@ use Carbon\Carbon;
 class AgendaService
 {
     public const ACRESCIMO_ATENDIMENTO_ESPECIAL_PERCENTUAL = 50.00;
+    public const ACRESCIMO_FERIADO_ESPECIAL_PERCENTUAL = 75.00;
+    public const ACRESCIMO_SAIDA_EXPEDIENTE_PERCENTUAL = 25.00;
+    public const TOLERANCIA_SAIDA_EXPEDIENTE_MINUTOS = 30;
+
+    private const TERMOS_FERIADO_ESPECIAL = [
+        'ano novo',
+        'reveillon',
+        'carnaval',
+        'natal',
+        'pascoa',
+        'feriado especial',
+    ];
 
     public function buscarEscala(int $profissionalId, int $diaSemana): ?HorarioTrabalho
     {
@@ -30,7 +42,7 @@ class AgendaService
         $horaInicio = $inicio->format('H:i:s');
         $horaFim = $fim->format('H:i:s');
 
-        if ($horaInicio < $escala->hora_inicio || $horaFim > $escala->hora_fim) {
+        if ($inicio->lt($this->inicioExpediente($escala, $inicio)) || $fim->gt($this->limiteSaidaExpediente($escala, $inicio))) {
             return 'O horario escolhido esta fora do expediente do profissional.';
         }
 
@@ -67,20 +79,63 @@ class AgendaService
 
         $horaInicio = $inicio->format('H:i:s');
         $horaFim = $fim->format('H:i:s');
+        $almocoInicio = Carbon::parse($escala->almoco_inicio)->format('H:i:s');
+        $almocoFim = Carbon::parse($escala->almoco_fim)->format('H:i:s');
 
-        return $horaInicio < $escala->almoco_fim && $horaFim > $escala->almoco_inicio;
+        return $horaInicio < $almocoFim && $horaFim > $almocoInicio;
     }
 
-    public function calcularAtendimentoEspecial(float $valorBase, bool $invadeAlmoco, ?BloqueioHorario $bloqueioGeral): array
+    public function excedeSaidaExpediente(?HorarioTrabalho $escala, Carbon $inicio, Carbon $fim): bool
+    {
+        if (!$escala || !$escala->hora_fim) {
+            return false;
+        }
+
+        $fimExpediente = $this->fimExpediente($escala, $inicio);
+
+        return $fim->gt($fimExpediente) && $fim->lte($fimExpediente->copy()->addMinutes(self::TOLERANCIA_SAIDA_EXPEDIENTE_MINUTOS));
+    }
+
+    public function inicioExpediente(HorarioTrabalho $escala, Carbon $data): Carbon
+    {
+        return Carbon::parse($data->toDateString() . ' ' . $escala->hora_inicio);
+    }
+
+    public function fimExpediente(HorarioTrabalho $escala, Carbon $data): Carbon
+    {
+        return Carbon::parse($data->toDateString() . ' ' . $escala->hora_fim);
+    }
+
+    public function limiteSaidaExpediente(HorarioTrabalho $escala, Carbon $data): Carbon
+    {
+        return $this->fimExpediente($escala, $data)->addMinutes(self::TOLERANCIA_SAIDA_EXPEDIENTE_MINUTOS);
+    }
+
+    public function calcularAtendimentoEspecial(float $valorBase, bool $invadeAlmoco, ?BloqueioHorario $bloqueioGeral, bool $excedeSaidaExpediente = false): array
     {
         $motivos = [];
+        $percentual = 0.00;
 
         if ($invadeAlmoco) {
-            $motivos[] = 'Horario de almoco';
+            $percentualAlmoco = self::ACRESCIMO_ATENDIMENTO_ESPECIAL_PERCENTUAL;
+            $motivos[] = 'Horario de almoco +' . $percentualAlmoco . '%';
+            $percentual += $percentualAlmoco;
         }
 
         if ($bloqueioGeral) {
-            $motivos[] = $bloqueioGeral->motivo ?: 'Feriado/Bloqueio geral';
+            $motivoBloqueio = $bloqueioGeral->motivo ?: 'Feriado/Bloqueio geral';
+            $percentualFeriado = $this->ehFeriadoEspecial($motivoBloqueio)
+                ? self::ACRESCIMO_FERIADO_ESPECIAL_PERCENTUAL
+                : self::ACRESCIMO_ATENDIMENTO_ESPECIAL_PERCENTUAL;
+
+            $motivos[] = $motivoBloqueio . ' +' . $percentualFeriado . '%';
+            $percentual += $percentualFeriado;
+        }
+
+        if ($excedeSaidaExpediente) {
+            $percentualSaida = self::ACRESCIMO_SAIDA_EXPEDIENTE_PERCENTUAL;
+            $motivos[] = 'Saida do expediente +' . $percentualSaida . '%';
+            $percentual += $percentualSaida;
         }
 
         if (empty($motivos)) {
@@ -92,7 +147,7 @@ class AgendaService
             ];
         }
 
-        $acrescimo = round($valorBase * (self::ACRESCIMO_ATENDIMENTO_ESPECIAL_PERCENTUAL / 100), 2);
+        $acrescimo = round($valorBase * ($percentual / 100), 2);
 
         return [
             'valor_base' => $valorBase,
@@ -100,6 +155,40 @@ class AgendaService
             'motivo_acrescimo' => implode(' + ', $motivos),
             'valor_total' => $valorBase + $acrescimo,
         ];
+    }
+
+    public function percentualAtendimentoEspecial(bool $invadeAlmoco, ?BloqueioHorario $bloqueioGeral, bool $excedeSaidaExpediente = false): float
+    {
+        $dados = $this->calcularAtendimentoEspecial(100.00, $invadeAlmoco, $bloqueioGeral, $excedeSaidaExpediente);
+
+        return (float) $dados['acrescimo_especial'];
+    }
+
+    private function ehFeriadoEspecial(string $motivo): bool
+    {
+        $motivoNormalizado = function_exists('mb_strtolower') ? mb_strtolower($motivo) : strtolower($motivo);
+        $motivoNormalizado = strtr($motivoNormalizado, [
+            'á' => 'a',
+            'à' => 'a',
+            'ã' => 'a',
+            'â' => 'a',
+            'é' => 'e',
+            'ê' => 'e',
+            'í' => 'i',
+            'ó' => 'o',
+            'ô' => 'o',
+            'õ' => 'o',
+            'ú' => 'u',
+            'ç' => 'c',
+        ]);
+
+        foreach (self::TERMOS_FERIADO_ESPECIAL as $termo) {
+            if (str_contains($motivoNormalizado, $termo)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function existeConflitoAgendamento(int $profissionalId, Carbon $inicio, Carbon $fim): bool

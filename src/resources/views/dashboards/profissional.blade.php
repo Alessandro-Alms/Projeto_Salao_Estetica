@@ -42,6 +42,33 @@
 @if($user->cargo === 'profissional')
     <div class="glass-card rounded-2xl shadow-xl overflow-hidden mb-6">
         <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
+            <div class="flex items-center gap-2 mb-4">
+                <span class="text-[#FF2EB6] text-xl">!</span>
+                <h3 class="text-lg font-title text-[#4A00B9]">Avisos de Agenda e Valores Especiais</h3>
+            </div>
+
+            <div class="space-y-3 text-sm text-[#1A002B]">
+                <p>Quando você bloquear um dia, sua agenda fica indisponível nesse período mesmo que o cliente aceite pagar mais.</p>
+                <p>Atendimentos no almoço padrão, das 11:00 às 13:00, feriados e bloqueios gerais podem ser cobrados com acréscimo. Quando almoço e feriado acontecem juntos, os acréscimos são somados.</p>
+            </div>
+
+            <div class="mt-4 space-y-2">
+                @forelse($bloqueiosProfissionalFuturos as $bloqueio)
+                    <div class="flex flex-wrap justify-between gap-2 p-3 rounded-xl bg-white/50 border border-[#FFD6F4]">
+                        <span class="font-semibold text-[#4A00B9]">{{ \Carbon\Carbon::parse($bloqueio->data_hora_inicio)->format('d/m/Y') }}</span>
+                        <span class="text-gray-600">{{ $bloqueio->motivo ?? 'Indisponibilidade' }}</span>
+                    </div>
+                @empty
+                    <div class="p-3 rounded-xl bg-white/50 border border-[#FFD6F4] text-gray-500">
+                        Nenhum bloqueio futuro informado por você.
+                    </div>
+                @endforelse
+            </div>
+        </div>
+    </div>
+
+    <div class="glass-card rounded-2xl shadow-xl overflow-hidden mb-6">
+        <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
             <div class="flex items-center gap-3 mb-6">
                 <div class="w-10 h-10 bg-gradient-to-br from-[#7B19E5] to-[#FF2EB6] rounded-xl flex items-center justify-center shadow-md">
                     <span class="text-white text-lg">✦</span>

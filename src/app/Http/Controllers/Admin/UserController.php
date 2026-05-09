@@ -20,6 +20,7 @@ use Illuminate\View\View;
 class UserController extends Controller
 {
     private const MOTIVO_INDISPONIBILIDADE_PROFISSIONAL = 'Indisponibilidade informada pelo profissional';
+    private const PREFIXO_MOTIVO_FERIADO_PROFISSIONAL = 'Indisponibilidade em feriado: ';
 
     public function dashboard(Request $request): View
     {
@@ -27,6 +28,7 @@ class UserController extends Controller
         $mediaAvaliacao = null;
         $totalAvaliacoes = 0;
         $comentariosAvaliacao = collect();
+        $bloqueiosProfissionalFuturos = collect();
         $agendamentoProximo = null;
         $avaliacoesPendentes = 0;
         $pacotesVencendo = collect();
@@ -56,6 +58,12 @@ class UserController extends Controller
                     'avaliacoes.created_at',
                     'clientes.name as cliente_nome'
                 )
+                ->get();
+
+            $bloqueiosProfissionalFuturos = BloqueioHorario::where('profissional_id', $user->id)
+                ->where('data_hora_fim', '>=', now())
+                ->orderBy('data_hora_inicio')
+                ->limit(5)
                 ->get();
         }
 
@@ -103,6 +111,7 @@ class UserController extends Controller
             'mediaAvaliacao',
             'totalAvaliacoes',
             'comentariosAvaliacao',
+            'bloqueiosProfissionalFuturos',
             'agendamentoProximo',
             'avaliacoesPendentes',
             'pacotesVencendo',
@@ -249,11 +258,21 @@ class UserController extends Controller
             ->where('data_hora_inicio', '<=', $fimDisponibilidade)
             ->orderBy('data_hora_inicio')
             ->get();
+        $feriadosGeraisFuturos = BloqueioHorario::whereNull('profissional_id')
+            ->where('data_hora_fim', '>=', $inicioDisponibilidade)
+            ->where('data_hora_inicio', '<=', $fimDisponibilidade)
+            ->orderBy('data_hora_inicio')
+            ->get();
+        $bloqueiosFeriadosProfissional = $bloqueiosFuturos
+            ->filter(fn ($bloqueio) => str_starts_with((string) $bloqueio->motivo, self::PREFIXO_MOTIVO_FERIADO_PROFISSIONAL))
+            ->keyBy(fn ($bloqueio) => Carbon::parse($bloqueio->data_hora_inicio)->toDateString());
 
         return view('profissional.configuracoes', compact(
             'usuario',
             'servicos',
             'bloqueiosFuturos',
+            'feriadosGeraisFuturos',
+            'bloqueiosFeriadosProfissional',
             'inicioDisponibilidade',
             'fimDisponibilidade'
         ));
@@ -335,6 +354,50 @@ class UserController extends Controller
         $bloqueio->delete();
 
         return back()->with('sucesso', 'Dia reativado na agenda com sucesso!');
+    }
+
+    public function atualizarFeriadoDisponibilidade(Request $request, BloqueioHorario $feriado)
+    {
+        $usuario = auth()->user();
+
+        if ($feriado->profissional_id !== null) {
+            abort(404);
+        }
+
+        $dados = $request->validate([
+            'status' => ['required', 'in:ativo,desativado'],
+        ]);
+
+        $inicio = Carbon::parse($feriado->data_hora_inicio)->startOfDay();
+        $fim = Carbon::parse($feriado->data_hora_fim)->endOfDay();
+        $bloqueioProfissional = $this->buscarBloqueioFeriadoProfissional($usuario->id, $inicio, $fim);
+
+        if ($dados['status'] === 'ativo') {
+            if ($bloqueioProfissional) {
+                $bloqueioProfissional->delete();
+            }
+
+            return back()->with('sucesso', 'Feriado ativado na sua agenda. Clientes poderao agendar com o acrescimo informado.');
+        }
+
+        if ($this->profissionalTemAgendamentoNoPeriodo($usuario->id, $inicio, $fim)) {
+            throw ValidationException::withMessages([
+                'feriado' => 'Esse feriado ja tem agendamento ativo. Reagende ou cancele antes de desativar.',
+            ]);
+        }
+
+        BloqueioHorario::updateOrCreate(
+            [
+                'profissional_id' => $usuario->id,
+                'data_hora_inicio' => $inicio,
+                'data_hora_fim' => $fim,
+            ],
+            [
+                'motivo' => self::PREFIXO_MOTIVO_FERIADO_PROFISSIONAL . ($feriado->motivo ?: 'Feriado'),
+            ]
+        );
+
+        return back()->with('sucesso', 'Feriado desativado na sua agenda. Clientes nao poderao agendar com voce nesse dia.');
     }
 
     public function alterarStatus(Request $request, $id)
@@ -454,7 +517,7 @@ class UserController extends Controller
                 [
                     'hora_inicio' => $dados['inicio'] ?? '08:00',
                     'hora_fim' => $dados['fim'] ?? '18:00',
-                    'almoco_inicio' => $dados['almoco_inicio'] ?? '12:00',
+                    'almoco_inicio' => $dados['almoco_inicio'] ?? '11:00',
                     'almoco_fim' => $dados['almoco_fim'] ?? '13:00',
                     'trabalha' => isset($dados['trabalha']) ? 1 : 0
                 ]
@@ -469,5 +532,14 @@ class UserController extends Controller
             ->where('data_hora_inicio', '<', $fim)
             ->where('data_hora_fim', '>', $inicio)
             ->exists();
+    }
+
+    private function buscarBloqueioFeriadoProfissional(int $profissionalId, Carbon $inicio, Carbon $fim): ?BloqueioHorario
+    {
+        return BloqueioHorario::where('profissional_id', $profissionalId)
+            ->where('data_hora_inicio', '<', $fim)
+            ->where('data_hora_fim', '>', $inicio)
+            ->where('motivo', 'like', self::PREFIXO_MOTIVO_FERIADO_PROFISSIONAL . '%')
+            ->first();
     }
 }

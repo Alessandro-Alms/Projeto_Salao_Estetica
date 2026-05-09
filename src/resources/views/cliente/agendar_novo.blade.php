@@ -28,7 +28,8 @@
                              id="servico-card-{{ $servico->id_servico }}"
                              data-id="{{ $servico->id_servico }}"
                              data-nome="{{ e($servico->nome) }}"
-                             data-duracao="{{ $servico->duracao }}">
+                             data-duracao="{{ $servico->duracao }}"
+                             data-preco="{{ $servico->preco }}">
                             <input type="checkbox" id="checkbox-servico-{{ $servico->id_servico }}" class="mt-1 mr-3" onclick="event.stopPropagation();">
                             <div class="w-full">
                                 <p class="font-bold text-lg text-gray-800">{{ $servico->nome }}</p>
@@ -81,6 +82,12 @@
 
                 <input type="hidden" id="data_agendamento" name="data_agendamento">
                 <input type="hidden" id="hora_agendamento" name="hora_agendamento">
+
+                <div id="aviso-horario-especial" class="mt-4 p-4 bg-yellow-50 border-2 border-yellow-200 rounded-lg hidden">
+                    <p class="text-yellow-800 font-semibold">
+                        Atenção: este horário pode ter acréscimo por almoço, feriado ou bloqueio geral. O valor exato aparece ao escolher o profissional.
+                    </p>
+                </div>
                 
                 <div id="info-hora-selecionada" class="mt-6 p-4 bg-green-50 border-2 border-green-200 rounded-lg hidden">
                     <p class="text-green-800 font-semibold">✓ Horário selecionado: <span id="hora-selecionada-texto" class="text-green-900 font-bold"></span></p>
@@ -130,6 +137,21 @@
                     <div class="flex items-center justify-between">
                         <span class="text-gray-700 font-semibold">🕐 Hora:</span>
                         <span id="resumo_hora" class="font-bold text-blue-800 text-lg"></span>
+                    </div>
+                    <div class="flex items-center justify-between pt-4 border-t-2 border-blue-200">
+                        <span class="text-gray-700 font-semibold">Valor base:</span>
+                        <span id="resumo_valor_base" class="font-bold text-blue-800 text-lg"></span>
+                    </div>
+                    <div id="linha_acrescimo" class="flex items-center justify-between hidden">
+                        <span class="text-gray-700 font-semibold">Acréscimo:</span>
+                        <span id="resumo_acrescimo" class="font-bold text-yellow-700 text-lg"></span>
+                    </div>
+                    <div id="linha_motivo_acrescimo" class="p-3 bg-yellow-50 border border-yellow-200 rounded-lg hidden">
+                        <p id="resumo_motivo_acrescimo" class="text-yellow-800 text-sm font-semibold"></p>
+                    </div>
+                    <div class="flex items-center justify-between pt-4 border-t-2 border-blue-200">
+                        <span class="text-gray-900 font-bold">Total a pagar:</span>
+                        <span id="resumo_valor_total" class="font-bold text-green-700 text-2xl"></span>
                     </div>
                 </div>
 
@@ -238,8 +260,10 @@
     .horario-option {
         aspect-ratio: 1;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
+        gap: 6px;
         border: 2px solid #e5e7eb;
         border-radius: 10px;
         cursor: pointer;
@@ -267,6 +291,26 @@
         background: #f3f4f6;
         cursor: not-allowed;
         border-color: #e5e7eb;
+    }
+
+    .horario-hora {
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .horario-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        max-width: 92%;
+        padding: 3px 6px;
+        border-radius: 999px;
+        background: #fef3c7;
+        color: #92400e;
+        font-size: 10px;
+        font-weight: 700;
+        line-height: 1.15;
+        text-align: center;
     }
     
     /* Profissional */
@@ -313,24 +357,29 @@
     // Constantes
     const urlProfissionais = "{{ route('api.profissionais') }}";
     const urlHorarios = "{{ route('api.horarios') }}";
+    const limiteAgendamento = new Date("{{ $limiteAgendamento->toDateString() }}T23:59:59");
 
     // Estado Global
     let estadoAgendamento = {
         servicosIds: [],
         servicosNomes: [],
         servicosDuracao: {},
+        servicosPrecos: {},
         duraoTotal: 0,
+        valorBase: 0,
         dataSelecionada: null,
         horaSelecionada: null,
+        horarioEspecial: null,
         profissionalId: null,
-        profissionalNome: null
+        profissionalNome: null,
+        resumoFinanceiro: null
     };
 
     let mesAtual = new Date().getMonth();
     let anoAtual = new Date().getFullYear();
 
     // ==================== PASSO 1: SERVIÇO(S) ====================
-    function toggleServico(servicoId, servicoNome, duracao) {
+    function toggleServico(servicoId, servicoNome, duracao, preco) {
         const checkbox = document.getElementById(`checkbox-servico-${servicoId}`);
         const card = document.getElementById(`servico-card-${servicoId}`);
         
@@ -339,6 +388,7 @@
             estadoAgendamento.servicosIds = estadoAgendamento.servicosIds.filter(id => id !== servicoId);
             estadoAgendamento.servicosNomes = estadoAgendamento.servicosNomes.filter(nome => nome !== servicoNome);
             delete estadoAgendamento.servicosDuracao[servicoId];
+            delete estadoAgendamento.servicosPrecos[servicoId];
             checkbox.checked = false;
             card.classList.remove('border-blue-400', 'border-4', 'bg-blue-100');
         } else {
@@ -346,6 +396,7 @@
             estadoAgendamento.servicosIds.push(servicoId);
             estadoAgendamento.servicosNomes.push(servicoNome);
             estadoAgendamento.servicosDuracao[servicoId] = duracao;
+            estadoAgendamento.servicosPrecos[servicoId] = preco;
             checkbox.checked = true;
             card.classList.add('border-blue-400', 'border-4', 'bg-blue-100');
         }
@@ -368,10 +419,12 @@
         listaUl.innerHTML = '';
         
         let tempoTotal = 0;
+        let valorBase = 0;
         estadoAgendamento.servicosIds.forEach((id, index) => {
             const nome = estadoAgendamento.servicosNomes[index];
             const duracao = estadoAgendamento.servicosDuracao[id];
             tempoTotal += duracao;
+            valorBase += Number(estadoAgendamento.servicosPrecos[id] || 0);
             
             const li = document.createElement('li');
             li.innerHTML = `<span class="text-blue-900">✓ ${nome}</span> <span class="text-gray-600">(${duracao} min)</span>`;
@@ -380,6 +433,7 @@
         
         document.getElementById('tempo-total').innerText = tempoTotal;
         estadoAgendamento.duraoTotal = tempoTotal;
+        estadoAgendamento.valorBase = valorBase;
         
         // Atualizar campo oculto
         document.getElementById('servicos_ids').value = estadoAgendamento.servicosIds.join(',');
@@ -409,6 +463,15 @@
     }
 
     function proxMes() {
+        const proximoMes = mesAtual === 11 ? 0 : mesAtual + 1;
+        const proximoAno = mesAtual === 11 ? anoAtual + 1 : anoAtual;
+        const primeiroDiaProximoMes = new Date(proximoAno, proximoMes, 1);
+        const ultimoMesPermitido = new Date(limiteAgendamento.getFullYear(), limiteAgendamento.getMonth(), 1);
+
+        if (primeiroDiaProximoMes > ultimoMesPermitido) {
+            return;
+        }
+
         mesAtual++;
         if (mesAtual > 11) { mesAtual = 0; anoAtual++; }
         atualizarCalendario(mesAtual, anoAtual);
@@ -461,8 +524,8 @@
             
             const dataObj = new Date(ano, mes, dia);
             
-            // Desabilitar datas passadas
-            if (dataObj < hojeDate) {
+            // Desabilitar datas passadas e datas fora dos proximos 3 meses
+            if (dataObj < hojeDate || dataObj > limiteAgendamento) {
                 dateDiv.classList.add('indisponivel');
             } else {
                 dateDiv.onclick = () => selecionarData(dataObj);
@@ -481,6 +544,11 @@
     }
 
     function selecionarData(data) {
+        if (data > limiteAgendamento) {
+            alert('Agendamentos so podem ser feitos para os proximos 3 meses.');
+            return;
+        }
+
         estadoAgendamento.dataSelecionada = data;
         const dataTxt = data.toLocaleDateString('pt-PT', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
         
@@ -488,6 +556,35 @@
         document.getElementById('info-data-selecionada').classList.remove('hidden');
         
         atualizarCalendario(mesAtual, anoAtual);
+    }
+
+    function rotuloAtendimentoEspecial(horario) {
+        if (!horario || !horario.atendimento_especial) {
+            return '';
+        }
+
+        const motivos = horario.motivos_acrescimo || [];
+        const temAlmoco = motivos.some(motivo => motivo.toLowerCase().includes('almoco'));
+        const temSaida = motivos.some(motivo => motivo.toLowerCase().includes('saida'));
+        const temFeriado = motivos.some(motivo => {
+            const texto = motivo.toLowerCase();
+            return !texto.includes('almoco') && !texto.includes('saida');
+        });
+        const partes = [];
+
+        if (temFeriado) {
+            partes.push('Feriado');
+        }
+
+        if (temAlmoco) {
+            partes.push('almoço');
+        }
+
+        if (temSaida) {
+            partes.push('saída');
+        }
+
+        return `${partes.join(' + ')} +${horario.percentual_acrescimo}%`;
     }
 
     // ==================== PASSO 3: HORÁRIOS ====================
@@ -519,10 +616,13 @@
                     const btn = document.createElement('button');
                     btn.type = 'button';
                     btn.className = `horario-option ${h.ocupado ? 'ocupado' : ''}`;
-                    btn.innerText = h.hora;
+                    const rotuloEspecial = rotuloAtendimentoEspecial(h);
+                    btn.innerHTML = h.atendimento_especial
+                        ? `<span class="horario-hora">${h.hora}</span><span class="horario-badge">${rotuloEspecial}</span>`
+                        : `<span class="horario-hora">${h.hora}</span>`;
                     
                     if (!h.ocupado) {
-                        btn.onclick = () => selecionarHora(h.hora);
+                        btn.onclick = () => selecionarHora(h);
                     }
                     
                     gradeHorarios.appendChild(btn);
@@ -530,12 +630,27 @@
             });
     }
 
-    function selecionarHora(hora) {
+    function selecionarHora(horario) {
+        const hora = typeof horario === 'string' ? horario : horario.hora;
         estadoAgendamento.horaSelecionada = hora;
+        estadoAgendamento.horarioEspecial = typeof horario === 'string' ? null : horario;
+        estadoAgendamento.profissionalId = null;
+        estadoAgendamento.profissionalNome = null;
+        estadoAgendamento.resumoFinanceiro = null;
+        document.getElementById('profissional_id').value = '';
         document.getElementById('hora_agendamento').value = hora;
         
         document.getElementById('hora-selecionada-texto').innerText = hora;
         document.getElementById('info-hora-selecionada').classList.remove('hidden');
+
+        const aviso = document.getElementById('aviso-horario-especial');
+        if (estadoAgendamento.horarioEspecial && estadoAgendamento.horarioEspecial.atendimento_especial) {
+            const rotuloEspecial = rotuloAtendimentoEspecial(estadoAgendamento.horarioEspecial);
+            aviso.querySelector('p').innerText = `Atenção: ${rotuloEspecial}. O percentual considera o período total do serviço; almoço das 11:00 às 13:00 e até 30 min após a saída podem somar acréscimos.`;
+            aviso.classList.remove('hidden');
+        } else {
+            aviso.classList.add('hidden');
+        }
     }
 
     // ==================== PASSO 4: PROFISSIONAIS ====================
@@ -565,25 +680,31 @@
                 profissionais.forEach(prof => {
                     const card = document.createElement('div');
                     card.className = 'profissional-card';
+                    const avisoPreco = prof.acrescimo_especial > 0
+                        ? `<p class="text-yellow-700 font-semibold">Acréscimo: ${formatarMoeda(prof.acrescimo_especial)} (${prof.motivo_acrescimo})</p>`
+                        : '';
                     card.innerHTML = `
                         <h4>👤 ${prof.name}</h4>
                         <p>✓ Disponível para os serviços</p>
+                        ${avisoPreco}
+                        <p class="font-bold text-green-700">Total previsto: ${formatarMoeda(prof.valor_total)}</p>
                     `;
-                    card.onclick = () => selecionarProfissional(prof.id, prof.name, card);
+                    card.onclick = () => selecionarProfissional(prof, card);
                     gradeProfissionais.appendChild(card);
                 });
             });
     }
 
-    function selecionarProfissional(profId, profNome, card) {
-        estadoAgendamento.profissionalId = profId;
-        estadoAgendamento.profissionalNome = profNome;
-        document.getElementById('profissional_id').value = profId;
+    function selecionarProfissional(prof, card) {
+        estadoAgendamento.profissionalId = prof.id;
+        estadoAgendamento.profissionalNome = prof.name;
+        estadoAgendamento.resumoFinanceiro = prof;
+        document.getElementById('profissional_id').value = prof.id;
         
         document.querySelectorAll('.profissional-card').forEach(c => c.classList.remove('selecionado'));
         card.classList.add('selecionado');
         
-        document.getElementById('profissional-selecionado-texto').innerText = profNome;
+        document.getElementById('profissional-selecionado-texto').innerText = prof.name;
         document.getElementById('info-profissional-selecionado').classList.remove('hidden');
     }
 
@@ -640,6 +761,13 @@
         }
     }
 
+    function formatarMoeda(valor) {
+        return Number(valor || 0).toLocaleString('pt-BR', {
+            style: 'currency',
+            currency: 'BRL'
+        });
+    }
+
     function preencherResumo() {
         const servicos = estadoAgendamento.servicosNomes.join(', ');
         document.getElementById('resumo_servico').innerText = servicos;
@@ -648,6 +776,28 @@
         const dataTxt = estadoAgendamento.dataSelecionada.toLocaleDateString('pt-PT', { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' });
         document.getElementById('resumo_data').innerText = dataTxt;
         document.getElementById('resumo_hora').innerText = estadoAgendamento.horaSelecionada;
+
+        const financeiro = estadoAgendamento.resumoFinanceiro || {
+            valor_base: estadoAgendamento.valorBase,
+            acrescimo_especial: 0,
+            valor_total: estadoAgendamento.valorBase,
+            motivo_acrescimo: null
+        };
+
+        document.getElementById('resumo_valor_base').innerText = formatarMoeda(financeiro.valor_base);
+        document.getElementById('resumo_valor_total').innerText = formatarMoeda(financeiro.valor_total);
+
+        const linhaAcrescimo = document.getElementById('linha_acrescimo');
+        const linhaMotivo = document.getElementById('linha_motivo_acrescimo');
+        if (Number(financeiro.acrescimo_especial) > 0) {
+            document.getElementById('resumo_acrescimo').innerText = formatarMoeda(financeiro.acrescimo_especial);
+            document.getElementById('resumo_motivo_acrescimo').innerText = `Este atendimento terá valor maior por: ${financeiro.motivo_acrescimo}.`;
+            linhaAcrescimo.classList.remove('hidden');
+            linhaMotivo.classList.remove('hidden');
+        } else {
+            linhaAcrescimo.classList.add('hidden');
+            linhaMotivo.classList.add('hidden');
+        }
     }
 
     // Inicialização
@@ -659,8 +809,9 @@
                 const servicoId = parseInt(this.dataset.id);
                 const servicoNome = this.dataset.nome;
                 const servicoDuracao = parseInt(this.dataset.duracao);
+                const servicoPreco = parseFloat(this.dataset.preco);
                 console.log('Card clicado:', servicoId, servicoNome, servicoDuracao);
-                toggleServico(servicoId, servicoNome, servicoDuracao);
+                toggleServico(servicoId, servicoNome, servicoDuracao, servicoPreco);
             });
         });
         
