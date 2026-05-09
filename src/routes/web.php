@@ -12,10 +12,80 @@ use App\Http\Controllers\PacoteController;
 use App\Http\Controllers\ClientePacoteController;
 use App\Http\Controllers\VendaProdutoController;
 use App\Http\Controllers\RelatorioController;
+use App\Models\Produto;
+use App\Models\Servico;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 Route::get('/', function () {
-    return view('welcome');
-});
+    $servicosDestaque = Schema::hasTable('servicos')
+        ? Servico::orderBy('nome')->limit(4)->get()
+        : collect();
+    $produtosDestaque = Schema::hasTable('produtos')
+        ? Produto::where('quantidade_estoque', '>', 0)->orderBy('nome')->limit(4)->get()
+        : collect();
+    $depoimentosDestaque = Schema::hasTable('avaliacoes') && Schema::hasTable('users')
+        ? DB::table('avaliacoes')
+        ->join('users as clientes', 'avaliacoes.cliente_id', '=', 'clientes.id')
+        ->leftJoin('users as profissionais', 'avaliacoes.profissional_id', '=', 'profissionais.id')
+        ->whereNotNull('avaliacoes.comentario')
+        ->where('avaliacoes.comentario', '!=', '')
+        ->orderByDesc('avaliacoes.nota')
+        ->orderByDesc('avaliacoes.created_at')
+        ->limit(3)
+        ->select(
+            'avaliacoes.nota',
+            'avaliacoes.comentario',
+            'clientes.name as cliente_nome',
+            'profissionais.name as profissional_nome'
+        )
+        ->get()
+        : collect();
+
+    return view('welcome', compact('servicosDestaque', 'produtosDestaque', 'depoimentosDestaque'));
+})->name('public.home');
+
+Route::get('/servicos', function () {
+    $titulo = 'Todos os servicos';
+    $subtitulo = 'Confira todos os servicos disponiveis no salao.';
+    $tipo = 'servicos';
+    $itens = Schema::hasTable('servicos') ? Servico::orderBy('nome')->get() : collect();
+
+    return view('public.catalogo', compact('titulo', 'subtitulo', 'tipo', 'itens'));
+})->name('public.servicos');
+
+Route::get('/produtos', function () {
+    $titulo = 'Todos os produtos';
+    $subtitulo = 'Produtos profissionais disponiveis para compra no salao.';
+    $tipo = 'produtos';
+    $itens = Schema::hasTable('produtos') ? Produto::where('quantidade_estoque', '>', 0)->orderBy('nome')->get() : collect();
+
+    return view('public.catalogo', compact('titulo', 'subtitulo', 'tipo', 'itens'));
+})->name('public.produtos');
+
+Route::get('/depoimentos', function () {
+    $titulo = 'Depoimentos';
+    $subtitulo = 'Avaliacoes reais deixadas pelas nossas clientes.';
+    $tipo = 'depoimentos';
+    $itens = Schema::hasTable('avaliacoes') && Schema::hasTable('users')
+        ? DB::table('avaliacoes')
+        ->join('users as clientes', 'avaliacoes.cliente_id', '=', 'clientes.id')
+        ->leftJoin('users as profissionais', 'avaliacoes.profissional_id', '=', 'profissionais.id')
+        ->whereNotNull('avaliacoes.comentario')
+        ->where('avaliacoes.comentario', '!=', '')
+        ->orderByDesc('avaliacoes.created_at')
+        ->select(
+            'avaliacoes.nota',
+            'avaliacoes.comentario',
+            'clientes.name as cliente_nome',
+            'profissionais.name as profissional_nome',
+            'avaliacoes.created_at'
+        )
+        ->get()
+        : collect();
+
+    return view('public.catalogo', compact('titulo', 'subtitulo', 'tipo', 'itens'));
+})->name('public.depoimentos');
 
 Route::get('/dashboard', [UserController::class, 'dashboard'])
     ->middleware(['auth', 'verified'])

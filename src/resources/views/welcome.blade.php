@@ -240,7 +240,42 @@
                 <h2 class="text-5xl font-title text-[#1A002B] mb-4 title-glow">O que oferecemos</h2>
                 <p class="text-[#4A00B9] font-body text-lg">Cada serviço pensado para realçar sua beleza</p>
             </div>
-            
+
+            @php
+                $servicoImagens = [
+                    'https://images.unsplash.com/photo-1580618672591-eb180b1a973f?w=500&auto=format&fit=crop',
+                    'https://images.unsplash.com/photo-1632345031435-8727f6897d53?w=500&auto=format&fit=crop',
+                    'https://images.unsplash.com/photo-1613966802194-d46a163af70d?q=80&w=870&auto=format&fit=crop',
+                    'https://images.unsplash.com/photo-1519415387722-a1c3bbef716c?w=500&auto=format&fit=crop',
+                ];
+            @endphp
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                @forelse($servicosDestaque as $servico)
+                    <div class="glass-card rounded-2xl overflow-hidden shadow-xl hover-lift border border-white/40">
+                        <div class="image-zoom h-48 overflow-hidden">
+                            <img src="{{ $servicoImagens[$loop->index % count($servicoImagens)] }}"
+                                 alt="{{ $servico->nome }}"
+                                 class="w-full h-full object-cover"
+                                 loading="lazy">
+                        </div>
+                        <div class="p-6">
+                            <h3 class="text-xl font-title text-[#4A00B9] mb-3">{{ $servico->nome }}</h3>
+                            <p class="text-sm text-[#1A002B] mb-4 font-body leading-relaxed min-h-[72px]">{{ $servico->descricao ?? 'Servico profissional do salao.' }}</p>
+                            <div class="flex items-center justify-between gap-3">
+                                <span class="text-[#FF2EB6] font-medium">R$ {{ number_format($servico->preco, 2, ',', '.') }}</span>
+                                <span class="text-xs text-[#7B19E5] font-semibold">{{ $servico->duracao }} min</span>
+                            </div>
+                        </div>
+                    </div>
+                @empty
+                    <div class="glass-card p-8 rounded-2xl shadow-xl border border-white/40 md:col-span-2 lg:col-span-4 text-center text-[#4A00B9]">
+                        Nenhum servico cadastrado ainda.
+                    </div>
+                @endforelse
+            </div>
+
+            @if(false)
             <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <!-- Cabelo -->
                 <div class="glass-card rounded-2xl overflow-hidden shadow-xl hover-lift border border-white/40">
@@ -369,8 +404,10 @@
                 </div>
             </div>
             
+            @endif
+
             <div class="text-center mt-12">
-                <a href="#servicos" class="bg-[#7B19E5] text-white px-8 py-3.5 text-sm tracking-wider rounded-full font-medium btn-primary inline-block shadow-xl">
+                <a href="{{ route('public.servicos') }}" class="bg-[#7B19E5] text-white px-8 py-3.5 text-sm tracking-wider rounded-full font-medium btn-primary inline-block shadow-xl">
                     VER TODOS OS SERVIÇOS
                 </a>
             </div>
@@ -386,6 +423,41 @@
                 <p class="text-[#4A00B9] font-body text-lg">Complete seu look com nossos produtos</p>
             </div>
 
+            @php
+                $produtoImagens = [
+                    'https://plus.unsplash.com/premium_photo-1681276169690-a22f1193c784?q=80&w=500&auto=format&fit=crop',
+                    'https://images.unsplash.com/photo-1601070846144-6be3aad73f7b?w=500&auto=format&fit=crop',
+                    'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?w=500&auto=format&fit=crop',
+                    'https://plus.unsplash.com/premium_photo-1728693697249-1d56feca531a?w=500&auto=format&fit=crop',
+                ];
+            @endphp
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                @forelse($produtosDestaque as $produto)
+                    <div class="glass-card rounded-2xl overflow-hidden shadow-xl hover-lift border border-white/40">
+                        <div class="image-zoom h-48 overflow-hidden">
+                            <img src="{{ $produtoImagens[$loop->index % count($produtoImagens)] }}"
+                                 alt="{{ $produto->nome }}"
+                                 class="w-full h-full object-cover"
+                                 loading="lazy">
+                        </div>
+                        <div class="p-6">
+                            <h3 class="text-xl font-title text-[#4A00B9] mb-2">{{ $produto->nome }}</h3>
+                            <p class="text-sm text-[#1A002B] mb-4 font-body leading-relaxed min-h-[72px]">{{ $produto->descricao ?? 'Produto profissional disponivel no salao.' }}</p>
+                            <div class="flex items-center justify-between gap-3">
+                                <span class="text-[#FF2EB6] font-medium">R$ {{ number_format($produto->valor_unitario, 2, ',', '.') }}</span>
+                                <span class="text-xs text-[#7B19E5] font-semibold">{{ ucfirst($produto->tipo) }}</span>
+                            </div>
+                        </div>
+                    </div>
+                @empty
+                    <div class="glass-card p-8 rounded-2xl shadow-xl border border-white/40 md:col-span-2 lg:col-span-4 text-center text-[#4A00B9]">
+                        Nenhum produto cadastrado ainda.
+                    </div>
+                @endforelse
+            </div>
+
+            @if(false)
             <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <!-- Acessórios -->
                 <div class="glass-card rounded-2xl overflow-hidden shadow-xl hover-lift border border-white/40">
@@ -460,8 +532,10 @@
                 </div>
             </div>
 
+            @endif
+
             <div class="text-center mt-12">
-                <a href="#servicos" class="bg-[#7B19E5] text-white px-8 py-3.5 text-sm tracking-wider rounded-full font-medium btn-primary inline-block shadow-xl">
+                <a href="{{ route('public.produtos') }}" class="bg-[#7B19E5] text-white px-8 py-3.5 text-sm tracking-wider rounded-full font-medium btn-primary inline-block shadow-xl">
                     VER TODOS OS PRODUTOS
                 </a>
             </div>
@@ -477,6 +551,28 @@
                 <p class="text-[#4A00B9] font-body text-lg">Quem ama, recomenda</p>
             </div>
             
+            <div class="grid md:grid-cols-3 gap-8">
+                @forelse($depoimentosDestaque as $depoimento)
+                    <div class="glass-card p-8 rounded-2xl shadow-xl hover-lift border border-white/40">
+                        <div class="flex gap-1 text-[#FF2EB6] mb-4 text-2xl">
+                            @for($i = 1; $i <= 5; $i++)
+                                <span class="{{ $i <= $depoimento->nota ? '' : 'opacity-30' }}">&#9733;</span>
+                            @endfor
+                        </div>
+                        <p class="text-[#1A002B] mb-6 font-body leading-relaxed">{{ $depoimento->comentario }}</p>
+                        <div>
+                            <h4 class="font-medium text-[#4A00B9] font-title">{{ $depoimento->cliente_nome }}</h4>
+                            <span class="text-sm text-[#7B19E5] font-body">{{ $depoimento->profissional_nome ? 'com ' . $depoimento->profissional_nome : 'Cliente' }}</span>
+                        </div>
+                    </div>
+                @empty
+                    <div class="glass-card p-8 rounded-2xl shadow-xl border border-white/40 md:col-span-3 text-center text-[#4A00B9]">
+                        Nenhum depoimento cadastrado ainda.
+                    </div>
+                @endforelse
+            </div>
+
+            @if(false)
             <div class="grid md:grid-cols-3 gap-8">
                 <div class="glass-card p-8 rounded-2xl shadow-xl hover-lift border border-white/40">
                     <div class="flex gap-1 text-[#FF2EB6] mb-4 text-2xl">★★★★★</div>
@@ -496,9 +592,10 @@
                     <div><h4 class="font-medium text-[#4A00B9] font-title">Patixa Teló</h4><span class="text-sm text-[#7B19E5] font-body">@Eupatixa</span></div>
                 </div>
             </div>
+            @endif
             
             <div class="text-center mt-12">
-                <a href="#depoimentos" class="bg-[#FF2EB6] text-white px-8 py-3.5 text-sm tracking-wider rounded-full font-medium btn-primary inline-block shadow-xl">
+                <a href="{{ route('public.depoimentos') }}" class="bg-[#FF2EB6] text-white px-8 py-3.5 text-sm tracking-wider rounded-full font-medium btn-primary inline-block shadow-xl">
                     VER MAIS DEPOIMENTOS
                 </a>
             </div>
