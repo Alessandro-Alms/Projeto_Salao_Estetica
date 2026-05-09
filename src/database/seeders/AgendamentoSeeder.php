@@ -54,7 +54,7 @@ class AgendamentoSeeder extends Seeder
                 'obs' => $this->observacaoParaStatus($status),
                 'created_at' => $inicio,
                 'updated_at' => $inicio,
-            ]);
+            ], 'id_agendamento');
 
             DB::table('agendamento_servico')->insert([
                 'agendamento_id' => $agendamentoId,
