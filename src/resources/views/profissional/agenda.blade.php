@@ -85,6 +85,13 @@
                                             </span>
                                             <span class="ml-4 font-bold text-[#1A002B]">{{ $agenda->servico->nome }}</span>
                                             <p class="text-sm text-gray-500 mt-1">Cliente: {{ $agenda->cliente->name }}</p>
+                                            @if(($agenda->acrescimo_especial ?? 0) > 0)
+                                                <div class="mt-2 inline-flex flex-wrap items-center gap-2 rounded-xl border border-yellow-200 bg-yellow-50 px-3 py-2 text-xs font-semibold text-yellow-800">
+                                                    <span>Atendimento com acréscimo:</span>
+                                                    <span>{{ $agenda->motivo_acrescimo }}</span>
+                                                    <span class="text-green-700">+ R$ {{ number_format($agenda->acrescimo_especial, 2, ',', '.') }}</span>
+                                                </div>
+                                            @endif
                                         </div>
                                         <div>
                                             <span class="text-xs font-bold uppercase px-3 py-1 rounded-full bg-gray-100/80 text-gray-600 border border-gray-200">
@@ -151,7 +158,9 @@
                                                     // Comissão fixa: 50% para todos os serviços
                                                     $porcentagemComissao = 50;
                                                     $taxaMatematica = $porcentagemComissao / 100;
-                                                    $valorServico = $agenda->servico->preco ?? 0; 
+                                                    $valorBaseServico = $agenda->valor_base ?? ($agenda->servico->preco ?? 0);
+                                                    $acrescimoServico = $agenda->acrescimo_especial ?? 0;
+                                                    $valorServico = $valorBaseServico + $acrescimoServico;
                                                     $valorReceber = $valorServico * $taxaMatematica;
                                                 @endphp
 
@@ -159,9 +168,19 @@
                                                     <h4 class="text-sm font-title text-[#4A00B9] mb-2">Resumo Financeiro</h4>
                                                     
                                                     <div class="flex justify-between text-sm mb-1">
-                                                        <span class="text-gray-600">Valor do Serviço:</span>
-                                                        <span class="font-semibold text-[#1A002B]">R$ {{ number_format($valorServico, 2, ',', '.') }}</span>
+                                                        <span class="text-gray-600">Valor base do serviço:</span>
+                                                        <span class="font-semibold text-[#1A002B]">R$ {{ number_format($valorBaseServico, 2, ',', '.') }}</span>
                                                     </div>
+
+                                                    @if($acrescimoServico > 0)
+                                                        <div class="flex justify-between text-sm mb-1">
+                                                            <span class="text-yellow-700 font-semibold">Acréscimo do atendimento:</span>
+                                                            <span class="font-semibold text-yellow-700">+ R$ {{ number_format($acrescimoServico, 2, ',', '.') }}</span>
+                                                        </div>
+                                                        <p class="text-xs text-yellow-700 mb-2">
+                                                            {{ $agenda->motivo_acrescimo }}. Sua comissão também considera este valor maior.
+                                                        </p>
+                                                    @endif
 
                                                     <div class="border-t border-[#FFD6F4] my-2"></div>
 

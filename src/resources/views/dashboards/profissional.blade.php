@@ -49,7 +49,7 @@
 
             <div class="space-y-3 text-sm text-[#1A002B]">
                 <p>Quando você bloquear um dia, sua agenda fica indisponível nesse período mesmo que o cliente aceite pagar mais.</p>
-                <p>Atendimentos no almoço padrão, das 11:00 às 13:00, feriados e bloqueios gerais podem ser cobrados com acréscimo. Quando almoço e feriado acontecem juntos, os acréscimos são somados.</p>
+                <p>Atendimentos aos sábados e domingos têm acréscimo de 25% e aumentam sua comissão. Almoço padrão, feriados e bloqueios gerais também podem gerar acréscimos; quando acontecem juntos, os percentuais são somados.</p>
             </div>
 
             <div class="mt-4 space-y-2">

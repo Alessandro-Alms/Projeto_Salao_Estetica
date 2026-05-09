@@ -13,7 +13,10 @@ class AgendaService
     public const ACRESCIMO_ATENDIMENTO_ESPECIAL_PERCENTUAL = 50.00;
     public const ACRESCIMO_FERIADO_ESPECIAL_PERCENTUAL = 75.00;
     public const ACRESCIMO_SAIDA_EXPEDIENTE_PERCENTUAL = 25.00;
+    public const ACRESCIMO_FIM_DE_SEMANA_PERCENTUAL = 25.00;
     public const TOLERANCIA_SAIDA_EXPEDIENTE_MINUTOS = 30;
+    public const MAX_SERVICOS_POR_AGENDAMENTO = 5;
+    public const DESCONTO_COMBO_SERVICOS_PERCENTUAL = 10.00;
 
     private const TERMOS_FERIADO_ESPECIAL = [
         'ano novo',
@@ -111,7 +114,19 @@ class AgendaService
         return $this->fimExpediente($escala, $data)->addMinutes(self::TOLERANCIA_SAIDA_EXPEDIENTE_MINUTOS);
     }
 
-    public function calcularAtendimentoEspecial(float $valorBase, bool $invadeAlmoco, ?BloqueioHorario $bloqueioGeral, bool $excedeSaidaExpediente = false): array
+    public function ehFimDeSemana(?Carbon $dataAtendimento): bool
+    {
+        return $dataAtendimento?->isWeekend() ?? false;
+    }
+
+    public function calcularAtendimentoEspecial(
+        float $valorBase,
+        bool $invadeAlmoco,
+        ?BloqueioHorario $bloqueioGeral,
+        bool $excedeSaidaExpediente = false,
+        ?Carbon $dataAtendimento = null,
+        int $quantidadeServicos = 1
+    ): array
     {
         $motivos = [];
         $percentual = 0.00;
@@ -138,28 +153,39 @@ class AgendaService
             $percentual += $percentualSaida;
         }
 
-        if (empty($motivos)) {
-            return [
-                'valor_base' => $valorBase,
-                'acrescimo_especial' => 0.00,
-                'motivo_acrescimo' => null,
-                'valor_total' => $valorBase,
-            ];
+        if ($this->ehFimDeSemana($dataAtendimento)) {
+            $percentualFimDeSemana = self::ACRESCIMO_FIM_DE_SEMANA_PERCENTUAL;
+            $motivos[] = 'Fim de semana +' . $percentualFimDeSemana . '%';
+            $percentual += $percentualFimDeSemana;
         }
 
         $acrescimo = round($valorBase * ($percentual / 100), 2);
+        $baseComissao = round($valorBase + $acrescimo, 2);
+        $desconto = $this->calcularDescontoComboServicos($baseComissao, $quantidadeServicos);
 
         return [
             'valor_base' => $valorBase,
             'acrescimo_especial' => $acrescimo,
-            'motivo_acrescimo' => implode(' + ', $motivos),
-            'valor_total' => $valorBase + $acrescimo,
+            'motivo_acrescimo' => empty($motivos) ? null : implode(' + ', $motivos),
+            'desconto_servicos' => $desconto,
+            'motivo_desconto' => $desconto > 0 ? 'Combo de 5 servicos -10%' : null,
+            'base_comissao' => $baseComissao,
+            'valor_total' => round($baseComissao - $desconto, 2),
         ];
     }
 
-    public function percentualAtendimentoEspecial(bool $invadeAlmoco, ?BloqueioHorario $bloqueioGeral, bool $excedeSaidaExpediente = false): float
+    public function calcularDescontoComboServicos(float $valorComAcrescimos, int $quantidadeServicos): float
     {
-        $dados = $this->calcularAtendimentoEspecial(100.00, $invadeAlmoco, $bloqueioGeral, $excedeSaidaExpediente);
+        if ($quantidadeServicos !== self::MAX_SERVICOS_POR_AGENDAMENTO) {
+            return 0.00;
+        }
+
+        return round($valorComAcrescimos * (self::DESCONTO_COMBO_SERVICOS_PERCENTUAL / 100), 2);
+    }
+
+    public function percentualAtendimentoEspecial(bool $invadeAlmoco, ?BloqueioHorario $bloqueioGeral, bool $excedeSaidaExpediente = false, ?Carbon $dataAtendimento = null): float
+    {
+        $dados = $this->calcularAtendimentoEspecial(100.00, $invadeAlmoco, $bloqueioGeral, $excedeSaidaExpediente, $dataAtendimento);
 
         return (float) $dados['acrescimo_especial'];
     }

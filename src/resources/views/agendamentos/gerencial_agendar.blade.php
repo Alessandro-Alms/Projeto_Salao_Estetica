@@ -93,7 +93,7 @@
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-sm font-medium text-[#4A00B9] mb-2">📅 Data</label>
-                                    <input type="date" name="data" 
+                                    <input type="date" name="data" id="data-agendamento"
                                         class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all"
                                         min="{{ now()->format('Y-m-d') }}" value="{{ old('data') }}" required>
                                 </div>
@@ -106,6 +106,11 @@
                             </div>
 
                             <!-- Botões -->
+                            <div id="aviso-fim-semana" class="hidden rounded-xl border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-800">
+                                <strong>Acréscimo de fim de semana:</strong> sábados e domingos funcionam em horário normal, mas o serviço recebe +25%. A comissão do profissional também considera esse valor maior.
+                                <p id="preview-fim-semana" class="mt-1 font-bold"></p>
+                            </div>
+
                             <div class="flex gap-4 pt-4">
                                 <a href="{{ route('dashboard') }}" class="flex-1 px-4 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-full transition-all text-center">
                                     ← Cancelar
@@ -181,6 +186,10 @@
         const profissionalId = document.getElementById('profissional-id');
         const profissionalSelecionado = document.getElementById('profissional-selecionado');
         const profissionalNome = document.getElementById('profissional-nome');
+        const dataAgendamento = document.getElementById('data-agendamento');
+        const servicoSelect = document.getElementById('servico-select');
+        const avisoFimSemana = document.getElementById('aviso-fim-semana');
+        const previewFimSemana = document.getElementById('preview-fim-semana');
 
         profissionalSearch.addEventListener('focus', () => profissionalDropdown.classList.remove('hidden'));
         profissionalSearch.addEventListener('input', (e) => {
@@ -210,5 +219,42 @@
                 profissionalNome.textContent = nome;
             });
         });
+
+        function formatarMoeda(valor) {
+            return Number(valor || 0).toLocaleString('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            });
+        }
+
+        function atualizarAvisoFimSemana() {
+            const data = dataAgendamento.value;
+            const opcaoServico = servicoSelect.selectedOptions[0];
+            const preco = Number(opcaoServico?.dataset.preco || 0);
+
+            if (!data) {
+                avisoFimSemana.classList.add('hidden');
+                return;
+            }
+
+            const diaSemana = new Date(`${data}T12:00:00`).getDay();
+            const fimDeSemana = diaSemana === 0 || diaSemana === 6;
+
+            if (!fimDeSemana) {
+                avisoFimSemana.classList.add('hidden');
+                return;
+            }
+
+            const acrescimo = preco * 0.25;
+            const total = preco + acrescimo;
+            previewFimSemana.textContent = preco > 0
+                ? `Prévia: ${formatarMoeda(preco)} + ${formatarMoeda(acrescimo)} = ${formatarMoeda(total)}.`
+                : 'Selecione o serviço para ver a prévia do valor.';
+            avisoFimSemana.classList.remove('hidden');
+        }
+
+        dataAgendamento.addEventListener('change', atualizarAvisoFimSemana);
+        servicoSelect.addEventListener('change', atualizarAvisoFimSemana);
+        atualizarAvisoFimSemana();
     </script>
 </x-app-layout>

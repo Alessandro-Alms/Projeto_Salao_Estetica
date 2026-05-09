@@ -80,11 +80,17 @@ class AgendamentoController extends Controller
         
         // Determinar qual array de serviços usar
         if ($servicosIdsString) {
-            $servicosIds = array_map('intval', explode(',', $servicosIdsString));
+            $servicosIds = array_values(array_unique(array_filter(array_map('intval', explode(',', $servicosIdsString)))));
         } elseif ($servicoIdSingle) {
-            $servicosIds = [$servicoIdSingle];
+            $servicosIds = [(int) $servicoIdSingle];
         } else {
             return response()->json([]);
+        }
+
+        if (count($servicosIds) > AgendaService::MAX_SERVICOS_POR_AGENDAMENTO) {
+            return response()->json([
+                'message' => 'Escolha no maximo ' . AgendaService::MAX_SERVICOS_POR_AGENDAMENTO . ' servicos por agendamento.',
+            ], 422);
         }
         
         // Passo 1: Busca profissionais que FAZEM TODOS os serviços selecionados
@@ -160,22 +166,26 @@ class AgendamentoController extends Controller
         $valorBase = (float) Servico::whereIn('id_servico', $servicosIds)->sum('preco');
         $bloqueioGeral = $agendaService->buscarBloqueioGeralConflitante($dataHora, $dataHoraFim);
 
-        $profissionaisComResumo = $profissionaisLivres->map(function ($prof) use ($dataHora, $dataHoraFim, $diaSemana, $agendaService, $bloqueioGeral, $valorBase) {
+        $quantidadeServicos = count($servicosIds);
+        $profissionaisComResumo = $profissionaisLivres->map(function ($prof) use ($dataHora, $dataHoraFim, $diaSemana, $agendaService, $bloqueioGeral, $valorBase, $quantidadeServicos) {
             $escala = HorarioTrabalho::where('profissional_id', $prof->id)
                 ->where('dia_semana', $diaSemana)
                 ->first();
             $invadeAlmoco = $agendaService->invadeAlmoco($escala, $dataHora, $dataHoraFim);
             $excedeSaidaExpediente = $agendaService->excedeSaidaExpediente($escala, $dataHora, $dataHoraFim);
-            $dadosValor = $agendaService->calcularAtendimentoEspecial($valorBase, $invadeAlmoco, $bloqueioGeral, $excedeSaidaExpediente);
+            $dadosValor = $agendaService->calcularAtendimentoEspecial($valorBase, $invadeAlmoco, $bloqueioGeral, $excedeSaidaExpediente, $dataHora, $quantidadeServicos);
 
             return [
                 'id' => $prof->id,
                 'name' => $prof->name,
                 'valor_base' => $dadosValor['valor_base'],
                 'acrescimo_especial' => $dadosValor['acrescimo_especial'],
+                'desconto_servicos' => $dadosValor['desconto_servicos'],
+                'motivo_desconto' => $dadosValor['motivo_desconto'],
+                'base_comissao' => $dadosValor['base_comissao'],
                 'valor_total' => $dadosValor['valor_total'],
                 'motivo_acrescimo' => $dadosValor['motivo_acrescimo'],
-                'percentual_acrescimo' => $agendaService->percentualAtendimentoEspecial($invadeAlmoco, $bloqueioGeral, $excedeSaidaExpediente),
+                'percentual_acrescimo' => $agendaService->percentualAtendimentoEspecial($invadeAlmoco, $bloqueioGeral, $excedeSaidaExpediente, $dataHora),
                 'invade_almoco' => $invadeAlmoco,
                 'excede_saida_expediente' => $excedeSaidaExpediente,
                 'feriado_ou_bloqueio' => (bool) $bloqueioGeral,
@@ -306,7 +316,7 @@ class AgendamentoController extends Controller
                 $bloqueioGeral = $agendaService->buscarBloqueioGeralConflitante($horaAtual, $horaFimEstimado);
                 $invadeAlmoco = $agendaService->invadeAlmoco($escala, $horaAtual, $horaFimEstimado);
                 $excedeSaidaExpediente = $agendaService->excedeSaidaExpediente($escala, $horaAtual, $horaFimEstimado);
-                $percentualAcrescimo = $ocupado ? 0 : $agendaService->percentualAtendimentoEspecial($invadeAlmoco, $bloqueioGeral, $excedeSaidaExpediente);
+                $percentualAcrescimo = $ocupado ? 0 : $agendaService->percentualAtendimentoEspecial($invadeAlmoco, $bloqueioGeral, $excedeSaidaExpediente, $horaAtual);
                 $motivosAcrescimo = [];
 
                 if (!$ocupado && $invadeAlmoco) {
@@ -319,6 +329,10 @@ class AgendamentoController extends Controller
 
                 if (!$ocupado && $excedeSaidaExpediente) {
                     $motivosAcrescimo[] = 'saida do expediente';
+                }
+
+                if (!$ocupado && $agendaService->ehFimDeSemana($horaAtual)) {
+                    $motivosAcrescimo[] = 'fim de semana';
                 }
 
                 $hora_str = $horaAtual->format('H:i');
@@ -377,11 +391,11 @@ class AgendamentoController extends Controller
         // Suporta tanto servico_id (compatibilidade) quanto servicos_ids (múltiplos)
         $servicos_ids = null;
         if ($request->has('servicos_ids') && is_array($request->servicos_ids)) {
-            $servicos_ids = $request->servicos_ids;
+            $servicos_ids = array_values(array_unique(array_filter(array_map('intval', $request->servicos_ids))));
         } elseif ($request->has('servicos_ids') && is_string($request->servicos_ids)) {
-            $servicos_ids = array_map('intval', explode(',', $request->servicos_ids));
+            $servicos_ids = array_values(array_unique(array_filter(array_map('intval', explode(',', $request->servicos_ids)))));
         } elseif ($request->has('servico_id')) {
-            $servicos_ids = [$request->servico_id];
+            $servicos_ids = [(int) $request->servico_id];
         }
 
         // Validação básica
@@ -396,6 +410,12 @@ class AgendamentoController extends Controller
 
         if (!$servicos_ids || empty($servicos_ids)) {
             return back()->withErrors(['servicos' => 'Por favor, escolhe pelo menos um serviço.'])->withInput();
+        }
+
+        if (count($servicos_ids) > AgendaService::MAX_SERVICOS_POR_AGENDAMENTO) {
+            return back()->withErrors([
+                'servicos' => 'Escolha no maximo ' . AgendaService::MAX_SERVICOS_POR_AGENDAMENTO . ' servicos por agendamento.',
+            ])->withInput();
         }
 
         if (auth()->user()->status === 'bloqueado') {
@@ -460,7 +480,9 @@ class AgendamentoController extends Controller
             (float) $valorTotal,
             $invadeAlmoco,
             $agendaService->buscarBloqueioGeralConflitante($inicio, $fim),
-            $excedeSaidaExpediente
+            $excedeSaidaExpediente,
+            $inicio,
+            count($servicos_ids)
         );
         // =========================================================================
         // BLINDAGEM CONTRA OVERBOOKING (Fila de Banco de Dados)
@@ -490,6 +512,9 @@ class AgendamentoController extends Controller
                 'valor_total' => $dadosValor['valor_total'],
                 'valor_base' => $dadosValor['valor_base'],
                 'acrescimo_especial' => $dadosValor['acrescimo_especial'],
+                'desconto_servicos' => $dadosValor['desconto_servicos'],
+                'motivo_desconto' => $dadosValor['motivo_desconto'],
+                'base_comissao' => $dadosValor['base_comissao'],
                 'motivo_acrescimo' => $dadosValor['motivo_acrescimo'],
             ]);
 
@@ -592,7 +617,8 @@ class AgendamentoController extends Controller
             (float) $servico->preco,
             $invadeAlmoco,
             $agendaService->buscarBloqueioGeralConflitante($data_hora, $data_hora_fim),
-            $excedeSaidaExpediente
+            $excedeSaidaExpediente,
+            $data_hora
         );
 
         // Verificar conflito com agendamentos existentes
@@ -618,6 +644,9 @@ class AgendamentoController extends Controller
                 'valor_total' => $dadosValor['valor_total'],
                 'valor_base' => $dadosValor['valor_base'],
                 'acrescimo_especial' => $dadosValor['acrescimo_especial'],
+                'desconto_servicos' => $dadosValor['desconto_servicos'],
+                'motivo_desconto' => $dadosValor['motivo_desconto'],
+                'base_comissao' => $dadosValor['base_comissao'],
                 'motivo_acrescimo' => $dadosValor['motivo_acrescimo'],
             ]);
 
@@ -844,8 +873,8 @@ class AgendamentoController extends Controller
             $porcentagemComissao = FinanceiroService::COMISSAO_SERVICO_PERCENTUAL;
             
             // Usa SEMPRE o preço base do serviço, NUNCA o valor_total (que pode ter descontos)
-            $precoBase = $agendamento->servico->preco;
-            $valorComissao = $financeiroService->calcularComissaoServico((float) $precoBase);
+            $baseComissao = (float) ($agendamento->base_comissao ?? (($agendamento->valor_base ?? $agendamento->servico->preco) + ($agendamento->acrescimo_especial ?? 0)));
+            $valorComissao = $financeiroService->calcularComissaoServico($baseComissao);
             
             // Exemplo: Se o serviço custa R$50,00 e ganhou desconto de 50%, o cliente paga R$25,00
             // mas o profissional recebe comissão de R$25,00 (50% de R$50,00), não R$12,50

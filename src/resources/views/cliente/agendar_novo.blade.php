@@ -22,6 +22,14 @@
             {{-- PASSO 1: ESCOLHER SERVIÇO(S) --}}
             <div id="passo-1" class="passo">
                 <h3 class="text-2xl font-semibold mb-8">Quais serviços desejas realizar? (Podes escolher mais de um)</h3>
+                <div class="mb-6 p-4 bg-emerald-50 border-2 border-emerald-200 rounded-lg">
+                    <p class="text-emerald-900 font-semibold">
+                        Limite: ate 5 servicos por agendamento. Ao selecionar 5 servicos, voce ganha 10% de desconto no total do atendimento.
+                    </p>
+                    <p class="text-emerald-700 text-sm mt-1">
+                        O desconto e beneficio do salao: a comissao do profissional continua sendo calculada sobre o valor cheio com os acrescimos aplicados.
+                    </p>
+                </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     @foreach($servicos as $servico)
                         <div class="flex items-start p-5 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition servico-card" 
@@ -44,6 +52,10 @@
                 <div id="resumo-servicos-selecionados" class="mt-8 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg hidden">
                     <h4 class="font-semibold text-blue-800 mb-3">📋 Serviços Selecionados:</h4>
                     <ul id="lista-servicos-selecionados" class="space-y-2"></ul>
+                    <div class="mt-4 p-3 bg-white border border-blue-200 rounded-lg">
+                        <p class="font-bold text-blue-900">Servicos: <span id="qtd-servicos">0</span>/5</p>
+                        <p id="aviso-desconto-combo" class="hidden mt-2 text-emerald-700 font-bold">Combo completo: 10% de desconto sera aplicado no total.</p>
+                    </div>
                     <div class="mt-4 pt-4 border-t-2 border-blue-200">
                         <p class="font-bold text-blue-900">⏱️ Tempo Total: <span id="tempo-total">0</span> minutos</p>
                     </div>
@@ -85,7 +97,7 @@
 
                 <div id="aviso-horario-especial" class="mt-4 p-4 bg-yellow-50 border-2 border-yellow-200 rounded-lg hidden">
                     <p class="text-yellow-800 font-semibold">
-                        Atenção: este horário pode ter acréscimo por almoço, feriado ou bloqueio geral. O valor exato aparece ao escolher o profissional.
+                        Atenção: este horário pode ter acréscimo por fim de semana, almoço, feriado ou bloqueio geral. O valor exato aparece ao escolher o profissional.
                     </p>
                 </div>
                 
@@ -146,8 +158,15 @@
                         <span class="text-gray-700 font-semibold">Acréscimo:</span>
                         <span id="resumo_acrescimo" class="font-bold text-yellow-700 text-lg"></span>
                     </div>
+                    <div id="linha_desconto_combo" class="flex items-center justify-between hidden">
+                        <span class="text-gray-700 font-semibold">Desconto combo:</span>
+                        <span id="resumo_desconto_combo" class="font-bold text-emerald-700 text-lg"></span>
+                    </div>
                     <div id="linha_motivo_acrescimo" class="p-3 bg-yellow-50 border border-yellow-200 rounded-lg hidden">
                         <p id="resumo_motivo_acrescimo" class="text-yellow-800 text-sm font-semibold"></p>
+                    </div>
+                    <div id="linha_motivo_desconto" class="p-3 bg-emerald-50 border border-emerald-200 rounded-lg hidden">
+                        <p id="resumo_motivo_desconto" class="text-emerald-800 text-sm font-semibold"></p>
                     </div>
                     <div class="flex items-center justify-between pt-4 border-t-2 border-blue-200">
                         <span class="text-gray-900 font-bold">Total a pagar:</span>
@@ -358,6 +377,8 @@
     const urlProfissionais = "{{ route('api.profissionais') }}";
     const urlHorarios = "{{ route('api.horarios') }}";
     const limiteAgendamento = new Date("{{ $limiteAgendamento->toDateString() }}T23:59:59");
+    const maxServicosPorAgendamento = {{ \App\Services\AgendaService::MAX_SERVICOS_POR_AGENDAMENTO }};
+    const descontoComboPercentual = {{ \App\Services\AgendaService::DESCONTO_COMBO_SERVICOS_PERCENTUAL }};
 
     // Estado Global
     let estadoAgendamento = {
@@ -393,6 +414,11 @@
             card.classList.remove('border-blue-400', 'border-4', 'bg-blue-100');
         } else {
             // Adicionar serviço
+            if (estadoAgendamento.servicosIds.length >= maxServicosPorAgendamento) {
+                alert(`Voce pode selecionar no maximo ${maxServicosPorAgendamento} servicos por agendamento.`);
+                return;
+            }
+
             estadoAgendamento.servicosIds.push(servicoId);
             estadoAgendamento.servicosNomes.push(servicoNome);
             estadoAgendamento.servicosDuracao[servicoId] = duracao;
@@ -432,6 +458,8 @@
         });
         
         document.getElementById('tempo-total').innerText = tempoTotal;
+        document.getElementById('qtd-servicos').innerText = estadoAgendamento.servicosIds.length;
+        document.getElementById('aviso-desconto-combo').classList.toggle('hidden', estadoAgendamento.servicosIds.length !== maxServicosPorAgendamento);
         estadoAgendamento.duraoTotal = tempoTotal;
         estadoAgendamento.valorBase = valorBase;
         
@@ -566,11 +594,16 @@
         const motivos = horario.motivos_acrescimo || [];
         const temAlmoco = motivos.some(motivo => motivo.toLowerCase().includes('almoco'));
         const temSaida = motivos.some(motivo => motivo.toLowerCase().includes('saida'));
+        const temFimDeSemana = motivos.some(motivo => motivo.toLowerCase().includes('fim de semana'));
         const temFeriado = motivos.some(motivo => {
             const texto = motivo.toLowerCase();
-            return !texto.includes('almoco') && !texto.includes('saida');
+            return !texto.includes('almoco') && !texto.includes('saida') && !texto.includes('fim de semana');
         });
         const partes = [];
+
+        if (temFimDeSemana) {
+            partes.push('Fim de semana');
+        }
 
         if (temFeriado) {
             partes.push('Feriado');
@@ -646,9 +679,14 @@
         const aviso = document.getElementById('aviso-horario-especial');
         if (estadoAgendamento.horarioEspecial && estadoAgendamento.horarioEspecial.atendimento_especial) {
             const rotuloEspecial = rotuloAtendimentoEspecial(estadoAgendamento.horarioEspecial);
-            aviso.querySelector('p').innerText = `Atenção: ${rotuloEspecial}. O percentual considera o período total do serviço; almoço das 11:00 às 13:00 e até 30 min após a saída podem somar acréscimos.`;
+            aviso.querySelector('p').innerText = `Atenção: ${rotuloEspecial}. Sábados e domingos têm +25%; almoço das 11:00 às 13:00, feriados e até 30 min após a saída também podem somar acréscimos.`;
             aviso.classList.remove('hidden');
         } else {
+            if (estadoAgendamento.servicosIds.length >= maxServicosPorAgendamento) {
+                alert(`Voce pode selecionar no maximo ${maxServicosPorAgendamento} servicos por agendamento.`);
+                return;
+            }
+
             aviso.classList.add('hidden');
         }
     }
@@ -683,10 +721,14 @@
                     const avisoPreco = prof.acrescimo_especial > 0
                         ? `<p class="text-yellow-700 font-semibold">Acréscimo: ${formatarMoeda(prof.acrescimo_especial)} (${prof.motivo_acrescimo})</p>`
                         : '';
+                    const avisoDesconto = prof.desconto_servicos > 0
+                        ? `<p class="text-emerald-700 font-semibold">Desconto combo: -${formatarMoeda(prof.desconto_servicos)} (${prof.motivo_desconto})</p>`
+                        : '';
                     card.innerHTML = `
                         <h4>👤 ${prof.name}</h4>
                         <p>✓ Disponível para os serviços</p>
                         ${avisoPreco}
+                        ${avisoDesconto}
                         <p class="font-bold text-green-700">Total previsto: ${formatarMoeda(prof.valor_total)}</p>
                     `;
                     card.onclick = () => selecionarProfissional(prof, card);
@@ -780,8 +822,12 @@
         const financeiro = estadoAgendamento.resumoFinanceiro || {
             valor_base: estadoAgendamento.valorBase,
             acrescimo_especial: 0,
+            desconto_servicos: estadoAgendamento.servicosIds.length === maxServicosPorAgendamento
+                ? (estadoAgendamento.valorBase * (descontoComboPercentual / 100))
+                : 0,
             valor_total: estadoAgendamento.valorBase,
-            motivo_acrescimo: null
+            motivo_acrescimo: null,
+            motivo_desconto: null
         };
 
         document.getElementById('resumo_valor_base').innerText = formatarMoeda(financeiro.valor_base);
@@ -797,6 +843,18 @@
         } else {
             linhaAcrescimo.classList.add('hidden');
             linhaMotivo.classList.add('hidden');
+        }
+
+        const linhaDesconto = document.getElementById('linha_desconto_combo');
+        const linhaMotivoDesconto = document.getElementById('linha_motivo_desconto');
+        if (Number(financeiro.desconto_servicos) > 0) {
+            document.getElementById('resumo_desconto_combo').innerText = `- ${formatarMoeda(financeiro.desconto_servicos)}`;
+            document.getElementById('resumo_motivo_desconto').innerText = `${financeiro.motivo_desconto || 'Combo de 5 servicos -10%'}. A comissao do profissional permanece sobre o valor cheio com acrescimos.`;
+            linhaDesconto.classList.remove('hidden');
+            linhaMotivoDesconto.classList.remove('hidden');
+        } else {
+            linhaDesconto.classList.add('hidden');
+            linhaMotivoDesconto.classList.add('hidden');
         }
     }
 

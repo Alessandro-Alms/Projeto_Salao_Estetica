@@ -61,12 +61,15 @@ return new class extends Migration
             $table->decimal('valor_total', 10, 2)->nullable();
             $table->decimal('valor_base', 10, 2)->nullable();
             $table->decimal('acrescimo_especial', 10, 2)->default(0);
+            $table->decimal('desconto_servicos', 10, 2)->default(0);
+            $table->string('motivo_desconto')->nullable();
+            $table->decimal('base_comissao', 10, 2)->nullable();
             $table->string('motivo_acrescimo')->nullable();
             $table->enum('status', ['confirmado', 'cancelado', 'falta', 'executado', 'presente'])->default('confirmado');
             $table->text('obs')->nullable();
-            $table->decimal('valor_comissao', 10, 2)->nullable()->after('valor_total');
-            $table->decimal('comissao_paga_percentual', 5, 2)->nullable()->after('valor_comissao');
-            $table->decimal('multa_valor', 10, 2)->default(0)->after('valor_total');
+            $table->decimal('valor_comissao', 10, 2)->nullable();
+            $table->decimal('comissao_paga_percentual', 5, 2)->nullable();
+            $table->decimal('multa_valor', 10, 2)->default(0);
             $table->timestamps();
         });
 

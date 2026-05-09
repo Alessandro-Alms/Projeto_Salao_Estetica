@@ -57,6 +57,21 @@ class AgendaServiceTest extends TestCase
         $this->assertSame('Saida do expediente +25%', $resultado['motivo_acrescimo']);
     }
 
+    public function test_calcula_fim_de_semana_com_vinte_e_cinco_por_cento(): void
+    {
+        $resultado = (new AgendaService())->calcularAtendimentoEspecial(
+            100.00,
+            false,
+            null,
+            false,
+            Carbon::parse('2026-05-30 10:00') // Sabado
+        );
+
+        $this->assertSame(25.00, $resultado['acrescimo_especial']);
+        $this->assertSame(125.00, $resultado['valor_total']);
+        $this->assertSame('Fim de semana +25%', $resultado['motivo_acrescimo']);
+    }
+
     public function test_calcula_feriado_comum_com_cinquenta_por_cento(): void
     {
         $bloqueio = new BloqueioHorario(['motivo' => 'Feriado municipal']);
@@ -110,5 +125,32 @@ class AgendaServiceTest extends TestCase
         $this->assertSame(125.00, $resultado['acrescimo_especial']);
         $this->assertSame(225.00, $resultado['valor_total']);
         $this->assertSame('Horario de almoco +50% + Feriado municipal +50% + Saida do expediente +25%', $resultado['motivo_acrescimo']);
+    }
+
+    public function test_combo_de_cinco_servicos_desconta_total_sem_reduzir_base_de_comissao(): void
+    {
+        $resultado = (new AgendaService())->calcularAtendimentoEspecial(200.00, false, null, false, null, 5);
+
+        $this->assertSame(20.00, $resultado['desconto_servicos']);
+        $this->assertSame(200.00, $resultado['base_comissao']);
+        $this->assertSame(180.00, $resultado['valor_total']);
+        $this->assertSame('Combo de 5 servicos -10%', $resultado['motivo_desconto']);
+    }
+
+    public function test_combo_de_cinco_servicos_desconta_depois_do_acrescimo(): void
+    {
+        $resultado = (new AgendaService())->calcularAtendimentoEspecial(
+            200.00,
+            false,
+            new BloqueioHorario(['motivo' => 'Feriado municipal']),
+            false,
+            null,
+            5
+        );
+
+        $this->assertSame(100.00, $resultado['acrescimo_especial']);
+        $this->assertSame(300.00, $resultado['base_comissao']);
+        $this->assertSame(30.00, $resultado['desconto_servicos']);
+        $this->assertSame(270.00, $resultado['valor_total']);
     }
 }
