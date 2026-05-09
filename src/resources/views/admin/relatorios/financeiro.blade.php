@@ -23,6 +23,21 @@
         </div>
 
         <div class="container mx-auto px-4">
+            @php
+                $graficoEntradasFinanceiroDados = [
+                    (float) $receitaServicos,
+                    (float) $receitaProdutos,
+                    (float) $receitaPacotes,
+                    (float) $receitaMultas,
+                ];
+
+                $graficoSaldoFinanceiroDados = [
+                    (float) $totalEntradas,
+                    (float) $totalSaidas,
+                    (float) $saldoLiquido,
+                ];
+            @endphp
+
             <!-- Filtro -->
             <div class="glass-card rounded-2xl shadow-xl overflow-hidden mb-6">
                 <div class="p-4 bg-white/70 backdrop-blur-sm border border-white/40">
@@ -83,6 +98,62 @@
                                 </p>
                             </div>
                             <div class="opacity-30 text-4xl">✧</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Graficos -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
+                    <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
+                        <div class="flex items-center gap-2 mb-4">
+                            <span class="text-[#7B19E5] text-xl">✧</span>
+                            <h3 class="font-title text-[#4A00B9] text-lg">Entradas por Categoria</h3>
+                        </div>
+                        <div class="h-80">
+                            <canvas id="graficoEntradasFinanceiro"></canvas>
+                            <script type="application/json" data-salao-chart="graficoEntradasFinanceiro">
+                                {
+                                    "type": "polarArea",
+                                    "data": {
+                                        "labels": ["Servicos", "Produtos", "Pacotes", "Multas"],
+                                        "datasets": [{
+                                            "data": @json($graficoEntradasFinanceiroDados),
+                                            "backgroundColor": ["rgba(123, 25, 229, 0.72)", "rgba(255, 46, 182, 0.72)", "rgba(168, 85, 247, 0.72)", "rgba(245, 158, 11, 0.72)"],
+                                            "borderColor": "#FFFFFF",
+                                            "borderWidth": 3
+                                        }]
+                                    }
+                                }
+                            </script>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
+                    <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
+                        <div class="flex items-center gap-2 mb-4">
+                            <span class="text-[#7B19E5] text-xl">✧</span>
+                            <h3 class="font-title text-[#4A00B9] text-lg">Entradas x Saidas</h3>
+                        </div>
+                        <div class="h-80">
+                            <canvas id="graficoSaldoFinanceiro"></canvas>
+                            <script type="application/json" data-salao-chart="graficoSaldoFinanceiro">
+                                {
+                                    "type": "bar",
+                                    "data": {
+                                        "labels": ["Entradas", "Saidas", "Saldo liquido"],
+                                        "datasets": [{
+                                            "label": "Valor",
+                                            "data": @json($graficoSaldoFinanceiroDados),
+                                            "backgroundColor": ["rgba(123, 25, 229, 0.72)", "rgba(255, 46, 182, 0.72)", "rgba(0, 176, 80, 0.72)"],
+                                            "borderColor": ["#7B19E5", "#FF2EB6", "#00B050"],
+                                            "borderWidth": 2
+                                        }]
+                                    }
+                                }
+                            </script>
                         </div>
                     </div>
                 </div>
@@ -186,6 +257,77 @@
         </div>
     </div>
 </x-app-layout>
+
+@php
+    $chartFinanceiro = [
+        'servicos' => (float) $receitaServicos,
+        'produtos' => (float) $receitaProdutos,
+        'pacotes' => (float) $receitaPacotes,
+        'multas' => (float) $receitaMultas,
+        'entradas' => (float) $totalEntradas,
+        'saidas' => (float) $totalSaidas,
+        'saldo' => (float) $saldoLiquido,
+    ];
+@endphp
+
+<script>
+    (window.SalaoChartQueue = window.SalaoChartQueue || []).push(() => {
+        const financeiro = @json($chartFinanceiro);
+
+        window.SalaoCharts?.create('graficoEntradasFinanceiro', {
+            type: 'polarArea',
+            data: {
+                labels: ['Servicos', 'Produtos', 'Pacotes', 'Multas'],
+                datasets: [{
+                    data: [financeiro.servicos, financeiro.produtos, financeiro.pacotes, financeiro.multas],
+                    backgroundColor: ['rgba(123, 25, 229, 0.72)', 'rgba(255, 46, 182, 0.72)', 'rgba(168, 85, 247, 0.72)', 'rgba(245, 158, 11, 0.72)'],
+                    borderColor: '#FFFFFF',
+                    borderWidth: 3,
+                }],
+            },
+            options: {
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: context => `${context.label}: ${window.SalaoCharts.money(context.parsed.r)}`,
+                        },
+                    },
+                },
+            },
+        });
+
+        window.SalaoCharts?.create('graficoSaldoFinanceiro', {
+            type: 'bar',
+            data: {
+                labels: ['Entradas', 'Saidas', 'Saldo liquido'],
+                datasets: [{
+                    label: 'Valor',
+                    data: [financeiro.entradas, financeiro.saidas, financeiro.saldo],
+                    backgroundColor: ['rgba(123, 25, 229, 0.72)', 'rgba(255, 46, 182, 0.72)', 'rgba(0, 176, 80, 0.72)'],
+                    borderColor: ['#7B19E5', '#FF2EB6', '#00B050'],
+                    borderWidth: 2,
+                    borderRadius: 14,
+                }],
+            },
+            options: {
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: context => window.SalaoCharts.money(context.parsed.y),
+                        },
+                    },
+                },
+                scales: {
+                    y: {
+                        ticks: {
+                            callback: value => window.SalaoCharts.money(value),
+                        },
+                    },
+                },
+            },
+        });
+    });
+</script>
 
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Playfair+Display:wght@700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');

@@ -101,7 +101,107 @@
                 </div>
             </div>
 
-            <!-- Gráficos -->
+            @php
+                $graficoOcupacaoHoraLabels = $ocupacaoPorHora->map(function ($item) {
+                    return str_pad($item->hora, 2, '0', STR_PAD_LEFT) . ':00';
+                })->values();
+
+                $graficoOcupacaoHoraDados = $ocupacaoPorHora->map(function ($item) {
+                    return (int) $item->total;
+                })->values();
+
+                $graficoOcupacaoDiaLabels = collect([1, 2, 3, 4, 5, 6, 0])->map(function ($dia) use ($nomesDias) {
+                    return $nomesDias[$dia];
+                })->values();
+
+                $graficoOcupacaoDiaDados = collect([1, 2, 3, 4, 5, 6, 0])->map(function ($dia) use ($ocupacaoPorDia) {
+                    return isset($ocupacaoPorDia[$dia]) ? (int) $ocupacaoPorDia[$dia]->total : 0;
+                })->values();
+            @endphp
+
+            <!-- Graficos Chart.js -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
+                    <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
+                        <div class="flex items-center gap-2 border-b border-[#FFD6F4] pb-2 mb-4">
+                            <span class="text-[#7B19E5] text-xl">✧</span>
+                            <h3 class="font-title text-[#4A00B9] text-lg">Agenda por Horario</h3>
+                        </div>
+                        <div class="h-80">
+                            <canvas id="graficoOcupacaoHora"></canvas>
+                            <script type="application/json" data-salao-chart="graficoOcupacaoHora">
+                                {
+                                    "type": "bar",
+                                    "data": {
+                                        "labels": @json($graficoOcupacaoHoraLabels),
+                                        "datasets": [{
+                                            "label": "Agendamentos",
+                                            "data": @json($graficoOcupacaoHoraDados),
+                                            "backgroundColor": "rgba(123, 25, 229, 0.72)",
+                                            "borderColor": "#7B19E5",
+                                            "borderWidth": 2
+                                        }]
+                                    },
+                                    "options": {
+                                        "scales": {
+                                            "y": {
+                                                "beginAtZero": true,
+                                                "ticks": {
+                                                    "precision": 0
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            </script>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
+                    <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
+                        <div class="flex items-center gap-2 border-b border-[#FFD6F4] pb-2 mb-4">
+                            <span class="text-[#7B19E5] text-xl">✧</span>
+                            <h3 class="font-title text-[#4A00B9] text-lg">Agenda por Dia</h3>
+                        </div>
+                        <div class="h-80">
+                            <canvas id="graficoOcupacaoDia"></canvas>
+                            <script type="application/json" data-salao-chart="graficoOcupacaoDia">
+                                {
+                                    "type": "line",
+                                    "data": {
+                                        "labels": @json($graficoOcupacaoDiaLabels),
+                                        "datasets": [{
+                                            "label": "Agendamentos",
+                                            "data": @json($graficoOcupacaoDiaDados),
+                                            "fill": true,
+                                            "tension": 0.35,
+                                            "backgroundColor": "rgba(255, 46, 182, 0.16)",
+                                            "borderColor": "#FF2EB6",
+                                            "pointBackgroundColor": "#7B19E5",
+                                            "pointBorderColor": "#FFFFFF",
+                                            "pointBorderWidth": 3,
+                                            "pointRadius": 5
+                                        }]
+                                    },
+                                    "options": {
+                                        "scales": {
+                                            "y": {
+                                                "beginAtZero": true,
+                                                "ticks": {
+                                                    "precision": 0
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            </script>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Barras detalhadas -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <!-- Distribuição por Horário -->
                 <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
@@ -165,3 +265,80 @@
         </div>
     </div>
 </x-app-layout>
+
+@php
+    $chartOcupacaoHora = $ocupacaoPorHora->map(function ($item) {
+        return [
+            'hora' => str_pad($item->hora, 2, '0', STR_PAD_LEFT) . ':00',
+            'total' => (int) $item->total,
+        ];
+    })->values();
+
+    $chartOcupacaoDia = collect([1, 2, 3, 4, 5, 6, 0])->map(function ($dia) use ($nomesDias, $ocupacaoPorDia) {
+        return [
+            'nome' => $nomesDias[$dia],
+            'total' => isset($ocupacaoPorDia[$dia]) ? (int) $ocupacaoPorDia[$dia]->total : 0,
+        ];
+    })->values();
+@endphp
+
+<script>
+    (window.SalaoChartQueue = window.SalaoChartQueue || []).push(() => {
+        const porHora = @json($chartOcupacaoHora);
+        const dias = @json($chartOcupacaoDia);
+
+        window.SalaoCharts?.create('graficoOcupacaoHora', {
+            type: 'bar',
+            data: {
+                labels: porHora.map(item => item.hora),
+                datasets: [{
+                    label: 'Agendamentos',
+                    data: porHora.map(item => item.total),
+                    backgroundColor: 'rgba(123, 25, 229, 0.72)',
+                    borderColor: '#7B19E5',
+                    borderWidth: 2,
+                    borderRadius: 12,
+                }],
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0,
+                        },
+                    },
+                },
+            },
+        });
+
+        window.SalaoCharts?.create('graficoOcupacaoDia', {
+            type: 'line',
+            data: {
+                labels: dias.map(item => item.nome),
+                datasets: [{
+                    label: 'Agendamentos',
+                    data: dias.map(item => item.total),
+                    fill: true,
+                    tension: 0.35,
+                    backgroundColor: 'rgba(255, 46, 182, 0.16)',
+                    borderColor: '#FF2EB6',
+                    pointBackgroundColor: '#7B19E5',
+                    pointBorderColor: '#FFFFFF',
+                    pointBorderWidth: 3,
+                    pointRadius: 5,
+                }],
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0,
+                        },
+                    },
+                },
+            },
+        });
+    });
+</script>

@@ -95,6 +95,76 @@
                 </div>
             </div>
 
+            <!-- Graficos -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
+                    <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
+                        <div class="flex items-center gap-2 mb-4">
+                            <span class="text-[#7B19E5] text-xl">✧</span>
+                            <h3 class="font-title text-[#4A00B9] text-lg">Unidades Vendidas</h3>
+                        </div>
+                        <div class="h-80">
+                            <canvas id="graficoProdutosVendidos"></canvas>
+                            <script type="application/json" data-salao-chart="graficoProdutosVendidos">
+                                {
+                                    "type": "bar",
+                                    "data": {
+                                        "labels": @json($produtosVendidos->take(10)->pluck('nome')->values()),
+                                        "datasets": [{
+                                            "label": "Unidades vendidas",
+                                            "data": @json($produtosVendidos->take(10)->pluck('total_vendido')->values()),
+                                            "backgroundColor": "rgba(123, 25, 229, 0.72)",
+                                            "borderColor": "#7B19E5",
+                                            "borderWidth": 2
+                                        }]
+                                    },
+                                    "options": {
+                                        "indexAxis": "y",
+                                        "scales": {
+                                            "x": {
+                                                "beginAtZero": true,
+                                                "ticks": {
+                                                    "precision": 0
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            </script>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
+                    <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
+                        <div class="flex items-center gap-2 mb-4">
+                            <span class="text-[#7B19E5] text-xl">✧</span>
+                            <h3 class="font-title text-[#4A00B9] text-lg">Receita por Produto</h3>
+                        </div>
+                        <div class="h-80">
+                            <canvas id="graficoReceitaProdutos"></canvas>
+                            <script type="application/json" data-salao-chart="graficoReceitaProdutos">
+                                {
+                                    "type": "doughnut",
+                                    "data": {
+                                        "labels": @json($produtosVendidos->take(10)->pluck('nome')->values()),
+                                        "datasets": [{
+                                            "data": @json($produtosVendidos->take(10)->pluck('receita_gerada')->values()),
+                                            "backgroundColor": ["#7B19E5", "#FF2EB6", "#A855F7", "#F59E0B", "#00B050", "#38BDF8", "#FB7185", "#6366F1", "#14B8A6", "#F97316"],
+                                            "borderColor": "#FFFFFF",
+                                            "borderWidth": 4
+                                        }]
+                                    },
+                                    "options": {
+                                        "cutout": "58%"
+                                    }
+                                }
+                            </script>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Tabela de Ranking -->
             <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
                 <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
@@ -154,6 +224,71 @@
         </div>
     </div>
 </x-app-layout>
+
+@php
+    $chartProdutos = $produtosVendidos->take(10)->map(function ($produto) {
+        return [
+            'nome' => $produto->nome,
+            'vendido' => (int) $produto->total_vendido,
+            'receita' => (float) $produto->receita_gerada,
+        ];
+    })->values();
+@endphp
+
+<script>
+    (window.SalaoChartQueue = window.SalaoChartQueue || []).push(() => {
+        const produtos = @json($chartProdutos);
+
+        window.SalaoCharts?.create('graficoProdutosVendidos', {
+            type: 'bar',
+            data: {
+                labels: produtos.map(item => item.nome),
+                datasets: [{
+                    label: 'Unidades vendidas',
+                    data: produtos.map(item => item.vendido),
+                    backgroundColor: 'rgba(123, 25, 229, 0.72)',
+                    borderColor: '#7B19E5',
+                    borderWidth: 2,
+                    borderRadius: 12,
+                }],
+            },
+            options: {
+                indexAxis: 'y',
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0,
+                        },
+                    },
+                },
+            },
+        });
+
+        window.SalaoCharts?.create('graficoReceitaProdutos', {
+            type: 'doughnut',
+            data: {
+                labels: produtos.map(item => item.nome),
+                datasets: [{
+                    data: produtos.map(item => item.receita),
+                    backgroundColor: ['#7B19E5', '#FF2EB6', '#A855F7', '#F59E0B', '#00B050', '#38BDF8', '#FB7185', '#6366F1', '#14B8A6', '#F97316'],
+                    borderColor: '#FFFFFF',
+                    borderWidth: 4,
+                }],
+            },
+            options: {
+                cutout: '58%',
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: context => `${context.label}: ${window.SalaoCharts.money(context.parsed)}`,
+                        },
+                    },
+                },
+            },
+        });
+    });
+</script>
 
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Playfair+Display:wght@700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');

@@ -533,11 +533,11 @@ class RelatorioController extends Controller
             // Regra de Negócio de Previsão: 
             // Se for feriado, reduzimos a expectativa pela metade (salões costumam fechar ou ter menos fluxo)
             // Se for sexta ou sábado (5 ou 6), costuma ser alta demanda natural
-            $previsaoDia = round($mediaHistorica);
+            $previsaoDia = max(0, (int) round($mediaHistorica));
             $tendencia = 'Normal';
 
             if ($feriadoNome) {
-                $previsaoDia = round($mediaHistorica * 0.5); 
+                $previsaoDia = max(0, (int) round($mediaHistorica * 0.5));
                 $tendencia = 'Feriado / Baixa';
                 $diasDeBaixa++;
             } elseif ($diaSemana == 5 || $diaSemana == 6 || $previsaoDia > 10) {

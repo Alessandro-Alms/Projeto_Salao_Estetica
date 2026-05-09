@@ -96,6 +96,106 @@
                 </div>
             </div>
 
+            <!-- Graficos -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
+                    <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
+                        <div class="flex items-center gap-2 mb-4">
+                            <span class="text-[#7B19E5] text-xl">✧</span>
+                            <h3 class="font-title text-[#4A00B9] text-lg">Receita por Profissional</h3>
+                        </div>
+                        <div class="h-80">
+                            <canvas id="graficoReceitaProfissional"></canvas>
+                            <script type="application/json" data-salao-chart="graficoReceitaProfissional">
+                                {
+                                    "type": "bar",
+                                    "data": {
+                                        "labels": @json($profissionais->pluck('name')->values()),
+                                        "datasets": [{
+                                            "label": "Receita gerada",
+                                            "data": @json($profissionais->pluck('receita_gerada')->values()),
+                                            "backgroundColor": "rgba(123, 25, 229, 0.72)",
+                                            "borderColor": "#7B19E5",
+                                            "borderWidth": 2
+                                        }]
+                                    },
+                                    "options": {
+                                        "indexAxis": "y",
+                                        "scales": {
+                                            "x": {
+                                                "beginAtZero": true
+                                            }
+                                        }
+                                    }
+                                }
+                            </script>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
+                    <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
+                        <div class="flex items-center gap-2 mb-4">
+                            <span class="text-[#7B19E5] text-xl">✧</span>
+                            <h3 class="font-title text-[#4A00B9] text-lg">Servicos x Avaliacao</h3>
+                        </div>
+                        <div class="h-80">
+                            <canvas id="graficoServicosAvaliacao"></canvas>
+                            <script type="application/json" data-salao-chart="graficoServicosAvaliacao">
+                                {
+                                    "type": "bar",
+                                    "data": {
+                                        "labels": @json($profissionais->pluck('name')->values()),
+                                        "datasets": [
+                                            {
+                                                "label": "Servicos executados",
+                                                "data": @json($profissionais->pluck('total_servicos')->values()),
+                                                "backgroundColor": "rgba(255, 46, 182, 0.62)",
+                                                "borderColor": "#FF2EB6",
+                                                "borderWidth": 2,
+                                                "yAxisID": "servicos"
+                                            },
+                                            {
+                                                "label": "Avaliacao media",
+                                                "type": "line",
+                                                "data": @json($profissionais->pluck('media_nota')->values()),
+                                                "borderColor": "#F59E0B",
+                                                "backgroundColor": "#F59E0B",
+                                                "pointBackgroundColor": "#F59E0B",
+                                                "pointBorderColor": "#FFFFFF",
+                                                "pointBorderWidth": 3,
+                                                "pointRadius": 5,
+                                                "tension": 0.35,
+                                                "yAxisID": "avaliacao"
+                                            }
+                                        ]
+                                    },
+                                    "options": {
+                                        "scales": {
+                                            "servicos": {
+                                                "beginAtZero": true,
+                                                "position": "left",
+                                                "ticks": {
+                                                    "precision": 0
+                                                }
+                                            },
+                                            "avaliacao": {
+                                                "beginAtZero": true,
+                                                "max": 5,
+                                                "position": "right",
+                                                "grid": {
+                                                    "drawOnChartArea": false
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            </script>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Tabela Detalhada -->
             <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
                 <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
@@ -155,6 +255,106 @@
         </div>
     </div>
 </x-app-layout>
+
+@php
+    $chartProfissionais = $profissionais->map(function ($prof) {
+        return [
+            'nome' => $prof->name,
+            'receita' => (float) ($prof->receita_gerada ?? 0),
+            'servicos' => (int) ($prof->total_servicos ?? 0),
+            'avaliacao' => $prof->media_nota ? (float) $prof->media_nota : 0,
+        ];
+    })->values();
+@endphp
+
+<script>
+    (window.SalaoChartQueue = window.SalaoChartQueue || []).push(() => {
+        const profissionais = @json($chartProfissionais);
+
+        window.SalaoCharts?.create('graficoReceitaProfissional', {
+            type: 'bar',
+            data: {
+                labels: profissionais.map(item => item.nome),
+                datasets: [{
+                    label: 'Receita gerada',
+                    data: profissionais.map(item => item.receita),
+                    backgroundColor: 'rgba(123, 25, 229, 0.72)',
+                    borderColor: '#7B19E5',
+                    borderWidth: 2,
+                    borderRadius: 12,
+                }],
+            },
+            options: {
+                indexAxis: 'y',
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: context => window.SalaoCharts.money(context.parsed.x),
+                        },
+                    },
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: value => window.SalaoCharts.money(value),
+                        },
+                    },
+                },
+            },
+        });
+
+        window.SalaoCharts?.create('graficoServicosAvaliacao', {
+            type: 'bar',
+            data: {
+                labels: profissionais.map(item => item.nome),
+                datasets: [
+                    {
+                        label: 'Servicos executados',
+                        data: profissionais.map(item => item.servicos),
+                        backgroundColor: 'rgba(255, 46, 182, 0.62)',
+                        borderColor: '#FF2EB6',
+                        borderWidth: 2,
+                        borderRadius: 12,
+                        yAxisID: 'servicos',
+                    },
+                    {
+                        label: 'Avaliacao media',
+                        data: profissionais.map(item => item.avaliacao),
+                        type: 'line',
+                        borderColor: '#F59E0B',
+                        backgroundColor: '#F59E0B',
+                        pointBackgroundColor: '#F59E0B',
+                        pointBorderColor: '#FFFFFF',
+                        pointBorderWidth: 3,
+                        pointRadius: 5,
+                        tension: 0.35,
+                        yAxisID: 'avaliacao',
+                    },
+                ],
+            },
+            options: {
+                scales: {
+                    servicos: {
+                        beginAtZero: true,
+                        position: 'left',
+                        ticks: {
+                            precision: 0,
+                        },
+                    },
+                    avaliacao: {
+                        beginAtZero: true,
+                        max: 5,
+                        position: 'right',
+                        grid: {
+                            drawOnChartArea: false,
+                        },
+                    },
+                },
+            },
+        });
+    });
+</script>
 
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Playfair+Display:wght@700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');

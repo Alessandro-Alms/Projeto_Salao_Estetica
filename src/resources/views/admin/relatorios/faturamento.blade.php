@@ -23,6 +23,19 @@
         </div>
 
         <div class="container mx-auto px-4">
+            @php
+                $graficoComposicaoFaturamentoDados = [
+                    (float) $receitaServicos,
+                    (float) $receitaVendas,
+                    (float) $receitaMultas,
+                ];
+
+                $graficoComparativoFaturamentoDados = [
+                    (float) $faturamentoAnterior,
+                    (float) $faturamentoTotal,
+                ];
+            @endphp
+
             <!-- Filtro -->
             <div class="glass-card rounded-2xl shadow-xl overflow-hidden mb-6">
                 <div class="p-4 bg-white/70 backdrop-blur-sm border border-white/40">
@@ -99,6 +112,73 @@
                 </div>
             </div>
 
+            <!-- Graficos -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
+                    <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
+                        <div class="flex items-center gap-2 mb-4">
+                            <span class="text-[#7B19E5] text-xl">✧</span>
+                            <h3 class="font-title text-[#4A00B9] text-lg">Receita por Origem</h3>
+                        </div>
+                        <div class="h-80">
+                            <canvas id="graficoComposicaoFaturamento"></canvas>
+                            <script type="application/json" data-salao-chart="graficoComposicaoFaturamento">
+                                {
+                                    "type": "doughnut",
+                                    "data": {
+                                        "labels": ["Servicos", "Produtos/avulsos", "Multas"],
+                                        "datasets": [{
+                                            "data": @json($graficoComposicaoFaturamentoDados),
+                                            "backgroundColor": ["#7B19E5", "#FF2EB6", "#F59E0B"],
+                                            "borderColor": "#FFFFFF",
+                                            "borderWidth": 4,
+                                            "hoverOffset": 10
+                                        }]
+                                    },
+                                    "options": {
+                                        "cutout": "64%"
+                                    }
+                                }
+                            </script>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
+                    <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
+                        <div class="flex items-center gap-2 mb-4">
+                            <span class="text-[#7B19E5] text-xl">✧</span>
+                            <h3 class="font-title text-[#4A00B9] text-lg">Periodo Atual x Anterior</h3>
+                        </div>
+                        <div class="h-80">
+                            <canvas id="graficoComparativoFaturamento"></canvas>
+                            <script type="application/json" data-salao-chart="graficoComparativoFaturamento">
+                                {
+                                    "type": "bar",
+                                    "data": {
+                                        "labels": ["Periodo anterior", "Periodo atual"],
+                                        "datasets": [{
+                                            "label": "Faturamento",
+                                            "data": @json($graficoComparativoFaturamentoDados),
+                                            "backgroundColor": ["rgba(123, 25, 229, 0.35)", "rgba(255, 46, 182, 0.75)"],
+                                            "borderColor": ["#7B19E5", "#FF2EB6"],
+                                            "borderWidth": 2
+                                        }]
+                                    },
+                                    "options": {
+                                        "scales": {
+                                            "y": {
+                                                "beginAtZero": true
+                                            }
+                                        }
+                                    }
+                                }
+                            </script>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Composição do Faturamento -->
             <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
                 <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
@@ -155,6 +235,78 @@
         </div>
     </div>
 </x-app-layout>
+
+@php
+    $chartFaturamento = [
+        'servicos' => (float) $receitaServicos,
+        'produtos' => (float) $receitaVendas,
+        'multas' => (float) $receitaMultas,
+        'atual' => (float) $faturamentoTotal,
+        'anterior' => (float) $faturamentoAnterior,
+    ];
+@endphp
+
+<script>
+    (window.SalaoChartQueue = window.SalaoChartQueue || []).push(() => {
+        const valores = @json($chartFaturamento);
+
+        window.SalaoCharts?.create('graficoComposicaoFaturamento', {
+            type: 'doughnut',
+            data: {
+                labels: ['Servicos', 'Produtos/avulsos', 'Multas'],
+                datasets: [{
+                    data: [valores.servicos, valores.produtos, valores.multas],
+                    backgroundColor: ['#7B19E5', '#FF2EB6', '#F59E0B'],
+                    borderColor: '#FFFFFF',
+                    borderWidth: 4,
+                    hoverOffset: 8,
+                }],
+            },
+            options: {
+                cutout: '64%',
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: context => `${context.label}: ${window.SalaoCharts.money(context.parsed)}`,
+                        },
+                    },
+                },
+            },
+        });
+
+        window.SalaoCharts?.create('graficoComparativoFaturamento', {
+            type: 'bar',
+            data: {
+                labels: ['Periodo anterior', 'Periodo atual'],
+                datasets: [{
+                    label: 'Faturamento',
+                    data: [valores.anterior, valores.atual],
+                    backgroundColor: ['rgba(123, 25, 229, 0.35)', 'rgba(255, 46, 182, 0.75)'],
+                    borderColor: ['#7B19E5', '#FF2EB6'],
+                    borderWidth: 2,
+                    borderRadius: 14,
+                }],
+            },
+            options: {
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: context => window.SalaoCharts.money(context.parsed.y),
+                        },
+                    },
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: value => window.SalaoCharts.money(value),
+                        },
+                    },
+                },
+            },
+        });
+    });
+</script>
 
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Playfair+Display:wght@700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');

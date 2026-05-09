@@ -150,7 +150,7 @@
                                                 <span class="text-xs text-gray-400">Sem telefone</span>
                                             @endif
                                         </td>
-                                    </table>
+                                    </tr>
                                 @empty
                                     <tr>
                                         <td colspan="5" class="p-8 text-center text-gray-500">

@@ -84,5 +84,147 @@
                 {{ $slot }}
             </main>
         </div>
+
+        <script>
+            (() => {
+                const loadChartJs = () => new Promise((resolve, reject) => {
+                    if (window.Chart) {
+                        resolve(window.Chart);
+                        return;
+                    }
+
+                    const existingScript = document.querySelector('script[data-chartjs-cdn]');
+
+                    if (existingScript) {
+                        existingScript.addEventListener('load', () => resolve(window.Chart));
+                        existingScript.addEventListener('error', reject);
+                        return;
+                    }
+
+                    const script = document.createElement('script');
+                    script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js';
+                    script.defer = true;
+                    script.dataset.chartjsCdn = 'true';
+                    script.onload = () => resolve(window.Chart);
+                    script.onerror = reject;
+                    document.head.appendChild(script);
+                });
+
+                const hasDatasetData = (config) => {
+                    return (config.data?.datasets || []).some((dataset) => {
+                        return (dataset.data || []).some((value) => Number(value) !== 0);
+                    });
+                };
+
+                const showEmptyChart = (canvas) => {
+                    const wrapper = canvas.parentElement;
+                    canvas.classList.add('hidden');
+
+                    if (!wrapper || wrapper.querySelector('[data-chart-empty]')) {
+                        return;
+                    }
+
+                    const emptyState = document.createElement('div');
+                    emptyState.dataset.chartEmpty = 'true';
+                    emptyState.className = 'h-full min-h-64 flex flex-col items-center justify-center text-center rounded-2xl border border-dashed border-[#FFD6F4] bg-white/40 px-6';
+                    emptyState.innerHTML = [
+                        '<p class="text-3xl text-[#7B19E5] mb-3">✧</p>',
+                        '<p class="font-bold text-[#4A00B9]">Sem dados para gerar este grafico</p>',
+                        '<p class="text-sm text-gray-500 mt-1">Tente outro periodo ou registre movimentos primeiro.</p>',
+                    ].join('');
+                    wrapper.appendChild(emptyState);
+                };
+
+                const renderSalaoCharts = async () => {
+                    const chartConfigs = document.querySelectorAll('script[type="application/json"][data-salao-chart]');
+
+                    if (!chartConfigs.length) {
+                        return;
+                    }
+
+                    try {
+                        await loadChartJs();
+                    } catch (error) {
+                        console.error('Chart.js nao carregou:', error);
+                        return;
+                    }
+
+                    window.SalaoChartInstances ||= {};
+
+                    chartConfigs.forEach((script) => {
+                        const canvasId = script.dataset.salaoChart;
+                        const canvas = document.getElementById(canvasId);
+
+                        if (!canvas || script.dataset.rendered === 'true') {
+                            return;
+                        }
+
+                        let config;
+
+                        try {
+                            config = JSON.parse(script.textContent || '{}');
+                        } catch (error) {
+                            console.error(`Configuracao invalida do grafico ${canvasId}:`, error);
+                            return;
+                        }
+
+                        if (!hasDatasetData(config)) {
+                            showEmptyChart(canvas);
+                            script.dataset.rendered = 'true';
+                            return;
+                        }
+
+                        if (window.SalaoChartInstances[canvasId]) {
+                            window.SalaoChartInstances[canvasId].destroy();
+                        }
+
+                        window.SalaoChartInstances[canvasId] = new window.Chart(canvas, {
+                            ...config,
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                animation: {
+                                    duration: 900,
+                                    easing: 'easeOutQuart',
+                                },
+                                interaction: {
+                                    intersect: false,
+                                    mode: 'nearest',
+                                },
+                                plugins: {
+                                    legend: {
+                                        labels: {
+                                            color: '#4A00B9',
+                                            font: {
+                                                family: 'Syne',
+                                                weight: '700',
+                                            },
+                                        },
+                                    },
+                                    tooltip: {
+                                        backgroundColor: '#1A002B',
+                                        titleColor: '#FFFFFF',
+                                        bodyColor: '#FFFFFF',
+                                        padding: 12,
+                                        cornerRadius: 12,
+                                    },
+                                    ...config.options?.plugins,
+                                },
+                                scales: config.options?.scales,
+                                ...config.options,
+                            },
+                        });
+
+                        script.dataset.rendered = 'true';
+                    });
+                };
+
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', renderSalaoCharts);
+                } else {
+                    renderSalaoCharts();
+                }
+            })();
+        </script>
     </body>
 </html>

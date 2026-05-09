@@ -23,6 +23,16 @@
         </div>
 
         <div class="container mx-auto px-4">
+            @php
+                $graficoDistribuicaoAvaliacoesDados = [
+                    (int) $distribuicao[5],
+                    (int) $distribuicao[4],
+                    (int) $distribuicao[3],
+                    (int) $distribuicao[2],
+                    (int) $distribuicao[1],
+                ];
+            @endphp
+
             <!-- Filtro -->
             <div class="glass-card rounded-2xl shadow-xl overflow-hidden mb-6">
                 <div class="p-4 bg-white/70 backdrop-blur-sm border border-white/40">
@@ -100,6 +110,106 @@
                                     <span class="w-8 text-right text-gray-500">{{ $qtd }}</span>
                                 </div>
                             @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Graficos -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
+                    <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
+                        <div class="flex items-center gap-2 mb-4">
+                            <span class="text-[#7B19E5] text-xl">✧</span>
+                            <h3 class="font-title text-[#4A00B9] text-lg">Distribuicao de Estrelas</h3>
+                        </div>
+                        <div class="h-80">
+                            <canvas id="graficoDistribuicaoAvaliacoes"></canvas>
+                            <script type="application/json" data-salao-chart="graficoDistribuicaoAvaliacoes">
+                                {
+                                    "type": "bar",
+                                    "data": {
+                                        "labels": ["5 estrelas", "4 estrelas", "3 estrelas", "2 estrelas", "1 estrela"],
+                                        "datasets": [{
+                                            "label": "Avaliacoes",
+                                            "data": @json($graficoDistribuicaoAvaliacoesDados),
+                                            "backgroundColor": ["#7B19E5", "#A855F7", "#FF2EB6", "#F59E0B", "#9CA3AF"]
+                                        }]
+                                    },
+                                    "options": {
+                                        "scales": {
+                                            "y": {
+                                                "beginAtZero": true,
+                                                "ticks": {
+                                                    "precision": 0
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            </script>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
+                    <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
+                        <div class="flex items-center gap-2 mb-4">
+                            <span class="text-[#7B19E5] text-xl">✧</span>
+                            <h3 class="font-title text-[#4A00B9] text-lg">Ranking dos Profissionais</h3>
+                        </div>
+                        <div class="h-80">
+                            <canvas id="graficoRankingAvaliacoes"></canvas>
+                            <script type="application/json" data-salao-chart="graficoRankingAvaliacoes">
+                                {
+                                    "type": "bar",
+                                    "data": {
+                                        "labels": @json($rankingProfissionais->pluck('nome')->values()),
+                                        "datasets": [
+                                            {
+                                                "label": "Media",
+                                                "data": @json($rankingProfissionais->pluck('media')->values()),
+                                                "backgroundColor": "rgba(123, 25, 229, 0.72)",
+                                                "borderColor": "#7B19E5",
+                                                "borderWidth": 2,
+                                                "yAxisID": "media"
+                                            },
+                                            {
+                                                "label": "Quantidade",
+                                                "type": "line",
+                                                "data": @json($rankingProfissionais->pluck('total_avaliacoes')->values()),
+                                                "borderColor": "#FF2EB6",
+                                                "backgroundColor": "#FF2EB6",
+                                                "pointBackgroundColor": "#FF2EB6",
+                                                "pointBorderColor": "#FFFFFF",
+                                                "pointBorderWidth": 3,
+                                                "pointRadius": 5,
+                                                "tension": 0.35,
+                                                "yAxisID": "quantidade"
+                                            }
+                                        ]
+                                    },
+                                    "options": {
+                                        "scales": {
+                                            "media": {
+                                                "beginAtZero": true,
+                                                "max": 5,
+                                                "position": "left"
+                                            },
+                                            "quantidade": {
+                                                "beginAtZero": true,
+                                                "position": "right",
+                                                "grid": {
+                                                    "drawOnChartArea": false
+                                                },
+                                                "ticks": {
+                                                    "precision": 0
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            </script>
                         </div>
                     </div>
                 </div>
@@ -183,6 +293,104 @@
         </div>
     </div>
 </x-app-layout>
+
+@php
+    $chartDistribuicao = [
+        5 => (int) $distribuicao[5],
+        4 => (int) $distribuicao[4],
+        3 => (int) $distribuicao[3],
+        2 => (int) $distribuicao[2],
+        1 => (int) $distribuicao[1],
+    ];
+
+    $chartRanking = $rankingProfissionais->map(function ($prof) {
+        return [
+            'nome' => $prof->nome,
+            'media' => (float) $prof->media,
+            'total' => (int) $prof->total_avaliacoes,
+        ];
+    })->values();
+@endphp
+
+<script>
+    (window.SalaoChartQueue = window.SalaoChartQueue || []).push(() => {
+        const distribuicao = @json($chartDistribuicao);
+        const ranking = @json($chartRanking);
+
+        window.SalaoCharts?.create('graficoDistribuicaoAvaliacoes', {
+            type: 'bar',
+            data: {
+                labels: ['5 estrelas', '4 estrelas', '3 estrelas', '2 estrelas', '1 estrela'],
+                datasets: [{
+                    label: 'Avaliacoes',
+                    data: [distribuicao[5], distribuicao[4], distribuicao[3], distribuicao[2], distribuicao[1]],
+                    backgroundColor: ['#7B19E5', '#A855F7', '#FF2EB6', '#F59E0B', '#9CA3AF'],
+                    borderRadius: 12,
+                }],
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0,
+                        },
+                    },
+                },
+            },
+        });
+
+        window.SalaoCharts?.create('graficoRankingAvaliacoes', {
+            type: 'bar',
+            data: {
+                labels: ranking.map(item => item.nome),
+                datasets: [
+                    {
+                        label: 'Media',
+                        data: ranking.map(item => item.media),
+                        backgroundColor: 'rgba(123, 25, 229, 0.72)',
+                        borderColor: '#7B19E5',
+                        borderWidth: 2,
+                        borderRadius: 12,
+                        yAxisID: 'media',
+                    },
+                    {
+                        label: 'Quantidade',
+                        data: ranking.map(item => item.total),
+                        type: 'line',
+                        borderColor: '#FF2EB6',
+                        backgroundColor: '#FF2EB6',
+                        pointBackgroundColor: '#FF2EB6',
+                        pointBorderColor: '#FFFFFF',
+                        pointBorderWidth: 3,
+                        pointRadius: 5,
+                        tension: 0.35,
+                        yAxisID: 'quantidade',
+                    },
+                ],
+            },
+            options: {
+                scales: {
+                    media: {
+                        beginAtZero: true,
+                        max: 5,
+                        position: 'left',
+                    },
+                    quantidade: {
+                        beginAtZero: true,
+                        position: 'right',
+                        grid: {
+                            drawOnChartArea: false,
+                        },
+                        ticks: {
+                            precision: 0,
+                        },
+                    },
+                },
+            },
+        });
+    });
+</script>
 
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Playfair+Display:wght@700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');

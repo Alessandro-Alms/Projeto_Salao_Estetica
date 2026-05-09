@@ -18,6 +18,12 @@
         </div>
 
         <div class="container mx-auto px-4">
+            @php
+                $graficoStatusAgendamentosDados = [
+                    (int) ($totalExecutados ?? 0),
+                    max((int) ($totalAgendamentos ?? 0) - (int) ($totalExecutados ?? 0), 0),
+                ];
+            @endphp
             
             <!-- Filtro e Exportação -->
             <div class="glass-card rounded-2xl shadow-xl overflow-hidden mb-6">
@@ -72,6 +78,76 @@
                             $taxa = ($totalAgendamentos ?? 0) > 0 ? (($totalExecutados ?? 0) / $totalAgendamentos) * 100 : 0;
                         @endphp
                         <p class="text-3xl font-black text-[#FF2EB6]">{{ number_format($taxa, 1, ',', '.') }}%</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Graficos da central -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+                <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
+                    <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
+                        <div class="flex items-center gap-2 mb-4">
+                            <span class="text-[#7B19E5] text-xl">✧</span>
+                            <h3 class="font-title text-[#4A00B9] text-lg">Status dos Agendamentos</h3>
+                        </div>
+                        <div class="h-80">
+                            <canvas id="graficoStatusAgendamentos"></canvas>
+                            <script type="application/json" data-salao-chart="graficoStatusAgendamentos">
+                                {
+                                    "type": "doughnut",
+                                    "data": {
+                                        "labels": ["Executados", "Outros status"],
+                                        "datasets": [{
+                                            "data": @json($graficoStatusAgendamentosDados),
+                                            "backgroundColor": ["#7B19E5", "#FFD6F4"],
+                                            "borderColor": "#FFFFFF",
+                                            "borderWidth": 4
+                                        }]
+                                    },
+                                    "options": {
+                                        "cutout": "62%"
+                                    }
+                                }
+                            </script>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
+                    <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
+                        <div class="flex items-center gap-2 mb-4">
+                            <span class="text-[#7B19E5] text-xl">✧</span>
+                            <h3 class="font-title text-[#4A00B9] text-lg">Top Profissionais no Periodo</h3>
+                        </div>
+                        <div class="h-80">
+                            <canvas id="graficoTopProfissionaisCentral"></canvas>
+                            <script type="application/json" data-salao-chart="graficoTopProfissionaisCentral">
+                                {
+                                    "type": "bar",
+                                    "data": {
+                                        "labels": @json($desempenhoProfissionais->take(8)->pluck('name')->values()),
+                                        "datasets": [{
+                                            "label": "Atendimentos",
+                                            "data": @json($desempenhoProfissionais->take(8)->pluck('total_atendimentos')->values()),
+                                            "backgroundColor": "rgba(255, 46, 182, 0.72)",
+                                            "borderColor": "#FF2EB6",
+                                            "borderWidth": 2
+                                        }]
+                                    },
+                                    "options": {
+                                        "indexAxis": "y",
+                                        "scales": {
+                                            "x": {
+                                                "beginAtZero": true,
+                                                "ticks": {
+                                                    "precision": 0
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            </script>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -192,6 +268,70 @@
         </div>
     </div>
 </x-app-layout>
+
+@php
+    $chartResumo = [
+        'executados' => (int) ($totalExecutados ?? 0),
+        'demais' => max((int) ($totalAgendamentos ?? 0) - (int) ($totalExecutados ?? 0), 0),
+    ];
+
+    $chartProfissionais = $desempenhoProfissionais->take(8)->map(function ($prof) {
+        return [
+            'nome' => $prof->name,
+            'atendimentos' => (int) $prof->total_atendimentos,
+            'gerado' => (float) $prof->total_gerado,
+        ];
+    })->values();
+@endphp
+
+<script>
+    (window.SalaoChartQueue = window.SalaoChartQueue || []).push(() => {
+        const resumo = @json($chartResumo);
+        const profissionais = @json($chartProfissionais);
+
+        window.SalaoCharts?.create('graficoStatusAgendamentos', {
+            type: 'doughnut',
+            data: {
+                labels: ['Executados', 'Outros status'],
+                datasets: [{
+                    data: [resumo.executados, resumo.demais],
+                    backgroundColor: ['#7B19E5', '#FFD6F4'],
+                    borderColor: '#FFFFFF',
+                    borderWidth: 4,
+                }],
+            },
+            options: {
+                cutout: '62%',
+            },
+        });
+
+        window.SalaoCharts?.create('graficoTopProfissionaisCentral', {
+            type: 'bar',
+            data: {
+                labels: profissionais.map(item => item.nome),
+                datasets: [{
+                    label: 'Atendimentos',
+                    data: profissionais.map(item => item.atendimentos),
+                    backgroundColor: 'rgba(255, 46, 182, 0.72)',
+                    borderColor: '#FF2EB6',
+                    borderWidth: 2,
+                    borderRadius: 12,
+                }],
+            },
+            options: {
+                indexAxis: 'y',
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0,
+                        },
+                    },
+                },
+            },
+        });
+    });
+</script>
 
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Playfair+Display:wght@700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');

@@ -87,7 +87,7 @@
                                     <th class="p-4 text-center text-[#4A00B9] text-xs font-medium uppercase">Estimativa de Clientes</th>
                                     <th class="p-4 text-center text-[#4A00B9] text-xs font-medium uppercase">Feriado?</th>
                                     <th class="p-4 text-center rounded-tr-lg text-[#4A00B9] text-xs font-medium uppercase">Tendência / Ação Sugerida</th>
-                                </table>
+                                </tr>
                             </thead>
                             <tbody>
                                 @foreach($proximos7Dias as $dia)
@@ -101,7 +101,10 @@
                                         </td>
                                         <td class="p-4 text-center">
                                             <span class="text-xl font-black {{ $dia->previsao_agendamentos >= 10 ? 'text-[#7B19E5]' : 'text-gray-700' }}">
-                                                ~{{ $dia->previsao_agendamentos }}
+                                                {{ $dia->previsao_agendamentos }}
+                                            </span>
+                                            <span class="ml-1 text-xs text-gray-500">
+                                                {{ $dia->previsao_agendamentos === 1 ? 'cliente' : 'clientes' }}
                                             </span>
                                         </td>
                                         <td class="p-4 text-center">
