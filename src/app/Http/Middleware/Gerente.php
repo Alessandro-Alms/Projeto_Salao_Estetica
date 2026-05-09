@@ -15,10 +15,10 @@ class Gerente
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (auth()->user()->cargo === 'gerente') {
-        return $next($request);
-    }
-    // Se for recepcionista ou outro, ele barra
-    abort(403, 'Acesso restrito ao Administrador.');
+        if ($request->user()?->isGerente()) {
+            return $next($request);
+        }
+
+        abort(403, 'Acesso restrito ao gerente.');
     }
 }

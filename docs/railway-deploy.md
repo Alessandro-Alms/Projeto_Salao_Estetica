@@ -4,7 +4,7 @@ Este projeto Laravel fica dentro da pasta `src`, entao na Railway o servico deve
 
 ## Arquivos preparados
 
-- `src/railway.toml`: configura healthcheck em `/up` e executa `php artisan migrate --force` antes do deploy.
+- `src/railway.toml`: configura build, start command, healthcheck em `/up` e executa `php artisan migrate --force` antes do deploy.
 - `src/.env.railway.example`: modelo das variaveis de ambiente para producao.
 
 ## Passos no painel da Railway
@@ -21,8 +21,9 @@ Este projeto Laravel fica dentro da pasta `src`, entao na Railway o servico deve
    - `DB_DATABASE`
    - `DB_USERNAME`
    - `DB_PASSWORD`
-6. Em `Networking`, gere o dominio publico.
-7. Faça um redeploy.
+6. Mantenha `APP_ENV=production` e `APP_DEBUG=false`.
+7. Em `Networking`, gere o dominio publico e use esse dominio em `APP_URL`.
+8. Faca um redeploy.
 
 ## Gerar APP_KEY
 
@@ -37,3 +38,6 @@ php artisan key:generate --show
 - A aplicacao ja possui endpoint de healthcheck em `/up`.
 - Nao use `sqlite` em producao na Railway; prefira `Postgres`.
 - O comando de pre-deploy vai rodar as migracoes automaticamente.
+- O build nao usa `route:cache` porque o projeto ainda possui rotas com closures.
+- Deixe `SEED_ON_DEPLOY=false` em producao para nao apagar dados.
+- Use `ADMIN_SEED_ON_DEPLOY=true` apenas quando quiser criar/atualizar o gerente inicial pelas variaveis `ADMIN_*`.

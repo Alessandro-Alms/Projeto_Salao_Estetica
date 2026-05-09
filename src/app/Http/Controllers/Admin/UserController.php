@@ -34,7 +34,7 @@ class UserController extends Controller
         $pacotesVencendo = collect();
         $mensagemProximaVisita = null;
 
-        if ($user && $user->cargo === 'profissional') {
+        if ($user && $user->isProfissional()) {
             $mediaAvaliacao = DB::table('avaliacoes')
                 ->where('profissional_id', $user->id)
                 ->avg('nota');
@@ -67,7 +67,7 @@ class UserController extends Controller
                 ->get();
         }
 
-        if ($user && $user->cargo === 'cliente') {
+        if ($user && $user->isCliente()) {
             $agendamentoProximo = Agendamento::where('cliente_id', $user->id)
                 ->whereIn('status', ['confirmado', 'presente'])
                 ->where('data_hora_inicio', '>', now())
@@ -125,7 +125,7 @@ class UserController extends Controller
         $usuarioLogado = auth()->user();
         $quantidadePorPagina = 10;
 
-        if ($request->filled('cargo')) {
+        if ($request->filled('cargo') && $usuarioLogado->isGerente()) {
             $consulta->where('cargo', $request->cargo);
         }
 
@@ -138,12 +138,12 @@ class UserController extends Controller
             });
         }
 
-        if ($usuarioLogado->cargo === 'gerente') {
+        if ($usuarioLogado->isGerente()) {
             $consulta->whereIn('cargo', ['gerente', 'recepcionista', 'profissional', 'cliente']);
-        } elseif ($usuarioLogado->cargo === 'recepcionista') {
+        } elseif ($usuarioLogado->isRecepcionista()) {
             $consulta->where('cargo', 'cliente');
         } else {
-            return redirect()->route('dashboard')->with('error', 'Acesso negado.');
+            abort(403, 'Acesso negado.');
         }
 
         $usuarios = $consulta->orderBy('name', 'asc')->paginate($quantidadePorPagina);
@@ -153,7 +153,11 @@ class UserController extends Controller
 
     public function create()
     {
-        return view('admin.usuarios.criar');
+        $cargosPermitidos = auth()->user()->isGerente()
+            ? User::ROLES
+            : [User::ROLE_CLIENTE];
+
+        return view('admin.usuarios.criar', compact('cargosPermitidos'));
     }
 
     public function store(Request $request)
@@ -167,7 +171,7 @@ class UserController extends Controller
             'email' => $dados['email'],
             'cpf' => $dados['cpf'],
             'telefone' => $dados['telefone'],
-            'cargo' => auth()->user()->cargo === 'recepcionista' ? 'cliente' : $dados['cargo'],
+            'cargo' => auth()->user()->isRecepcionista() ? User::ROLE_CLIENTE : $dados['cargo'],
             'password' => Hash::make($dados['password']),
             'd_nasc' => $dados['d_nasc'] ?? null,
             'endereco' => $dados['endereco'] ?? null,
@@ -178,7 +182,7 @@ class UserController extends Controller
 
     public function edit(User $usuario)
     {
-        if (auth()->user()->cargo === 'recepcionista' && $usuario->cargo !== 'cliente') {
+        if (auth()->user()->isRecepcionista() && !$usuario->isCliente()) {
             abort(403, 'Você só tem permissão para editar clientes.');
         }
 
@@ -192,7 +196,7 @@ class UserController extends Controller
     {
         $usuario = User::findOrFail($id);
 
-        if (auth()->user()->cargo === 'recepcionista' && $usuario->cargo !== 'cliente') {
+        if (auth()->user()->isRecepcionista() && !$usuario->isCliente()) {
             abort(403, 'Recepcionistas sÃ³ podem editar clientes.');
         }
 
@@ -200,8 +204,8 @@ class UserController extends Controller
 
         $dados = $request->validate($this->regrasUsuario($id, false), $this->mensagensUsuario($request));
 
-        if (auth()->user()->cargo === 'recepcionista') {
-            $dados['cargo'] = 'cliente';
+        if (auth()->user()->isRecepcionista()) {
+            $dados['cargo'] = User::ROLE_CLIENTE;
         }
 
         $usuario->update(collect($dados)
@@ -213,9 +217,9 @@ class UserController extends Controller
             $usuario->save();
         }
 
-        if ($usuario->cargo === 'profissional' && $request->has('servicos')) {
+        if ($usuario->isProfissional() && $request->has('servicos')) {
             $this->sincronizarServicosProfissional($usuario, $request->input('servicos', []));
-        } elseif ($usuario->cargo !== 'profissional') {
+        } elseif (!$usuario->isProfissional()) {
             $usuario->servicos()->sync([]);
         }
 
@@ -228,7 +232,7 @@ class UserController extends Controller
             return redirect()->route('admin.usuarios.index')->with('error', 'Você não pode deletar sua própria conta!');
         }
 
-        if (auth()->user()->cargo === 'recepcionista' && $usuario->cargo !== 'cliente') {
+        if (auth()->user()->isRecepcionista() && !$usuario->isCliente()) {
             abort(403, 'Recepcionistas sÃ³ podem remover clientes.');
         }
 
@@ -402,7 +406,7 @@ class UserController extends Controller
 
     public function alterarStatus(Request $request, $id)
     {
-        if (auth()->user()->cargo !== 'gerente') {
+        if (!auth()->user()->isGerente()) {
             abort(403);
         }
 

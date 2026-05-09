@@ -67,13 +67,14 @@
                                     {{ __('Cargo / Função') }}
                                 </label>
                                 
-                                @if(auth()->user()->cargo === 'gerente')
+                                @if(auth()->user()->isGerente())
                                     <select name="cargo" id="cargo" 
                                         class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
-                                        <option value="cliente" {{ old('cargo', $usuario->cargo ?? '') == 'cliente' ? 'selected' : '' }}>Cliente</option>
-                                        <option value="recepcionista" {{ old('cargo', $usuario->cargo ?? '') == 'recepcionista' ? 'selected' : '' }}>Recepcionista</option>
-                                        <option value="profissional" {{ old('cargo', $usuario->cargo ?? '') == 'profissional' ? 'selected' : '' }}>Profissional</option>
-                                        <option value="gerente" {{ old('cargo', $usuario->cargo ?? '') == 'gerente' ? 'selected' : '' }}>Gerente (Admin)</option>
+                                        @foreach($cargosPermitidos as $cargo)
+                                            <option value="{{ $cargo }}" {{ old('cargo', request('cargo', 'cliente')) == $cargo ? 'selected' : '' }}>
+                                                {{ $cargo === 'gerente' ? 'Gerente (Admin)' : ucfirst($cargo) }}
+                                            </option>
+                                        @endforeach
                                     </select>
                                 @else
                                     <select disabled 

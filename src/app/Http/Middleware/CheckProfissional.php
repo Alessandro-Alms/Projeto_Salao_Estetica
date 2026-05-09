@@ -15,8 +15,8 @@ class CheckProfissional
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!auth()->check() || auth()->user()->cargo !== 'profissional') {
-        return redirect('/dashboard');
+        if (!$request->user()?->isProfissional()) {
+            abort(403, 'Acesso restrito ao profissional.');
         }
 
         return $next($request);

@@ -14,6 +14,18 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
+    public const ROLE_GERENTE = 'gerente';
+    public const ROLE_RECEPCIONISTA = 'recepcionista';
+    public const ROLE_PROFISSIONAL = 'profissional';
+    public const ROLE_CLIENTE = 'cliente';
+
+    public const ROLES = [
+        self::ROLE_GERENTE,
+        self::ROLE_RECEPCIONISTA,
+        self::ROLE_PROFISSIONAL,
+        self::ROLE_CLIENTE,
+    ];
+
     protected $fillable = [
         'name',
         'email',
@@ -41,6 +53,31 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function hasRole(string|array $roles): bool
+    {
+        return in_array($this->cargo, (array) $roles, true);
+    }
+
+    public function isGerente(): bool
+    {
+        return $this->hasRole(self::ROLE_GERENTE);
+    }
+
+    public function isRecepcionista(): bool
+    {
+        return $this->hasRole(self::ROLE_RECEPCIONISTA);
+    }
+
+    public function isProfissional(): bool
+    {
+        return $this->hasRole(self::ROLE_PROFISSIONAL);
+    }
+
+    public function isCliente(): bool
+    {
+        return $this->hasRole(self::ROLE_CLIENTE);
     }
     // Relacionamentos profissional - serviços 
     public function servicos()

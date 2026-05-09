@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "repomix": "repomix"
+  },
   "devDependencies": {
     "repomix": "^1.13.1"
   }

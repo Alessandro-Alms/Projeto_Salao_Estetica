@@ -126,7 +126,7 @@ Route::middleware('auth')->group(function () {
 // ==========================================
 // ROTAS ADMIN (Gerente ou Recepcionista)
 // ==========================================
-Route::middleware(['auth', 'gerente_ou_recepcionista'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'role:gerente,recepcionista'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('usuarios', UserController::class)->names([
         'index'   => 'usuarios.index',
         'create'  => 'usuarios.criar',
@@ -159,7 +159,7 @@ Route::middleware(['auth', 'gerente_ou_recepcionista'])->prefix('admin')->name('
 // ==========================================
 // ROTAS ADMIN (Apenas Gerente)
 // ==========================================
-Route::middleware(['auth', 'gerente'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'role:gerente'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('servicos', ServicoController::class)->names([
         'index'   => 'servicos.index',
         'create'  => 'servicos.criar',
@@ -223,7 +223,7 @@ Route::middleware(['auth', 'gerente'])->prefix('admin')->name('admin.')->group(f
 // ==========================================
 // ROTAS PROFISSIONAL
 // ==========================================
-Route::middleware(['auth', 'profissional'])->prefix('profissional')->name('profissional.')->group(function () {
+Route::middleware(['auth', 'role:profissional'])->prefix('profissional')->name('profissional.')->group(function () {
     Route::get('/configuracoes', [UserController::class, 'configuracoesservicos'])->name('servicos.editar');
     Route::put('/configuracoes', [UserController::class, 'atualizarconfiguracoesservicos'])->name('servicos.atualizar');
     Route::post('/configuracoes/bloqueios', [UserController::class, 'bloquearDiaDisponibilidade'])->name('servicos.bloqueios.store');
@@ -232,8 +232,6 @@ Route::middleware(['auth', 'profissional'])->prefix('profissional')->name('profi
     Route::post('/agendamento/{id_agendamento}/executado', [AgendamentoController::class, 'marcarComoExecutado'])->name('agendamento.executado');
     Route::get('/minha-agenda', [AgendamentoController::class, 'agendaProfissional'])->name('agenda');
     Route::get('/extrato', [UserController::class, 'extrato'])->name('extrato');
-    Route::get('/agendar-cliente', [AgendamentoController::class, 'agendarGerencial'])->name('agendar.cliente');
-    Route::post('/agendar-cliente', [AgendamentoController::class, 'salvarAgendamentoGerencial'])->name('agendar.cliente.salvar');
 });
 
 require __DIR__.'/auth.php';

@@ -15,10 +15,10 @@ class GerenteOuRecepcionista
      */
     public function handle($request, $next)
     {
-        $cargo = auth()->user()->cargo;
-        if ($cargo === 'gerente' || $cargo === 'recepcionista') {
+        if ($request->user()?->hasRole(['gerente', 'recepcionista'])) {
             return $next($request);
         }
-        return redirect()->route('dashboard');
+
+        abort(403, 'Acesso negado para o seu nivel de permissao.');
     }
 }

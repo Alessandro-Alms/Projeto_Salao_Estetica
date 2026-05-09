@@ -1,0 +1,40 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+!.env.exemplo
+!.env.railway.example
+
+# Dependencies
+node_modules/
+vendor/
+
+# Generated output
+repomix-output.xml
+public/build/
+public/hot
+public/storage/
+storage/*.key
+storage/logs/*.log
+bootstrap/cache/*.php
+
+# Test and tool caches
+.phpunit.result.cache
+.phpunit.cache/
+.phpactor.json
+.cache/
+coverage/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.fleet/
+.idea/
+.nova/
+.vscode/
+.zed/
+
+# Local auth/config artifacts
+auth.json
+Homestead.json
+Homestead.yaml

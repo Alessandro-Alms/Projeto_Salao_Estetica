@@ -12,6 +12,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->web(append: [
+            \App\Http\Middleware\SecurityHeaders::class,
+        ]);
+
         // Railway termina o HTTPS no proxy. Confiar nesses headers
         // garante que o Laravel gere URLs seguras.
         $middleware->trustProxies(
@@ -22,18 +26,12 @@ return Application::configure(basePath: dirname(__DIR__))
                 Request::HEADER_X_FORWARDED_PROTO |
                 Request::HEADER_X_FORWARDED_AWS_ELB
         );
-    })
-    ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'gerente_ou_recepcionista' => \App\Http\Middleware\GerenteOuRecepcionista::class,
             'gerente' => \App\Http\Middleware\Gerente::class,
+            'role' => \App\Http\Middleware\EnsureUserRole::class,
+            'profissional' => \App\Http\Middleware\CheckProfissional::class,
         ]);
-    })
-        ->withMiddleware(function (Middleware $middleware) {
-    $middleware->alias([
-        'profissional' => \App\Http\Middleware\CheckProfissional::class,
-
-    ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (\Illuminate\Session\TokenMismatchException $exception, \Illuminate\Http\Request $request) {
