@@ -301,7 +301,7 @@ class DatabaseSeeder extends Seeder
                 'ativo' => true,
                 'created_at' => now()->subDays(20),
                 'updated_at' => now()->subDays(20),
-            ]);
+            ], 'id_pacote');
 
             foreach ($pacote['servicos_ids'] as $servicoId) {
                 DB::table('pacote_servico')->insert([
