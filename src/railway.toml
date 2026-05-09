@@ -1,5 +1,5 @@
 [deploy]
-preDeployCommand = "if [ \"$SEED_ON_DEPLOY\" = \"true\" ]; then php artisan migrate:fresh --seed --force; else php artisan migrate --force; fi"
+preDeployCommand = "if [ \"$SEED_ON_DEPLOY\" = \"true\" ]; then php artisan migrate:fresh --seed --force; else php artisan migrate --force; fi && if [ \"$ADMIN_SEED_ON_DEPLOY\" = \"true\" ]; then php artisan db:seed --class=Database\\\\Seeders\\\\AdminUserSeeder --force; fi"
 healthcheckPath = "/up"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
