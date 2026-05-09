@@ -445,8 +445,11 @@ class UserController extends Controller
             ->whereYear('created_at', $ano)
             ->sum('valor_venda');
 
-        $totalComissaoProdutos = app(FinanceiroService::class)
-            ->calcularComissaoProduto((float) $totalVendasProdutos);
+        $totalComissaoProdutos = DB::table('vendas')
+            ->where('profissional_id', $profissionalId)
+            ->whereMonth('created_at', $mes)
+            ->whereYear('created_at', $ano)
+            ->sum('valor_comissao');
 
         return view('profissional.extrato', compact(
             'agendamentos',

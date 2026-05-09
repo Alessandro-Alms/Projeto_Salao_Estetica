@@ -54,7 +54,9 @@ class ClientePacoteController extends Controller
             'pacote_id' => ['required', Rule::exists('pacotes', 'id_pacote')->where('ativo', true)],
         ]);
 
-        $clientePacoteService->venderPacote((int) $request->cliente_id, (int) $request->pacote_id);
+        $vendedorId = auth()->user()->isRecepcionista() ? (int) auth()->id() : null;
+
+        $clientePacoteService->venderPacote((int) $request->cliente_id, (int) $request->pacote_id, $vendedorId);
 
         return redirect()->back()->with('success', 'Pacote vendido com sucesso! O cliente já pode usar as sessões.');
     }

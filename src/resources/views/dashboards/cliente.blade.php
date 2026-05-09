@@ -51,9 +51,12 @@
     </div>
 @endif
 
-<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
     <a href="{{ route('cliente.agendar.novo') }}" class="flex items-center justify-center p-6 bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white rounded-full font-medium btn-primary shadow-lg hover:shadow-xl transition-all text-center">
         Agendar Novo Horário
+    </a>
+    <a href="{{ route('cliente.produtos.index') }}" class="flex items-center justify-center p-6 bg-white text-[#FF2EB6] border-2 border-[#FFD6F4] rounded-full font-medium hover:bg-[#FF2EB6] hover:text-white transition-all text-center">
+        Comprar Produtos
     </a>
     <a href="{{ route('cliente.pacotes.index') }}" class="flex items-center justify-center p-6 bg-white text-[#FF2EB6] border-2 border-[#FF2EB6] rounded-full font-medium hover:bg-[#FF2EB6] hover:text-white transition-all text-center">
         Comprar Pacotes

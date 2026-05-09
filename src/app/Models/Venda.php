@@ -13,6 +13,8 @@ class Venda extends Model
         'servico_id',
         'quantidade',
         'valor_venda',
+        'valor_comissao',
+        'comissao_paga_percentual',
     ];
 
     // Quem realizou a venda.

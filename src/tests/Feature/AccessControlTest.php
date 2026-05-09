@@ -5,9 +5,11 @@ namespace Tests\Feature;
 use App\Models\Agendamento;
 use App\Models\BloqueioHorario;
 use App\Models\Pacote;
+use App\Models\Produto;
 use App\Models\Servico;
 use App\Models\User;
 use App\Services\ClientePacoteService;
+use App\Services\FinanceiroService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -182,15 +184,152 @@ class AccessControlTest extends TestCase
         ]);
 
         $this->actingAs($cliente)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('Comprar Pacotes');
+
+        $this->actingAs($cliente)
+            ->get(route('cliente.pacotes.index'))
+            ->assertOk()
+            ->assertSee('Pacotes')
+            ->assertSee('Comprar para mim')
+            ->assertSee($pacote->nome);
+
+        $this->actingAs($cliente)
             ->post(route('cliente.pacotes.comprar'), ['pacote_id' => $pacote->id_pacote])
             ->assertRedirect(route('cliente.pacotes.index'));
 
         $this->assertDatabaseHas('cliente_pacotes', [
             'cliente_id' => $cliente->id,
             'pacote_id' => $pacote->id_pacote,
+            'vendedor_id' => null,
             'sessoes_restantes' => 5,
+            'valor_comissao' => 0,
+            'comissao_paga_percentual' => 0,
             'status' => 'ativo',
         ]);
+    }
+
+    public function test_venda_de_pacote_por_recepcionista_gera_comissao_de_servico(): void
+    {
+        $recepcionista = User::factory()->create(['cargo' => User::ROLE_RECEPCIONISTA]);
+        $cliente = User::factory()->create(['cargo' => User::ROLE_CLIENTE]);
+        $servico = Servico::create([
+            'nome' => 'Massagem',
+            'descricao' => 'Servico usado no pacote.',
+            'preco' => 100,
+            'duracao' => 60,
+        ]);
+        $pacote = Pacote::create([
+            'nome' => 'Combo Recepcao',
+            'servico_id' => $servico->id_servico,
+            'quantidade_sessoes' => 4,
+            'valor_total' => 300,
+            'validade_dias' => 90,
+            'ativo' => true,
+        ]);
+
+        $this->actingAs($recepcionista)
+            ->post(route('admin.venda.store'), [
+                'cliente_id' => $cliente->id,
+                'pacote_id' => $pacote->id_pacote,
+            ])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('cliente_pacotes', [
+            'cliente_id' => $cliente->id,
+            'pacote_id' => $pacote->id_pacote,
+            'vendedor_id' => $recepcionista->id,
+            'valor_comissao' => 150,
+            'comissao_paga_percentual' => FinanceiroService::COMISSAO_SERVICO_PERCENTUAL,
+        ]);
+
+        $comissoes = app(FinanceiroService::class)->resumoComissoesPeriodo(now()->toDateString(), now()->toDateString());
+        $comissaoRecepcionista = $comissoes->firstWhere('id', $recepcionista->id);
+
+        $this->assertNotNull($comissaoRecepcionista);
+        $this->assertSame(1, $comissaoRecepcionista->total_servicos);
+        $this->assertSame(150.0, $comissaoRecepcionista->comissao_servicos);
+        $this->assertSame(150.0, $comissaoRecepcionista->comissao_a_pagar);
+    }
+
+    public function test_cliente_compra_produto_para_si_mesmo_sem_gerar_comissao(): void
+    {
+        $cliente = User::factory()->create(['cargo' => User::ROLE_CLIENTE]);
+        $produto = Produto::create([
+            'nome' => 'Finalizador',
+            'descricao' => 'Produto para teste de compra.',
+            'tipo' => 'cosmeticos',
+            'valor_unitario' => 50,
+            'quantidade_estoque' => 3,
+        ]);
+
+        $this->actingAs($cliente)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('Comprar Produtos');
+
+        $this->actingAs($cliente)
+            ->get(route('cliente.produtos.index'))
+            ->assertOk()
+            ->assertSee('Comprar Produtos')
+            ->assertSee('Comprar para mim')
+            ->assertSee($produto->nome);
+
+        $this->actingAs($cliente)
+            ->post(route('cliente.produtos.comprar'), [
+                'produto_id' => $produto->id_produto,
+                'quantidade' => 2,
+            ])
+            ->assertRedirect(route('cliente.produtos.index'));
+
+        $this->assertDatabaseHas('vendas', [
+            'profissional_id' => $cliente->id,
+            'produto_id' => $produto->id_produto,
+            'quantidade' => 2,
+            'valor_venda' => 100,
+            'valor_comissao' => 0,
+            'comissao_paga_percentual' => 0,
+        ]);
+
+        $this->assertDatabaseHas('produtos', [
+            'id_produto' => $produto->id_produto,
+            'quantidade_estoque' => 1,
+        ]);
+    }
+
+    public function test_venda_de_produto_por_recepcionista_gera_comissao_de_produto(): void
+    {
+        $recepcionista = User::factory()->create(['cargo' => User::ROLE_RECEPCIONISTA]);
+        $produto = Produto::create([
+            'nome' => 'Oleo capilar',
+            'descricao' => 'Produto para teste de venda.',
+            'tipo' => 'cabelo',
+            'valor_unitario' => 80,
+            'quantidade_estoque' => 5,
+        ]);
+
+        $this->actingAs($recepcionista)
+            ->post(route('admin.vendas.produtos.store'), [
+                'produto_id' => $produto->id_produto,
+                'quantidade' => 1,
+            ])
+            ->assertRedirect(route('admin.vendas.produtos.create'));
+
+        $this->assertDatabaseHas('vendas', [
+            'profissional_id' => $recepcionista->id,
+            'produto_id' => $produto->id_produto,
+            'valor_venda' => 80,
+            'valor_comissao' => 8,
+            'comissao_paga_percentual' => FinanceiroService::COMISSAO_PRODUTO_PERCENTUAL,
+        ]);
+
+        $comissoes = app(FinanceiroService::class)->resumoComissoesPeriodo(now()->toDateString(), now()->toDateString());
+        $comissaoRecepcionista = $comissoes->firstWhere('id', $recepcionista->id);
+
+        $this->assertNotNull($comissaoRecepcionista);
+        $this->assertSame(1, $comissaoRecepcionista->total_vendas_produtos);
+        $this->assertSame(8.0, $comissaoRecepcionista->comissao_produtos);
     }
 
     public function test_cliente_nao_usa_rota_admin_para_vender_pacote_a_outro_cliente(): void

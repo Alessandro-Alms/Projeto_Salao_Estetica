@@ -29,9 +29,14 @@ class FinanceiroService
             ->get();
 
         $totalServicos = $agendamentos->sum('valor_total');
-        $totalComissoesServicos = $agendamentos->sum('valor_comissao');
+        $totalComissoesPacotes = DB::table('cliente_pacotes')
+            ->whereDate('created_at', $dataSelecionada)
+            ->sum('valor_comissao');
+        $totalComissoesServicos = $agendamentos->sum('valor_comissao') + $totalComissoesPacotes;
         $totalProdutos = DB::table('vendas')->whereDate('created_at', $dataSelecionada)->sum('valor_venda');
-        $totalComissoesProdutos = $this->calcularComissaoProduto((float) $totalProdutos);
+        $totalComissoesProdutos = DB::table('vendas')
+            ->whereDate('created_at', $dataSelecionada)
+            ->sum('valor_comissao');
 
         $totalMultas = Agendamento::where('status', 'cancelado')
             ->whereDate('updated_at', $dataSelecionada)
@@ -77,7 +82,7 @@ class FinanceiroService
 
         $receitaPacotes = DB::table('cliente_pacotes')
             ->join('pacotes', 'cliente_pacotes.pacote_id', '=', 'pacotes.id_pacote')
-            ->whereBetween('cliente_pacotes.data_compra', [$dataInicio, $dataFim])
+            ->whereBetween('cliente_pacotes.data_compra', [$inicioQuery, $fimQuery])
             ->sum('pacotes.valor_total') ?? 0;
 
         $receitaMultas = DB::table('agendamentos')
@@ -93,7 +98,16 @@ class FinanceiroService
             ->whereBetween('data_hora_inicio', [$inicioQuery, $fimQuery])
             ->sum('valor_comissao') ?? 0;
 
-        $despesaComissoesProdutos = $this->calcularComissaoProduto((float) $receitaProdutos);
+        $despesaComissoesPacotes = DB::table('cliente_pacotes')
+            ->whereNotNull('vendedor_id')
+            ->whereBetween('data_compra', [$inicioQuery, $fimQuery])
+            ->sum('valor_comissao') ?? 0;
+
+        $despesaComissoesServicos += $despesaComissoesPacotes;
+        $despesaComissoesProdutos = DB::table('vendas')
+            ->whereNotNull('produto_id')
+            ->whereBetween('created_at', [$inicioQuery, $fimQuery])
+            ->sum('valor_comissao') ?? 0;
         $despesaComissoes = $despesaComissoesServicos + $despesaComissoesProdutos;
         $totalSaidas = $despesaComissoes;
         $saldoLiquido = $totalEntradas - $totalSaidas;
@@ -199,33 +213,50 @@ class FinanceiroService
             ->get()
             ->keyBy('profissional_id');
 
+        $pacotesPorVendedor = DB::table('cliente_pacotes')
+            ->join('pacotes', 'cliente_pacotes.pacote_id', '=', 'pacotes.id_pacote')
+            ->whereNotNull('cliente_pacotes.vendedor_id')
+            ->whereBetween('cliente_pacotes.data_compra', [$inicioQuery, $fimQuery])
+            ->select(
+                'cliente_pacotes.vendedor_id',
+                DB::raw('COUNT(cliente_pacotes.id) as total_pacotes'),
+                DB::raw('SUM(pacotes.valor_total) as receita_pacotes'),
+                DB::raw('SUM(cliente_pacotes.valor_comissao) as comissao_pacotes')
+            )
+            ->groupBy('cliente_pacotes.vendedor_id')
+            ->get()
+            ->keyBy('vendedor_id');
+
         $vendasPorProfissional = DB::table('vendas')
             ->whereNotNull('produto_id')
             ->whereBetween('created_at', [$inicioQuery, $fimQuery])
             ->select(
                 'profissional_id',
                 DB::raw('COUNT(id_venda) as total_vendas_produtos'),
-                DB::raw('SUM(valor_venda) as receita_produtos')
+                DB::raw('SUM(valor_venda) as receita_produtos'),
+                DB::raw('SUM(valor_comissao) as comissao_produtos')
             )
             ->groupBy('profissional_id')
             ->get()
             ->keyBy('profissional_id');
 
         return DB::table('users')
-            ->where('cargo', 'profissional')
-            ->select('id', 'name', 'telefone')
+            ->whereIn('cargo', ['profissional', 'recepcionista'])
+            ->select('id', 'name', 'telefone', 'cargo')
             ->get()
-            ->map(function ($profissional) use ($servicosPorProfissional, $vendasPorProfissional) {
+            ->map(function ($profissional) use ($servicosPorProfissional, $pacotesPorVendedor, $vendasPorProfissional) {
                 $servicos = $servicosPorProfissional->get($profissional->id);
+                $pacotes = $pacotesPorVendedor->get($profissional->id);
                 $vendas = $vendasPorProfissional->get($profissional->id);
 
-                $profissional->total_servicos = (int) ($servicos->total_servicos ?? 0);
+                $profissional->total_servicos = (int) ($servicos->total_servicos ?? 0) + (int) ($pacotes->total_pacotes ?? 0);
                 $profissional->total_vendas_produtos = (int) ($vendas->total_vendas_produtos ?? 0);
                 $profissional->receita_servicos = (float) ($servicos->receita_servicos ?? 0);
+                $profissional->receita_pacotes = (float) ($pacotes->receita_pacotes ?? 0);
                 $profissional->receita_produtos = (float) ($vendas->receita_produtos ?? 0);
-                $profissional->receita_gerada = $profissional->receita_servicos + $profissional->receita_produtos;
-                $profissional->comissao_servicos = (float) ($servicos->comissao_servicos ?? 0);
-                $profissional->comissao_produtos = $this->calcularComissaoProduto($profissional->receita_produtos);
+                $profissional->receita_gerada = $profissional->receita_servicos + $profissional->receita_pacotes + $profissional->receita_produtos;
+                $profissional->comissao_servicos = (float) ($servicos->comissao_servicos ?? 0) + (float) ($pacotes->comissao_pacotes ?? 0);
+                $profissional->comissao_produtos = (float) ($vendas->comissao_produtos ?? 0);
                 $profissional->comissao_a_pagar = $profissional->comissao_servicos + $profissional->comissao_produtos;
 
                 return $profissional;

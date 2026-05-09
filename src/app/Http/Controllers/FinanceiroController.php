@@ -41,7 +41,9 @@ class FinanceiroController extends Controller
 
     public function comissoes(Request $request, FinanceiroService $financeiroService)
     {
-        $profissionais = User::where('cargo', 'profissional')->orderBy('name')->get();
+        $profissionais = User::whereIn('cargo', [User::ROLE_PROFISSIONAL, User::ROLE_RECEPCIONISTA])
+            ->orderBy('name')
+            ->get();
         $profissionalId = $request->input('profissional_id');
         $mes = $request->input('mes', now()->format('m'));
         $ano = $request->input('ano', now()->format('Y'));
@@ -75,16 +77,37 @@ class FinanceiroController extends Controller
                 ->get();
 
             foreach ($vendas as $venda) {
-                $valorComissaoProduto = $financeiroService->calcularComissaoProduto((float) $venda->valor_venda);
-
                 $comissoes[] = [
                     'data' => Carbon::parse($venda->created_at)->format('d/m/Y'),
                     'descricao' => 'Produto (Venda #' . $venda->id_venda . ')',
                     'valor_total' => $venda->valor_venda,
-                    'valor_comissao' => $valorComissaoProduto,
+                    'valor_comissao' => $venda->valor_comissao,
                 ];
 
-                $totalComissao += $valorComissaoProduto;
+                $totalComissao += $venda->valor_comissao;
+            }
+
+            $pacotesVendidos = DB::table('cliente_pacotes')
+                ->join('pacotes', 'cliente_pacotes.pacote_id', '=', 'pacotes.id_pacote')
+                ->where('cliente_pacotes.vendedor_id', $profissionalId)
+                ->whereMonth('cliente_pacotes.data_compra', $mes)
+                ->whereYear('cliente_pacotes.data_compra', $ano)
+                ->select(
+                    'cliente_pacotes.*',
+                    'pacotes.nome as pacote_nome',
+                    'pacotes.valor_total'
+                )
+                ->get();
+
+            foreach ($pacotesVendidos as $pacoteVendido) {
+                $comissoes[] = [
+                    'data' => Carbon::parse($pacoteVendido->data_compra)->format('d/m/Y'),
+                    'descricao' => 'Pacote: ' . $pacoteVendido->pacote_nome,
+                    'valor_total' => $pacoteVendido->valor_total,
+                    'valor_comissao' => $pacoteVendido->valor_comissao,
+                ];
+
+                $totalComissao += $pacoteVendido->valor_comissao;
             }
 
             usort($comissoes, function ($a, $b) {

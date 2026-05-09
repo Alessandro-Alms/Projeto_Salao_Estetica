@@ -9,9 +9,12 @@ class ClientePacote extends Model
     protected $fillable = [
         'cliente_id',
         'pacote_id',   
+        'vendedor_id',
         'sessoes_restantes', 
         'data_compra', 
         'data_validade', 
+        'valor_comissao',
+        'comissao_paga_percentual',
         'status'];
 
     public function pacote()
@@ -22,5 +25,10 @@ class ClientePacote extends Model
     public function cliente()
     {
         return $this->belongsTo(User::class, 'cliente_id');
+    }
+
+    public function vendedor()
+    {
+        return $this->belongsTo(User::class, 'vendedor_id');
     }
 }

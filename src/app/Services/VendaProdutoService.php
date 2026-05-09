@@ -25,7 +25,7 @@ class VendaProdutoService
         return null;
     }
 
-    public function registrarVenda(int $vendedorId, int $produtoId, int $quantidade): Venda
+    public function registrarVenda(int $vendedorId, int $produtoId, int $quantidade, bool $geraComissao = true): Venda
     {
         $produto = Produto::lockForUpdate()->findOrFail($produtoId);
 
@@ -34,17 +34,21 @@ class VendaProdutoService
         }
 
         $produto->decrement('quantidade_estoque', $quantidade);
+        $valorVenda = $produto->valor_unitario * $quantidade;
+        $financeiroService = app(FinanceiroService::class);
 
         return Venda::create([
-            // A coluna se chama profissional_id, mas representa o usuario que realizou a venda.
+            // A coluna se chama profissional_id, mas representa o usuario que realizou a venda/compra.
             'profissional_id' => $vendedorId,
             'produto_id' => $produto->id_produto,
             'quantidade' => $quantidade,
-            'valor_venda' => $produto->valor_unitario * $quantidade,
+            'valor_venda' => $valorVenda,
+            'valor_comissao' => $geraComissao ? $financeiroService->calcularComissaoProduto((float) $valorVenda) : 0,
+            'comissao_paga_percentual' => $geraComissao ? FinanceiroService::COMISSAO_PRODUTO_PERCENTUAL : 0,
         ]);
     }
 
-    public function registrarVendas(int $vendedorId, array $itens): void
+    public function registrarVendas(int $vendedorId, array $itens, bool $geraComissao = true): void
     {
         foreach ($itens as $item) {
             if (empty($item['id'])) {
@@ -54,7 +58,8 @@ class VendaProdutoService
             $this->registrarVenda(
                 $vendedorId,
                 (int) $item['id'],
-                (int) ($item['quantidade'] ?? 1)
+                (int) ($item['quantidade'] ?? 1),
+                $geraComissao
             );
         }
     }

@@ -9,6 +9,39 @@ use Illuminate\Support\Facades\DB;
 
 class VendaProdutoController extends Controller
 {
+    public function indexCliente()
+    {
+        $produtos = Produto::where('quantidade_estoque', '>', 0)
+            ->orderBy('nome')
+            ->get();
+
+        return view('cliente.produtos.index', compact('produtos'));
+    }
+
+    public function comprarCliente(Request $request, VendaProdutoService $vendaProdutoService)
+    {
+        $dados = $request->validate([
+            'produto_id' => ['required', 'exists:produtos,id_produto'],
+            'quantidade' => ['required', 'integer', 'min:1'],
+        ]);
+
+        return DB::transaction(function () use ($dados, $vendaProdutoService) {
+            try {
+                $vendaProdutoService->registrarVenda(
+                    (int) auth()->id(),
+                    (int) $dados['produto_id'],
+                    (int) $dados['quantidade'],
+                    false
+                );
+            } catch (\RuntimeException $exception) {
+                return back()->withErrors(['quantidade' => $exception->getMessage()])->withInput();
+            }
+
+            return redirect()->route('cliente.produtos.index')
+                ->with('success', 'Produto comprado com sucesso!');
+        });
+    }
+
     public function create()
     {
         $produtos = Produto::orderBy('nome')->get();

@@ -8,16 +8,23 @@ use Carbon\Carbon;
 
 class ClientePacoteService
 {
-    public function venderPacote(int $clienteId, int $pacoteId): ClientePacote
+    public function venderPacote(int $clienteId, int $pacoteId, ?int $vendedorId = null): ClientePacote
     {
         $pacote = Pacote::findOrFail($pacoteId);
+        $financeiroService = app(FinanceiroService::class);
+        $valorComissao = $vendedorId
+            ? $financeiroService->calcularComissaoServico((float) $pacote->valor_total)
+            : 0;
 
         return ClientePacote::create([
             'cliente_id' => $clienteId,
             'pacote_id' => $pacote->id_pacote,
+            'vendedor_id' => $vendedorId,
             'sessoes_restantes' => $pacote->quantidade_sessoes,
             'data_compra' => now(),
             'data_validade' => now()->addDays($pacote->validade_dias),
+            'valor_comissao' => $valorComissao,
+            'comissao_paga_percentual' => $vendedorId ? FinanceiroService::COMISSAO_SERVICO_PERCENTUAL : 0,
             'status' => 'ativo',
         ]);
     }

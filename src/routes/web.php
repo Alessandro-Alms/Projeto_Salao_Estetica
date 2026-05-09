@@ -117,6 +117,8 @@ Route::middleware('auth')->group(function () {
     // =======================================
 
     Route::get('/meus-agendamentos', [AgendamentoController::class, 'indexCliente'])->name('cliente.index');
+    Route::get('/meus-produtos', [VendaProdutoController::class, 'indexCliente'])->name('cliente.produtos.index');
+    Route::post('/meus-produtos/comprar', [VendaProdutoController::class, 'comprarCliente'])->name('cliente.produtos.comprar');
     Route::get('/meus-pacotes', [ClientePacoteController::class, 'indexCliente'])->name('cliente.pacotes.index');
     Route::post('/meus-pacotes/comprar', [ClientePacoteController::class, 'comprarCliente'])->name('cliente.pacotes.comprar');
     Route::post('/agendamento/{id}/cancelar', [AgendamentoController::class, 'cancelarCliente'])->name('cliente.agendamento.cancelar');

@@ -14,6 +14,15 @@
                     <a href="{{ route('dashboard') }}" class="text-sm text-[#1A002B] hover:text-[#FF2EB6] transition-colors">
                         Dashboard
                     </a>
+
+                    @if(auth()->user()->isCliente())
+                        <a href="{{ route('cliente.produtos.index') }}" class="text-sm text-[#1A002B] hover:text-[#FF2EB6] transition-colors">
+                            Produtos
+                        </a>
+                        <a href="{{ route('cliente.pacotes.index') }}" class="text-sm text-[#1A002B] hover:text-[#FF2EB6] transition-colors">
+                            Pacotes
+                        </a>
+                    @endif
                     
                     @if(auth()->user()->cargo === 'gerente')
                         <a href="{{ route('admin.usuarios.index') }}" class="text-sm text-[#1A002B] hover:text-[#FF2EB6] transition-colors">
@@ -71,6 +80,15 @@
             <a href="{{ route('dashboard') }}" class="block px-3 py-2 text-base text-[#1A002B] hover:text-[#FF2EB6] hover:bg-[#FFD6F4] rounded-md">
                 Dashboard
             </a>
+
+            @if(auth()->user()->isCliente())
+                <a href="{{ route('cliente.produtos.index') }}" class="block px-3 py-2 text-base text-[#1A002B] hover:text-[#FF2EB6] hover:bg-[#FFD6F4] rounded-md">
+                    Produtos
+                </a>
+                <a href="{{ route('cliente.pacotes.index') }}" class="block px-3 py-2 text-base text-[#1A002B] hover:text-[#FF2EB6] hover:bg-[#FFD6F4] rounded-md">
+                    Pacotes
+                </a>
+            @endif
             
             @if(auth()->user()->cargo === 'gerente')
                 <a href="{{ route('admin.usuarios.index') }}" class="block px-3 py-2 text-base text-[#1A002B] hover:text-[#FF2EB6] hover:bg-[#FFD6F4] rounded-md">
