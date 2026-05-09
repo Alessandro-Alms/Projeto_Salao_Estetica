@@ -52,7 +52,7 @@ class BloqueioHorarioSeeder extends Seeder
 
     private function feriadosMoveis(int $ano): array
     {
-        $pascoa = Carbon::createFromTimestamp(easter_date($ano))->startOfDay();
+        $pascoa = $this->calcularPascoa($ano)->startOfDay();
 
         return [
             ['data' => $pascoa->copy()->subDays(48)->toDateString(), 'motivo' => 'Carnaval'],
@@ -61,6 +61,26 @@ class BloqueioHorarioSeeder extends Seeder
             ['data' => $pascoa->copy()->toDateString(), 'motivo' => 'Pascoa'],
             ['data' => $pascoa->copy()->addDays(60)->toDateString(), 'motivo' => 'Corpus Christi'],
         ];
+    }
+
+    private function calcularPascoa(int $ano): Carbon
+    {
+        $a = $ano % 19;
+        $b = intdiv($ano, 100);
+        $c = $ano % 100;
+        $d = intdiv($b, 4);
+        $e = $b % 4;
+        $f = intdiv($b + 8, 25);
+        $g = intdiv($b - $f + 1, 3);
+        $h = (19 * $a + $b - $d - $g + 15) % 30;
+        $i = intdiv($c, 4);
+        $k = $c % 4;
+        $l = (32 + 2 * $e + 2 * $i - $h - $k) % 7;
+        $m = intdiv($a + 11 * $h + 22 * $l, 451);
+        $mes = intdiv($h + $l - 7 * $m + 114, 31);
+        $dia = (($h + $l - 7 * $m + 114) % 31) + 1;
+
+        return Carbon::create($ano, $mes, $dia, 0, 0, 0);
     }
 
     private function criarFolgasProfissionais(): void
