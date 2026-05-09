@@ -30,7 +30,7 @@ class RelatorioExport implements FromCollection, WithHeadings
             ->where('agendamentos.status', 'executado')
             ->whereBetween('agendamentos.updated_at', [$this->dataInicio, $this->dataFim])
             ->groupBy('users.id', 'users.name')
-            ->orderByDesc('Total_Atendimentos')
+            ->orderByRaw('COUNT(agendamentos.id_agendamento) DESC')
             ->get();
     }
 
