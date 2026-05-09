@@ -36,6 +36,12 @@
                     <h2 class="text-2xl font-title text-[#4A00B9]">Meus Pacotes Ativos</h2>
                 </div>
 
+                <div class="mb-6">
+                    <a href="{{ route('cliente.pacotes.index') }}" class="inline-flex items-center justify-center bg-white text-[#FF2EB6] border-2 border-[#FF2EB6] px-5 py-2 rounded-full text-sm font-bold hover:bg-[#FF2EB6] hover:text-white transition-all">
+                        Comprar pacote
+                    </a>
+                </div>
+
                 @if(isset($pacotes) && $pacotes->count() > 0)
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         @foreach($pacotes as $meuPacote)
@@ -47,6 +53,9 @@
                                         </span>
                                     </div>
                                     <h3 class="text-lg font-title text-[#4A00B9] mt-2 mb-1">{{ $meuPacote->pacote->nome }}</h3>
+                                    <p class="text-xs text-[#7B19E5] mb-2">
+                                        {{ $meuPacote->pacote->servicos->pluck('nome')->join(', ') ?: ($meuPacote->pacote->servico->nome ?? 'Servico removido') }}
+                                    </p>
                                     <p class="text-sm text-[#7B19E5] mb-4">
                                         Válido até: <span class="font-bold">{{ \Carbon\Carbon::parse($meuPacote->data_validade)->format('d/m/Y') }}</span>
                                     </p>

@@ -75,7 +75,8 @@ class ServicoController extends Controller
             || DB::table('agendamento_servico')->where('servico_id', $id)->exists();
 
         // 2. Verifica se está vinculado a algum pacote
-        $temPacote = DB::table('pacotes')->where('servico_id', $id)->exists();
+        $temPacote = DB::table('pacotes')->where('servico_id', $id)->exists()
+            || DB::table('pacote_servico')->where('servico_id', $id)->exists();
 
         // 3. Verifica se algum profissional faz este serviço (tabela pivô)
         $temProfissional = DB::table('profissional_servico')->where('servico_id', $id)->exists();

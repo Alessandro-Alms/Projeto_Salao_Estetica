@@ -117,6 +117,8 @@ Route::middleware('auth')->group(function () {
     // =======================================
 
     Route::get('/meus-agendamentos', [AgendamentoController::class, 'indexCliente'])->name('cliente.index');
+    Route::get('/meus-pacotes', [ClientePacoteController::class, 'indexCliente'])->name('cliente.pacotes.index');
+    Route::post('/meus-pacotes/comprar', [ClientePacoteController::class, 'comprarCliente'])->name('cliente.pacotes.comprar');
     Route::post('/agendamento/{id}/cancelar', [AgendamentoController::class, 'cancelarCliente'])->name('cliente.agendamento.cancelar');
     Route::post('/agendamentos/{id}/presenca', [AgendamentoController::class, 'confirmarPresenca'])->name('agendamento.presenca');
     Route::patch('/agendamentos/{id}/falta', [AgendamentoController::class, 'marcarFalta'])->name('agendamentos.falta');

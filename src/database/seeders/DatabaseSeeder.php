@@ -40,6 +40,7 @@ class DatabaseSeeder extends Seeder
             'agendamento_servico',
             'avaliacoes',
             'cliente_pacotes',
+            'pacote_servico',
             'pacotes',
             'bloqueios_horarios',
             'horarios_trabalho',
@@ -281,6 +282,7 @@ class DatabaseSeeder extends Seeder
             'escovas' => [
                 'nome' => 'Pacote 5 escovas modeladas',
                 'servico_id' => $servicos['escova']->id_servico,
+                'servicos_ids' => [$servicos['escova']->id_servico, $servicos['hidratacao']->id_servico],
                 'quantidade_sessoes' => 5,
                 'valor_total' => 260.00,
                 'validade_dias' => 90,
@@ -288,17 +290,27 @@ class DatabaseSeeder extends Seeder
             'pele' => [
                 'nome' => 'Pacote pele iluminada',
                 'servico_id' => $servicos['limpeza']->id_servico,
+                'servicos_ids' => [$servicos['limpeza']->id_servico, $servicos['sobrancelha']->id_servico],
                 'quantidade_sessoes' => 3,
                 'valor_total' => 300.00,
                 'validade_dias' => 120,
             ],
         ] as $chave => $pacote) {
             $ids[$chave] = DB::table('pacotes')->insertGetId([
-                ...$pacote,
+                ...collect($pacote)->except('servicos_ids')->all(),
                 'ativo' => true,
                 'created_at' => now()->subDays(20),
                 'updated_at' => now()->subDays(20),
             ]);
+
+            foreach ($pacote['servicos_ids'] as $servicoId) {
+                DB::table('pacote_servico')->insert([
+                    'pacote_id' => $ids[$chave],
+                    'servico_id' => $servicoId,
+                    'created_at' => now()->subDays(20),
+                    'updated_at' => now()->subDays(20),
+                ]);
+            }
         }
 
         return $ids;

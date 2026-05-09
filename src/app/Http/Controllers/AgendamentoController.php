@@ -692,7 +692,7 @@ class AgendamentoController extends Controller
         $filtro = $request->get('filtro', '7');
         
         $query = Agendamento::where('profissional_id', auth()->id())
-                            ->with(['cliente.pacotesAtivos.pacote', 'servico', 'servicos'])
+                            ->with(['cliente.pacotesAtivos.pacote.servicos', 'servico', 'servicos'])
                             ->orderBy('data_hora_inicio', 'asc');
         
         // Aplicar filtro de período
@@ -758,7 +758,7 @@ class AgendamentoController extends Controller
         
         $agendamentos = $query->get();
 
-        $pacotes = auth()->user()->pacotesAtivos()->with('pacote')->get();
+        $pacotes = auth()->user()->pacotesAtivos()->with('pacote.servicos')->get();
 
         return view('cliente.index', compact('agendamentos', 'pacotes'));
     }

@@ -198,7 +198,9 @@
                                                 
                                                 {{-- LÓGICA DO PACOTE --}}
                                                 @php
-                                                    $pacoteDisponivel = $agenda->cliente->pacotesAtivos->firstWhere('pacote.servico_id', $agenda->servico_id);
+                                                    $pacoteDisponivel = $agenda->cliente->pacotesAtivos->first(function ($clientePacote) use ($agenda) {
+                                                        return $clientePacote->pacote && $clientePacote->pacote->aceitaServico((int) $agenda->servico_id);
+                                                    });
                                                 @endphp
 
                                                 @if($pacoteDisponivel)

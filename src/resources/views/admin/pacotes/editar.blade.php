@@ -36,17 +36,20 @@
                                 class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
                         </div>
 
-                        <!-- Serviço Vinculado -->
+                        <!-- Servicos inclusos -->
                         <div>
-                            <label class="block text-sm font-medium text-[#4A00B9] mb-2">Serviço Vinculado</label>
-                            <select name="servico_id" required 
-                                class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
+                            <label class="block text-sm font-medium text-[#4A00B9] mb-2">Servicos inclusos</label>
+                            @php
+                                $servicosSelecionados = $pacote->servicos->pluck('id_servico')->push($pacote->servico_id)->filter()->unique();
+                            @endphp
+                            <div class="max-h-44 overflow-y-auto space-y-2 bg-white/50 border border-[#FFD6F4] rounded-lg p-3">
                                 @foreach($servicos as $servico)
-                                    <option value="{{ $servico->id_servico }}" {{ $pacote->servico_id == $servico->id_servico ? 'selected' : '' }}>
-                                        {{ $servico->nome }}
-                                    </option>
+                                    <label class="flex items-center gap-2 text-sm text-[#1A002B]">
+                                        <input type="checkbox" name="servicos_ids[]" value="{{ $servico->id_servico }}" class="rounded border-[#FFD6F4] text-[#7B19E5] focus:ring-[#7B19E5]" @checked($servicosSelecionados->contains($servico->id_servico))>
+                                        <span>{{ $servico->nome }}</span>
+                                    </label>
                                 @endforeach
-                            </select>
+                            </div>
                         </div>
 
                         <!-- Qtd. de Sessões -->

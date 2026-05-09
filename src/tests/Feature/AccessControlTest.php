@@ -4,8 +4,10 @@ namespace Tests\Feature;
 
 use App\Models\Agendamento;
 use App\Models\BloqueioHorario;
+use App\Models\Pacote;
 use App\Models\Servico;
 use App\Models\User;
+use App\Services\ClientePacoteService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -159,6 +161,81 @@ class AccessControlTest extends TestCase
             ->assertHeader('X-Content-Type-Options', 'nosniff')
             ->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
             ->assertHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+    }
+
+    public function test_cliente_compra_pacote_para_si_mesmo(): void
+    {
+        $cliente = User::factory()->create(['cargo' => User::ROLE_CLIENTE]);
+        $servico = Servico::create([
+            'nome' => 'Pacote Teste',
+            'descricao' => 'Servico usado no pacote.',
+            'preco' => 100,
+            'duracao' => 60,
+        ]);
+        $pacote = Pacote::create([
+            'nome' => 'Combo Cliente',
+            'servico_id' => $servico->id_servico,
+            'quantidade_sessoes' => 5,
+            'valor_total' => 400,
+            'validade_dias' => 90,
+            'ativo' => true,
+        ]);
+
+        $this->actingAs($cliente)
+            ->post(route('cliente.pacotes.comprar'), ['pacote_id' => $pacote->id_pacote])
+            ->assertRedirect(route('cliente.pacotes.index'));
+
+        $this->assertDatabaseHas('cliente_pacotes', [
+            'cliente_id' => $cliente->id,
+            'pacote_id' => $pacote->id_pacote,
+            'sessoes_restantes' => 5,
+            'status' => 'ativo',
+        ]);
+    }
+
+    public function test_cliente_nao_usa_rota_admin_para_vender_pacote_a_outro_cliente(): void
+    {
+        $cliente = User::factory()->create(['cargo' => User::ROLE_CLIENTE]);
+
+        $this->actingAs($cliente)
+            ->get(route('admin.venda.create'))
+            ->assertForbidden();
+    }
+
+    public function test_pacote_pode_ser_usado_em_qualquer_servico_vinculado(): void
+    {
+        $cliente = User::factory()->create(['cargo' => User::ROLE_CLIENTE]);
+        $servicoPrincipal = Servico::create([
+            'nome' => 'Limpeza de pele',
+            'descricao' => 'Servico principal do pacote.',
+            'preco' => 120,
+            'duracao' => 60,
+        ]);
+        $servicoExtra = Servico::create([
+            'nome' => 'Design de sobrancelhas',
+            'descricao' => 'Servico extra do mesmo pacote.',
+            'preco' => 45,
+            'duracao' => 30,
+        ]);
+        $pacote = Pacote::create([
+            'nome' => 'Pele completa',
+            'servico_id' => $servicoPrincipal->id_servico,
+            'quantidade_sessoes' => 3,
+            'valor_total' => 300,
+            'validade_dias' => 90,
+            'ativo' => true,
+        ]);
+        $pacote->servicos()->sync([$servicoPrincipal->id_servico, $servicoExtra->id_servico]);
+
+        $clientePacote = app(ClientePacoteService::class)->venderPacote($cliente->id, $pacote->id_pacote);
+
+        app(ClientePacoteService::class)->consumirSessao($clientePacote->id, $cliente->id, $servicoExtra->id_servico);
+
+        $this->assertDatabaseHas('cliente_pacotes', [
+            'id' => $clientePacote->id,
+            'sessoes_restantes' => 2,
+            'status' => 'ativo',
+        ]);
     }
 
     private function criarAgendamento(User $cliente, User $profissional): Agendamento

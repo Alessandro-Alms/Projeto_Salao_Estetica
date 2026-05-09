@@ -24,7 +24,7 @@ class ClientePacoteService
 
     public function consumirSessao(int $clientePacoteId, int $clienteId, int $servicoId): ClientePacote
     {
-        $clientePacote = ClientePacote::with('pacote')
+        $clientePacote = ClientePacote::with('pacote.servicos')
             ->where('id', $clientePacoteId)
             ->where('cliente_id', $clienteId)
             ->where('status', 'ativo')
@@ -36,7 +36,7 @@ class ClientePacoteService
             throw new \RuntimeException('Pacote inválido, vencido ou sem sessões disponíveis.');
         }
 
-        if ((int) $clientePacote->pacote->servico_id !== $servicoId) {
+        if (! $clientePacote->pacote->aceitaServico($servicoId)) {
             throw new \RuntimeException('Este pacote não pertence ao serviço deste agendamento.');
         }
 

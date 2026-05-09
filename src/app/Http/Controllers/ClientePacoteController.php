@@ -10,6 +10,35 @@ use Illuminate\Validation\Rule;
 
 class ClientePacoteController extends Controller
 {
+    public function indexCliente()
+    {
+        $pacotesDisponiveis = Pacote::with(['servico', 'servicos'])
+            ->where('ativo', true)
+            ->orderBy('nome')
+            ->get();
+
+        $meusPacotes = auth()->user()
+            ->pacotesAtivos()
+            ->with('pacote.servicos')
+            ->orderBy('data_validade')
+            ->get();
+
+        return view('cliente.pacotes.index', compact('pacotesDisponiveis', 'meusPacotes'));
+    }
+
+    public function comprarCliente(Request $request, ClientePacoteService $clientePacoteService)
+    {
+        $request->validate([
+            'pacote_id' => ['required', Rule::exists('pacotes', 'id_pacote')->where('ativo', true)],
+        ]);
+
+        $clientePacoteService->venderPacote((int) auth()->id(), (int) $request->pacote_id);
+
+        return redirect()
+            ->route('cliente.pacotes.index')
+            ->with('success', 'Pacote comprado com sucesso! As sessoes ja estao disponiveis para seus agendamentos.');
+    }
+
     public function create()
     {
         $clientes = User::where('cargo', 'cliente')->orderBy('name')->get();

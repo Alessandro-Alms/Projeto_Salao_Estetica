@@ -128,12 +128,21 @@ return new class extends Migration
         Schema::create('pacotes', function (Blueprint $table) {
             $table->id('id_pacote');
             $table->string('nome'); // Ex: Pacote Verão Laser
-            $table->foreignId('servico_id')->constrained('servicos', 'id_servico'); // A qual serviço pertence
+            $table->foreignId('servico_id')->nullable()->constrained('servicos', 'id_servico'); // Servico principal para compatibilidade
             $table->integer('quantidade_sessoes'); // Ex: 5
             $table->decimal('valor_total', 8, 2); // Ex: 500.00
             $table->integer('validade_dias')->default(90); // Ex: expira em 90 dias
             $table->boolean('ativo')->default(true);
             $table->timestamps();
+        });
+
+        Schema::create('pacote_servico', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('pacote_id')->constrained('pacotes', 'id_pacote')->onDelete('cascade');
+            $table->foreignId('servico_id')->constrained('servicos', 'id_servico')->onDelete('cascade');
+            $table->timestamps();
+
+            $table->unique(['pacote_id', 'servico_id']);
         });
 
         // Tabela 2: Os pacotes comprados pelos clientes
@@ -180,6 +189,7 @@ return new class extends Migration
         Schema::dropIfExists('agendamento_servico');
         Schema::dropIfExists('avaliacoes');
         Schema::dropIfExists('cliente_pacotes');
+        Schema::dropIfExists('pacote_servico');
         Schema::dropIfExists('pacotes');
         Schema::dropIfExists('bloqueios_horarios');
         Schema::dropIfExists('horarios_trabalho');
