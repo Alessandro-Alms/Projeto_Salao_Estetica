@@ -6,9 +6,10 @@
         </div>
         
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {{-- Minha Agenda (roxo + ✧) --}}
             <a href="{{ route('profissional.agenda') }}" class="group flex items-center gap-4 p-4 rounded-xl bg-white/50 hover:bg-white/80 transition-all hover:shadow-lg hover:-translate-y-1 border border-[#FFD6F4]">
                 <div class="w-12 h-12 bg-gradient-to-br from-[#7B19E5] to-[#A855F7] rounded-xl flex items-center justify-center shadow-md">
-                    <span class="text-white text-xl">Calendário</span>
+                    <span class="text-white text-xl">✧</span>
                 </div>
                 <div>
                     <h4 class="font-title text-[#4A00B9]">Minha Agenda</h4>
@@ -16,9 +17,10 @@
                 </div>
             </a>
 
+            {{-- Meu Extrato (rosa + ✦) --}}
             <a href="{{ route('profissional.extrato') }}" class="group flex items-center gap-4 p-4 rounded-xl bg-white/50 hover:bg-white/80 transition-all hover:shadow-lg hover:-translate-y-1 border border-[#FFD6F4]">
                 <div class="w-12 h-12 bg-gradient-to-br from-[#FF2EB6] to-[#FF69B4] rounded-xl flex items-center justify-center shadow-md">
-                    <span class="text-white text-xl">✧</span>
+                    <span class="text-white text-xl">✦</span>
                 </div>
                 <div>
                     <h4 class="font-title text-[#4A00B9]">Meu Extrato</h4>
@@ -26,6 +28,7 @@
                 </div>
             </a>
 
+            {{-- Configurações (roxo + ✧) --}}
             <a href="{{ route('profissional.servicos.editar') }}" class="group flex items-center gap-4 p-4 rounded-xl bg-white/50 hover:bg-white/80 transition-all hover:shadow-lg hover:-translate-y-1 border border-[#FFD6F4]">
                 <div class="w-12 h-12 bg-gradient-to-br from-[#7B19E5] to-[#A855F7] rounded-xl flex items-center justify-center shadow-md">
                     <span class="text-white text-xl">✧</span>
@@ -43,7 +46,7 @@
     <div class="glass-card rounded-2xl shadow-xl overflow-hidden mb-6">
         <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
             <div class="flex items-center gap-2 mb-4">
-                <span class="text-[#FF2EB6] text-xl">!</span>
+                <span class="text-[#FF2EB6] text-xl">✦</span>
                 <h3 class="text-lg font-title text-[#4A00B9]">Avisos de Agenda e Valores Especiais</h3>
             </div>
 
@@ -60,7 +63,7 @@
                     </div>
                 @empty
                     <div class="p-3 rounded-xl bg-white/50 border border-[#FFD6F4] text-gray-500">
-                        Nenhum bloqueio futuro informado por você.
+                        ✧ Nenhum bloqueio futuro informado por você.
                     </div>
                 @endforelse
             </div>
@@ -71,7 +74,7 @@
         <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
             <div class="flex items-center gap-3 mb-6">
                 <div class="w-10 h-10 bg-gradient-to-br from-[#7B19E5] to-[#FF2EB6] rounded-xl flex items-center justify-center shadow-md">
-                    <span class="text-white text-lg">✦</span>
+                    <span class="text-white text-lg">✧</span>
                 </div>
                 <div>
                     <h3 class="text-lg font-title text-[#4A00B9]">REL011: Avaliações e Reputação</h3>
@@ -95,7 +98,7 @@
                             </div>
                             <p class="text-xs mt-3 bg-white/20 px-3 py-1 rounded-full inline-block">{{ $totalAvaliacoes }} avaliações</p>
                         @else
-                            <p class="text-sm opacity-90">Sem avaliações registradas ainda.</p>
+                            <p class="text-sm opacity-90">✧ Sem avaliações registradas ainda.</p>
                         @endif
                     </div>
                 </div>

@@ -161,109 +161,41 @@
                 <p class="text-gray-500 text-sm mt-1">Selecione uma categoria abaixo para ver análises aprofundadas.</p>
             </div>
 
-            <!-- Cards de módulos -->
+            <!-- Cards de módulos com cores alternadas -->
             @php 
-                $query = ['data_inicio' => $dataInicio, 'data_fim' => $dataFim]; 
+                $query = ['data_inicio' => $dataInicio, 'data_fim' => $dataFim];
+                $cards = [
+                    ['route' => 'admin.relatorios.faturamento', 'title' => 'Faturamento', 'desc' => 'Total de receitas, ticket médio e comparativo com período anterior.'],
+                    ['route' => 'admin.relatorios.ocupacao', 'title' => 'Ocupação da Agenda', 'desc' => 'Taxa de preenchimento de horários, identificação de picos e horas mortas.'],
+                    ['route' => 'admin.relatorios.desempenho', 'title' => 'Desempenho da Equipe', 'desc' => 'Ranking de profissionais por serviços feitos, avaliações e valores gerados.'],
+                    ['route' => 'admin.relatorios.produtos', 'title' => 'Produtos Mais Vendidos', 'desc' => 'Ranking de vendas físicas, giro de prateleira e lucro direto por produto.'],
+                    ['route' => 'admin.relatorios.fidelizacao', 'title' => 'Fidelização e VIPs', 'desc' => 'Taxa de retorno de clientes e ranking dos clientes que mais investem no salão.'],
+                    ['route' => 'admin.relatorios.cancelamentos', 'title' => 'Análise de Cancelamentos', 'desc' => 'Motivos de desistência, cálculo de prejuízos e ranking de clientes ofensores.'],
+                    ['route' => 'admin.relatorios.financeiro', 'title' => 'Financeiro Detalhado', 'desc' => 'Balanço de entradas (serviços e produtos) vs despesas (comissões geradas).'],
+                    ['route' => 'admin.relatorios.comissoes', 'title' => 'Comissões a Pagar', 'desc' => 'Folha de pagamento exata baseada nos serviços executados. Exportável.'],
+                    ['route' => 'admin.relatorios.estoque', 'title' => 'Estoque de Produtos', 'desc' => 'Saldo atual, capital empatado na prateleira e alertas de reposição urgente.'],
+                    ['route' => 'admin.relatorios.sazonalidade', 'title' => 'Sazonalidade', 'desc' => 'Descobre quais são os dias da semana mais fortes e fracos do teu salão.'],
+                    ['route' => 'admin.relatorios.avaliacoes', 'title' => 'Avaliações e Reputação', 'desc' => 'Média de estrelas, taxa de aprovação dos clientes e feed de comentários.'],
+                    ['route' => 'admin.relatorios.previsao', 'title' => 'Previsão de Demanda', 'desc' => 'Projeção inteligente de clientes para os próximos 7 dias baseada no histórico.'],
+                ];
             @endphp
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                
-                <a href="{{ route('admin.relatorios.faturamento', $query) }}" class="glass-card rounded-2xl shadow-xl overflow-hidden hover-lift group block">
-                    <div class="p-5 bg-white/70 backdrop-blur-sm border border-white/40">
-                        <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">✧</div>
-                        <h3 class="font-title text-[#4A00B9] text-lg mb-1 group-hover:text-[#7B19E5] transition-colors">Faturamento</h3>
-                        <p class="text-xs text-gray-500">Total de receitas, ticket médio e comparativo com período anterior.</p>
-                    </div>
-                </a>
-
-                <a href="{{ route('admin.relatorios.ocupacao', $query) }}" class="glass-card rounded-2xl shadow-xl overflow-hidden hover-lift group block">
-                    <div class="p-5 bg-white/70 backdrop-blur-sm border border-white/40">
-                        <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">✧</div>
-                        <h3 class="font-title text-[#4A00B9] text-lg mb-1 group-hover:text-[#7B19E5] transition-colors">Ocupação da Agenda</h3>
-                        <p class="text-xs text-gray-500">Taxa de preenchimento de horários, identificação de picos e horas mortas.</p>
-                    </div>
-                </a>
-
-                <a href="{{ route('admin.relatorios.desempenho', $query) }}" class="glass-card rounded-2xl shadow-xl overflow-hidden hover-lift group block">
-                    <div class="p-5 bg-white/70 backdrop-blur-sm border border-white/40">
-                        <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">★</div>
-                        <h3 class="font-title text-[#4A00B9] text-lg mb-1 group-hover:text-[#7B19E5] transition-colors">Desempenho da Equipe</h3>
-                        <p class="text-xs text-gray-500">Ranking de profissionais por serviços feitos, avaliações e valores gerados.</p>
-                    </div>
-                </a>
-
-                <a href="{{ route('admin.relatorios.produtos', $query) }}" class="glass-card rounded-2xl shadow-xl overflow-hidden hover-lift group block">
-                    <div class="p-5 bg-white/70 backdrop-blur-sm border border-white/40">
-                        <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">✧</div>
-                        <h3 class="font-title text-[#4A00B9] text-lg mb-1 group-hover:text-[#7B19E5] transition-colors">Produtos Mais Vendidos</h3>
-                        <p class="text-xs text-gray-500">Ranking de vendas físicas, giro de prateleira e lucro direto por produto.</p>
-                    </div>
-                </a>
-
-                <a href="{{ route('admin.relatorios.fidelizacao', $query) }}" class="glass-card rounded-2xl shadow-xl overflow-hidden hover-lift group block">
-                    <div class="p-5 bg-white/70 backdrop-blur-sm border border-white/40">
-                        <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">✧</div>
-                        <h3 class="font-title text-[#4A00B9] text-lg mb-1 group-hover:text-[#7B19E5] transition-colors">Fidelização e VIPs</h3>
-                        <p class="text-xs text-gray-500">Taxa de retorno de clientes e ranking dos clientes que mais investem no salão.</p>
-                    </div>
-                </a>
-
-                <a href="{{ route('admin.relatorios.cancelamentos', $query) }}" class="glass-card rounded-2xl shadow-xl overflow-hidden hover-lift group block">
-                    <div class="p-5 bg-white/70 backdrop-blur-sm border border-white/40">
-                        <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">✧</div>
-                        <h3 class="font-title text-[#4A00B9] text-lg mb-1 group-hover:text-[#7B19E5] transition-colors">Análise de Cancelamentos</h3>
-                        <p class="text-xs text-gray-500">Motivos de desistência, cálculo de prejuízos e ranking de clientes ofensores.</p>
-                    </div>
-                </a>
-
-                <a href="{{ route('admin.relatorios.financeiro', $query) }}" class="glass-card rounded-2xl shadow-xl overflow-hidden hover-lift group block">
-                    <div class="p-5 bg-white/70 backdrop-blur-sm border border-white/40">
-                        <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">✧</div>
-                        <h3 class="font-title text-[#4A00B9] text-lg mb-1 group-hover:text-[#7B19E5] transition-colors">Financeiro Detalhado</h3>
-                        <p class="text-xs text-gray-500">Balanço de entradas (serviços e produtos) vs despesas (comissões geradas).</p>
-                    </div>
-                </a>
-
-                <a href="{{ route('admin.relatorios.comissoes', $query) }}" class="glass-card rounded-2xl shadow-xl overflow-hidden hover-lift group block">
-                    <div class="p-5 bg-white/70 backdrop-blur-sm border border-white/40">
-                        <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">✧</div>
-                        <h3 class="font-title text-[#4A00B9] text-lg mb-1 group-hover:text-[#7B19E5] transition-colors">Comissões a Pagar</h3>
-                        <p class="text-xs text-gray-500">Folha de pagamento exata baseada nos serviços executados. Exportável.</p>
-                    </div>
-                </a>
-
-                <a href="{{ route('admin.relatorios.estoque', $query) }}" class="glass-card rounded-2xl shadow-xl overflow-hidden hover-lift group block">
-                    <div class="p-5 bg-white/70 backdrop-blur-sm border border-white/40">
-                        <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">✧</div>
-                        <h3 class="font-title text-[#4A00B9] text-lg mb-1 group-hover:text-[#7B19E5] transition-colors">Estoque de Produtos</h3>
-                        <p class="text-xs text-gray-500">Saldo atual, capital empatado na prateleira e alertas de reposição urgente.</p>
-                    </div>
-                </a>
-
-                <a href="{{ route('admin.relatorios.sazonalidade', $query) }}" class="glass-card rounded-2xl shadow-xl overflow-hidden hover-lift group block">
-                    <div class="p-5 bg-white/70 backdrop-blur-sm border border-white/40">
-                        <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">Calendário</div>
-                        <h3 class="font-title text-[#4A00B9] text-lg mb-1 group-hover:text-[#7B19E5] transition-colors">Sazonalidade</h3>
-                        <p class="text-xs text-gray-500">Descobre quais são os dias da semana mais fortes e fracos do teu salão.</p>
-                    </div>
-                </a>
-
-                <a href="{{ route('admin.relatorios.avaliacoes', $query) }}" class="glass-card rounded-2xl shadow-xl overflow-hidden hover-lift group block">
-                    <div class="p-5 bg-white/70 backdrop-blur-sm border border-white/40">
-                        <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">✧</div>
-                        <h3 class="font-title text-[#4A00B9] text-lg mb-1 group-hover:text-[#7B19E5] transition-colors">Avaliações e Reputação</h3>
-                        <p class="text-xs text-gray-500">Média de estrelas, taxa de aprovação dos clientes e feed de comentários.</p>
-                    </div>
-                </a>
-
-                <a href="{{ route('admin.relatorios.previsao', $query) }}" class="glass-card rounded-2xl shadow-xl overflow-hidden hover-lift group block">
-                    <div class="p-5 bg-white/70 backdrop-blur-sm border border-white/40">
-                        <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">✧</div>
-                        <h3 class="font-title text-[#4A00B9] text-lg mb-1 group-hover:text-[#7B19E5] transition-colors">Previsão de Demanda</h3>
-                        <p class="text-xs text-gray-500">Projeção inteligente de clientes para os próximos 7 dias baseada no histórico.</p>
-                    </div>
-                </a>
-
+                @foreach($cards as $index => $card)
+                    @php
+                        $isRoxo = $index % 2 == 0;
+                        $gradiente = $isRoxo ? 'from-[#7B19E5] to-[#A855F7]' : 'from-[#FF2EB6] to-[#FF69B4]';
+                        $simbolo = $isRoxo ? '✧' : '✦';
+                    @endphp
+                    
+                    <a href="{{ route($card['route'], $query) }}" class="glass-card rounded-2xl shadow-xl overflow-hidden hover-lift group block">
+                        <div class="p-5 bg-gradient-to-br {{ $gradiente }} text-white">
+                            <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">{{ $simbolo }}</div>
+                            <h3 class="font-title text-lg mb-1">{{ $card['title'] }}</h3>
+                            <p class="text-xs text-white/80">{{ $card['desc'] }}</p>
+                        </div>
+                    </a>
+                @endforeach
             </div>
         </div>
     </div>

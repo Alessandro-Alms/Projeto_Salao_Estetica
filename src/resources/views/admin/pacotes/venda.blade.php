@@ -32,7 +32,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="block text-sm font-medium text-[#4A00B9] mb-2">
-                                    <i class="fa-regular fa-user mr-2"></i> Selecione o Cliente
+                                    ✧ Selecione o Cliente
                                 </label>
                                 <select name="cliente_id" required 
                                     class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
@@ -45,7 +45,7 @@
 
                             <div>
                                 <label class="block text-sm font-medium text-[#4A00B9] mb-2">
-                                    <i class="fa-regular fa-tag mr-2"></i> Selecione o Pacote
+                                    ✧ Selecione o Pacote
                                 </label>
                                 <select name="pacote_id" required 
                                     class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
@@ -61,7 +61,7 @@
 
                         <div class="mt-8 flex justify-end">
                             <button type="submit" class="bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white px-8 py-3 text-sm rounded-full font-medium btn-primary shadow-lg hover:shadow-xl transition-all w-full md:w-auto">
-                                <i class="fa-regular fa-cart-shopping mr-2"></i> Confirmar Venda e Ativar Pacote
+                                 Confirmar Venda e Ativar Pacote
                             </button>
                         </div>
                     </form>

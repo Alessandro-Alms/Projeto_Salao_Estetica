@@ -18,7 +18,6 @@
                 <h1 class="text-2xl font-title text-[#4A00B9]">Minha Agenda de Atendimentos</h1>
             </div>
 
-            {{-- Alertas de Sucesso ou Erro --}}
             @if(session('status'))
                 <div class="mb-6 p-4 rounded-lg bg-green-50/80 border border-green-200 text-green-700">
                     ✧ {{ session('status') }}
@@ -31,24 +30,24 @@
                 </div>
             @endif
 
-            {{-- FILTRO DE PERÍODO --}}
+            <!-- FILTRO DE PERÍODO -->
             <div class="mb-6 flex gap-3 flex-wrap">
                 <form method="GET" action="{{ route('profissional.agenda') }}" class="flex gap-2">
                     <input type="hidden" name="filtro" id="filtro_input" value="{{ request('filtro', '7') }}">
                     
                     <button type="button" onclick="filtrarAgendamentos(7)" 
-                            class="px-4 py-2 rounded-full text-sm font-medium transition-all {{ request('filtro', '7') == '7' ? 'bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white shadow-md' : 'bg-white/70 border border-[#FFD6F4] text-[#4A00B9] hover:bg-white/90' }}">
-                        Calendário Próximos 7 dias
+                            class="px-4 py-2 rounded-full text-sm font-medium transition-all {{ request('filtro', '7') == '7' ? 'bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white shadow-md' : 'bg-white/70 border border-[#FFD6F4] text-[#4A00B9] hover:bg-gradient-to-r hover:from-[#7B19E5] hover:to-[#FF2EB6] hover:text-white' }}">
+                        ✧ Próximos 7 dias
                     </button>
 
                     <button type="button" onclick="filtrarAgendamentos(30)" 
-                            class="px-4 py-2 rounded-full text-sm font-medium transition-all {{ request('filtro') == '30' ? 'bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white shadow-md' : 'bg-white/70 border border-[#FFD6F4] text-[#4A00B9] hover:bg-white/90' }}">
-                        Calendário Próximos 30 dias
+                            class="px-4 py-2 rounded-full text-sm font-medium transition-all {{ request('filtro') == '30' ? 'bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white shadow-md' : 'bg-white/70 border border-[#FFD6F4] text-[#4A00B9] hover:bg-gradient-to-r hover:from-[#7B19E5] hover:to-[#FF2EB6] hover:text-white' }}">
+                        ✦ Próximos 30 dias
                     </button>
 
                     <button type="button" onclick="filtrarAgendamentos('todos')" 
-                            class="px-4 py-2 rounded-full text-sm font-medium transition-all {{ request('filtro') == 'todos' ? 'bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white shadow-md' : 'bg-white/70 border border-[#FFD6F4] text-[#4A00B9] hover:bg-white/90' }}">
-                        Calendário Todos os agendamentos
+                            class="px-4 py-2 rounded-full text-sm font-medium transition-all {{ request('filtro') == 'todos' ? 'bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white shadow-md' : 'bg-white/70 border border-[#FFD6F4] text-[#4A00B9] hover:bg-gradient-to-r hover:from-[#7B19E5] hover:to-[#FF2EB6] hover:text-white' }}">
+                        ✧ Todos os agendamentos
                     </button>
                 </form>
             </div>
@@ -57,8 +56,8 @@
                 <div class="mb-8">
                     <div class="flex items-center gap-2 mb-3">
                         <span class="text-[#FF2EB6] text-xl">✦</span>
-                        <h2 class="bg-gradient-to-r from-[#FF2EB6]/20 to-[#7B19E5]/20 text-[#4A00B9] px-4 py-2 rounded-full font-title text-lg inline-block">
-                            Calendário Dia: {{ $dia }}
+                        <h2 class="text-lg font-title text-[#4A00B9]">
+                            {{ $dia }}
                         </h2>
                     </div>
                     
@@ -67,14 +66,13 @@
                             <div class="glass-card rounded-2xl shadow-xl overflow-hidden hover-lift">
                                 <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
                                     
-                                    {{-- AVISO DE FIDELIDADE --}}
                                     @if($agenda->cliente->contador_fidelidade == 5)
                                         <div class="mb-4 inline-block px-3 py-1 text-xs font-semibold rounded-full bg-gradient-to-r from-yellow-500/20 to-orange-500/20 text-yellow-700 border border-yellow-200">
-                                            Pacotes PRÓXIMO SERVIÇO COM 50% OFF!
+                                            ✧ PRÓXIMO SERVIÇO COM 50% OFF!
                                         </div>
                                     @else
                                         <div class="mb-4 inline-block px-3 py-1 text-xs font-semibold rounded-full bg-blue-500/20 text-blue-700 border border-blue-200">
-                                            ✧ Fidelidade do Cliente: {{ $agenda->cliente->contador_fidelidade }}/5
+                                            ✧ Fidelidade: {{ $agenda->cliente->contador_fidelidade }}/5
                                         </div>
                                     @endif
 
@@ -100,39 +98,34 @@
                                         </div>
                                     </div>
 
-                                    {{-- LÓGICA DE BOTÃ•ES --}}
                                     <div class="mt-4 pt-4 border-t border-[#FFD6F4]">
                                         
-                                        {{-- PASSO 1: Marcar Presença --}}
                                         @if($agenda->status == 'confirmado' || $agenda->status == 'pendente')
-                                            <div class="flex flex-col sm:flex-row gap-4">
-                                                <form action="{{ route('agendamentos.falta', $agenda->id_agendamento) }}" method="POST" class="sm:w-1/3">
+                                            <div class="flex flex-col sm:flex-row gap-3">
+                                                <form action="{{ route('agendamentos.falta', $agenda->id_agendamento) }}" method="POST" class="flex-1">
                                                     @csrf
                                                     @method('PATCH')
-                                                    <button type="submit" class="w-full text-[#FF2EB6] border border-[#FF2EB6] hover:bg-[#FF2EB6] hover:text-white font-bold py-2 px-4 rounded-full transition">
-                                                        Marcar falta
+                                                    <button type="submit" class="w-full text-[#FF2EB6] border border-[#FF2EB6] hover:bg-[#FF2EB6] hover:text-white font-medium py-2 px-4 rounded-full transition text-sm">
+                                                        ✧ Marcar falta
                                                     </button>
                                                 </form>
-                                                <form action="{{ route('agendamento.presenca', $agenda->id_agendamento) }}" method="POST" class="sm:w-2/3">
+                                                <form action="{{ route('agendamento.presenca', $agenda->id_agendamento) }}" method="POST" class="flex-1">
                                                     @csrf
-                                                    <button type="submit" class="w-full bg-gradient-to-r from-[#7B19E5] to-[#A855F7] hover:from-[#FF2EB6] hover:to-[#FF69B4] text-white font-bold py-2 px-4 rounded-full transition">
-                                                        Confirmar presença
+                                                    <button type="submit" class="w-full bg-gradient-to-r from-[#7B19E5] to-[#A855F7] hover:from-[#FF2EB6] hover:to-[#FF69B4] text-white font-medium py-2 px-4 rounded-full transition text-sm">
+                                                        ✧ Confirmar presença
                                                     </button>
                                                 </form>
                                             </div>
 
-                                        {{-- PASSO 2: Finalizar com Obs e Produto --}}
                                         @elseif($agenda->status == 'presente')
                                             <form action="{{ route('profissional.agendamento.executado', $agenda->id_agendamento) }}" method="POST" class="space-y-4">
                                                 @csrf
                                                 
-                                                {{-- Campo de Observações --}}
                                                 <div>
                                                     <label class="block text-xs font-medium text-[#4A00B9] uppercase mb-1">Observações do Atendimento:</label>
                                                     <textarea name="observacao" rows="2" class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all" placeholder="Ex: Cabelo seco, usado shampoo hidratante..."></textarea>
                                                 </div>
 
-                                                {{-- Seleção de Produto para Venda --}}
                                                 <div class="bg-white/50 rounded-xl p-4 border border-[#FFD6F4]">
                                                     <h4 class="font-title text-[#4A00B9] text-sm mb-2">Produtos Vendidos (Opcional)</h4>
                                                     
@@ -153,9 +146,7 @@
                                                     </button>
                                                 </div>
 
-                                                {{-- Resumo Financeiro --}}
                                                 @php
-                                                    // Comissão fixa: 50% para todos os serviços
                                                     $porcentagemComissao = 50;
                                                     $taxaMatematica = $porcentagemComissao / 100;
                                                     $valorBaseServico = $agenda->valor_base ?? ($agenda->servico->preco ?? 0);
@@ -174,7 +165,7 @@
 
                                                     @if($acrescimoServico > 0)
                                                         <div class="flex justify-between text-sm mb-1">
-                                                            <span class="text-yellow-700 font-semibold">Acréscimo do atendimento:</span>
+                                                            <span class="text-yellow-700 font-semibold">Acréscimo:</span>
                                                             <span class="font-semibold text-yellow-700">+ R$ {{ number_format($acrescimoServico, 2, ',', '.') }}</span>
                                                         </div>
                                                         <p class="text-xs text-yellow-700 mb-2">
@@ -196,7 +187,6 @@
                                                     </p>
                                                 </div>
                                                 
-                                                {{-- LÓGICA DO PACOTE --}}
                                                 @php
                                                     $pacoteDisponivel = $agenda->cliente->pacotesAtivos->first(function ($clientePacote) use ($agenda) {
                                                         return $clientePacote->pacote && $clientePacote->pacote->aceitaServico((int) $agenda->servico_id);
@@ -206,7 +196,7 @@
                                                 @if($pacoteDisponivel)
                                                     <div class="bg-gradient-to-r from-blue-500/10 to-blue-600/10 rounded-xl p-4 border border-blue-200">
                                                         <div class="flex items-center gap-3">
-                                                            <span class="text-2xl">Pacotes</span>
+                                                            <span class="text-2xl">✧</span>
                                                             <div>
                                                                 <h3 class="text-md font-title text-blue-700">Pacote Disponível!</h3>
                                                                 <p class="text-sm text-blue-600">Este cliente possui <strong>{{ $pacoteDisponivel->sessoes_restantes }} sessões</strong> do pacote "{{ $pacoteDisponivel->pacote->nome }}".</p>
@@ -223,11 +213,11 @@
                                                 @endif
 
                                                 <button type="submit" class="w-full bg-gradient-to-r from-green-500 to-green-600 text-white font-bold py-3 px-4 rounded-full shadow-lg hover:shadow-xl transition-all">
-                                                    ✓ Finalizar e Baixar Estoque
+                                                    ✧ Finalizar e Baixar Estoque
                                                 </button>
                                             </form>
                                         @else
-                                            <p class="text-center text-gray-400 italic text-sm">Atendimento finalizado.</p>
+                                            <p class="text-center text-gray-400 italic text-sm">✧ Atendimento finalizado.</p>
                                         @endif
                                     </div>
                                 </div>
