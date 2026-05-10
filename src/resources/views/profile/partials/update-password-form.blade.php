@@ -1,4 +1,4 @@
-﻿<section>
+<section>
     <header>
         <h2 class="text-lg font-title text-[#4A00B9]">
             {{ __('Atualizar Senha') }}

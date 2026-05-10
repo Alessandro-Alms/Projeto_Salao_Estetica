@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ﻿<x-app-layout>
 <div class="py-12 relative">
     <!-- Fundo -->
@@ -7,6 +8,17 @@
         <div class="absolute top-1/3 left-1/3 w-[400px] h-[400px] bg-[#A955D3]/15 rounded-full blur-3xl"></div>
         <div class="absolute inset-0 bg-gradient-to-br from-[#7B19E5]/5 via-white/30 to-[#FF2EB6]/5"></div>
     </div>
+=======
+<x-app-layout>
+<div class="container mx-auto p-4 max-w-6xl">
+    <div class="glass-card rounded-2xl shadow-xl overflow-hidden p-8">
+        <div class="flex items-center gap-3 mb-8">
+            <div class="w-10 h-10 bg-gradient-to-br from-[#7B19E5] to-[#FF2EB6] rounded-xl flex items-center justify-center shadow-md">
+                <span class="text-white text-lg">✧</span>
+            </div>
+            <h2 class="text-3xl font-title text-[#4A00B9]">Agendar Novo Atendimento</h2>
+        </div>
+>>>>>>> 86d7a6490519a60b3e5c5ef033670b57afae8aec
 
     <div class="max-w-6xl mx-auto px-4">
         <div class="glass-card rounded-3xl shadow-xl overflow-hidden">

@@ -10,10 +10,17 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('vendas', function (Blueprint $table) {
-            $table->decimal('valor_comissao', 10, 2)->default(0)->after('valor_venda');
-            $table->decimal('comissao_paga_percentual', 5, 2)->default(0)->after('valor_comissao');
-        });
+        if (! Schema::hasColumn('vendas', 'valor_comissao')) {
+            Schema::table('vendas', function (Blueprint $table) {
+                $table->decimal('valor_comissao', 10, 2)->default(0)->after('valor_venda');
+            });
+        }
+
+        if (! Schema::hasColumn('vendas', 'comissao_paga_percentual')) {
+            Schema::table('vendas', function (Blueprint $table) {
+                $table->decimal('comissao_paga_percentual', 5, 2)->default(0)->after('valor_comissao');
+            });
+        }
 
         DB::table('vendas')
             ->whereNotNull('produto_id')
@@ -25,8 +32,20 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('vendas', function (Blueprint $table) {
-            $table->dropColumn(['valor_comissao', 'comissao_paga_percentual']);
-        });
+        if (Schema::hasColumn('vendas', 'valor_comissao') || Schema::hasColumn('vendas', 'comissao_paga_percentual')) {
+            Schema::table('vendas', function (Blueprint $table) {
+                $columns = [];
+
+                if (Schema::hasColumn('vendas', 'valor_comissao')) {
+                    $columns[] = 'valor_comissao';
+                }
+
+                if (Schema::hasColumn('vendas', 'comissao_paga_percentual')) {
+                    $columns[] = 'comissao_paga_percentual';
+                }
+
+                $table->dropColumn($columns);
+            });
+        }
     }
 };

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Produto;
 use App\Models\Venda;
+use Illuminate\Support\Facades\Schema;
 
 class VendaProdutoService
 {
@@ -37,15 +38,23 @@ class VendaProdutoService
         $valorVenda = $produto->valor_unitario * $quantidade;
         $financeiroService = app(FinanceiroService::class);
 
-        return Venda::create([
+        $dadosVenda = [
             // A coluna se chama profissional_id, mas representa o usuario que realizou a venda/compra.
             'profissional_id' => $vendedorId,
             'produto_id' => $produto->id_produto,
             'quantidade' => $quantidade,
             'valor_venda' => $valorVenda,
-            'valor_comissao' => $geraComissao ? $financeiroService->calcularComissaoProduto((float) $valorVenda) : 0,
-            'comissao_paga_percentual' => $geraComissao ? FinanceiroService::COMISSAO_PRODUTO_PERCENTUAL : 0,
-        ]);
+        ];
+
+        if (Schema::hasColumn('vendas', 'valor_comissao')) {
+            $dadosVenda['valor_comissao'] = $geraComissao ? $financeiroService->calcularComissaoProduto((float) $valorVenda) : 0;
+        }
+
+        if (Schema::hasColumn('vendas', 'comissao_paga_percentual')) {
+            $dadosVenda['comissao_paga_percentual'] = $geraComissao ? FinanceiroService::COMISSAO_PRODUTO_PERCENTUAL : 0;
+        }
+
+        return Venda::create($dadosVenda);
     }
 
     public function registrarVendas(int $vendedorId, array $itens, bool $geraComissao = true): void

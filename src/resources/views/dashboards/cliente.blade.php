@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 ﻿@if($mensagemProximaVisita || $avaliacoesPendentes > 0 || $pacotesVencendo->count() > 0)
     <div class="glass-card rounded-2xl shadow-xl overflow-hidden mb-6">
+=======
+@if($mensagemProximaVisita || $avaliacoesPendentes > 0 || $pacotesVencendo->count() > 0)
+    <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
+>>>>>>> 86d7a6490519a60b3e5c5ef033670b57afae8aec
         <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
             <div class="flex items-center gap-2 mb-4">
                 <span class="text-[#7B19E5] text-xl">✧</span>
@@ -58,6 +63,7 @@
         <span class="block font-title text-lg">Agendar horário</span>
         <span class="block text-xs text-white/80 mt-1">Escolha serviço, profissional e data.</span>
     </a>
+<<<<<<< HEAD
 
     {{-- Comprar produtos (rosa) --}}
     <a href="{{ route('cliente.produtos.index') }}" class="group min-h-28 rounded-2xl bg-gradient-to-br from-[#FF2EB6] to-[#FF69B4] p-5 text-white shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all">
@@ -71,6 +77,17 @@
         <span class="block text-3xl mb-3">✧</span>
         <span class="block font-title text-lg">Comprar pacotes</span>
         <span class="block text-xs text-white/80 mt-1">Use sessões em agendamentos futuros.</span>
+=======
+    <a href="{{ route('cliente.produtos.index') }}" class="group min-h-28 rounded-2xl bg-white/80 border border-[#FFD6F4] p-5 text-[#1A002B] shadow-md hover:shadow-lg hover:-translate-y-1 transition-all">
+        <span class="block text-2xl text-[#FF2EB6] mb-3">✧</span>
+        <span class="block font-title text-lg text-[#4A00B9]">Comprar Produtos</span>
+        <span class="block text-xs text-gray-500 mt-1">Veja produtos disponíveis no estoque.</span>
+    </a>
+    <a href="{{ route('cliente.pacotes.index') }}" class="group min-h-28 rounded-2xl bg-white/80 border border-[#FFD6F4] p-5 text-[#1A002B] shadow-md hover:shadow-lg hover:-translate-y-1 transition-all">
+        <span class="block text-2xl text-[#7B19E5] mb-3">✧</span>
+        <span class="block font-title text-lg text-[#4A00B9]">Comprar Pacotes</span>
+        <span class="block text-xs text-gray-500 mt-1">Use sessões em agendamentos futuros.</span>
+>>>>>>> 86d7a6490519a60b3e5c5ef033670b57afae8aec
     </a>
 
     {{-- Meus agendamentos (rosa) --}}
