@@ -1,4 +1,4 @@
-<x-app-layout>
+﻿<x-app-layout>
     <div class="py-12 relative">
         <!-- Fundo -->
         <div class="fixed inset-0 -z-10 overflow-hidden">
@@ -61,11 +61,11 @@
                                         <div class="ml-6 space-y-2">
                                             <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/50 cursor-pointer transition group">
                                                 <input type="checkbox" name="servicos[]" value="Corte e finalização" class="w-4 h-4 text-[#7B19E5] rounded border-[#FFD6F4] focus:ring-[#7B19E5]">
-                                                <span class="text-sm text-[#1A002B] group-hover:text-[#7B19E5] transition">Corte e finalização — R$ 89</span>
+                                                <span class="text-sm text-[#1A002B] group-hover:text-[#7B19E5] transition">Corte e finalização - R$ 89</span>
                                             </label>
                                             <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/50 cursor-pointer transition group">
                                                 <input type="checkbox" name="servicos[]" value="Progressiva e botox" class="w-4 h-4 text-[#7B19E5] rounded border-[#FFD6F4] focus:ring-[#7B19E5]">
-                                                <span class="text-sm text-[#1A002B] group-hover:text-[#7B19E5] transition">Progressiva e botox — R$ 89</span>
+                                                <span class="text-sm text-[#1A002B] group-hover:text-[#7B19E5] transition">Progressiva e botox - R$ 89</span>
                                             </label>
                                         </div>
                                     </div>
@@ -78,19 +78,19 @@
                                         <div class="ml-6 space-y-2">
                                             <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/50 cursor-pointer transition group">
                                                 <input type="checkbox" name="servicos[]" value="Manicure e pedicure" class="w-4 h-4 text-[#7B19E5] rounded border-[#FFD6F4]">
-                                                <span class="text-sm text-[#1A002B]">Manicure e pedicure — R$ 49</span>
+                                                <span class="text-sm text-[#1A002B]">Manicure e pedicure - R$ 49</span>
                                             </label>
                                             <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/50 cursor-pointer transition group">
                                                 <input type="checkbox" name="servicos[]" value="Alongamento de fibra" class="w-4 h-4 text-[#7B19E5] rounded border-[#FFD6F4]">
-                                                <span class="text-sm text-[#1A002B]">Alongamento de fibra — R$ 49</span>
+                                                <span class="text-sm text-[#1A002B]">Alongamento de fibra - R$ 49</span>
                                             </label>
                                             <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/50 cursor-pointer transition group">
                                                 <input type="checkbox" name="servicos[]" value="Nail art exclusiva" class="w-4 h-4 text-[#7B19E5] rounded border-[#FFD6F4]">
-                                                <span class="text-sm text-[#1A002B]">Nail art exclusiva — R$ 49</span>
+                                                <span class="text-sm text-[#1A002B]">Nail art exclusiva - R$ 49</span>
                                             </label>
                                             <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/50 cursor-pointer transition group">
                                                 <input type="checkbox" name="servicos[]" value="Esmaltação em gel" class="w-4 h-4 text-[#7B19E5] rounded border-[#FFD6F4]">
-                                                <span class="text-sm text-[#1A002B]">Esmaltação em gel — R$ 49</span>
+                                                <span class="text-sm text-[#1A002B]">Esmaltação em gel - R$ 49</span>
                                             </label>
                                         </div>
                                     </div>
@@ -103,11 +103,11 @@
                                         <div class="ml-6 space-y-2">
                                             <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/50 cursor-pointer transition group">
                                                 <input type="checkbox" name="servicos[]" value="Social e noiva" class="w-4 h-4 text-[#7B19E5] rounded border-[#FFD6F4]">
-                                                <span class="text-sm text-[#1A002B]">Social e noiva — R$ 79</span>
+                                                <span class="text-sm text-[#1A002B]">Social e noiva - R$ 79</span>
                                             </label>
                                             <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/50 cursor-pointer transition group">
                                                 <input type="checkbox" name="servicos[]" value="Make artística" class="w-4 h-4 text-[#7B19E5] rounded border-[#FFD6F4]">
-                                                <span class="text-sm text-[#1A002B]">Make artística — R$ 79</span>
+                                                <span class="text-sm text-[#1A002B]">Make artística - R$ 79</span>
                                             </label>
                                         </div>
                                     </div>
@@ -120,11 +120,11 @@
                                         <div class="ml-6 space-y-2">
                                             <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/50 cursor-pointer transition group">
                                                 <input type="checkbox" name="servicos[]" value="Design tradicional" class="w-4 h-4 text-[#7B19E5] rounded border-[#FFD6F4]">
-                                                <span class="text-sm text-[#1A002B]">Design tradicional — R$ 39</span>
+                                                <span class="text-sm text-[#1A002B]">Design tradicional - R$ 39</span>
                                             </label>
                                             <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/50 cursor-pointer transition group">
                                                 <input type="checkbox" name="servicos[]" value="Henna e fio a fio" class="w-4 h-4 text-[#7B19E5] rounded border-[#FFD6F4]">
-                                                <span class="text-sm text-[#1A002B]">Henna e fio a fio — R$ 39</span>
+                                                <span class="text-sm text-[#1A002B]">Henna e fio a fio - R$ 39</span>
                                             </label>
                                         </div>
                                     </div>
@@ -137,7 +137,7 @@
                                         <div class="ml-6 space-y-2">
                                             <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/50 cursor-pointer transition group">
                                                 <input type="checkbox" name="servicos[]" value="Hidratação, nutrição e reconstrução" class="w-4 h-4 text-[#7B19E5] rounded border-[#FFD6F4]">
-                                                <span class="text-sm text-[#1A002B]">Hidratação, nutrição e reconstrução — R$ 59</span>
+                                                <span class="text-sm text-[#1A002B]">Hidratação, nutrição e reconstrução - R$ 59</span>
                                             </label>
                                         </div>
                                     </div>
@@ -150,7 +150,7 @@
                                         <div class="ml-6 space-y-2">
                                             <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/50 cursor-pointer transition group">
                                                 <input type="checkbox" name="servicos[]" value="Mechas, luzes e coloração completa" class="w-4 h-4 text-[#7B19E5] rounded border-[#FFD6F4]">
-                                                <span class="text-sm text-[#1A002B]">Mechas, luzes e coloração completa — R$ 129</span>
+                                                <span class="text-sm text-[#1A002B]">Mechas, luzes e coloração completa - R$ 129</span>
                                             </label>
                                         </div>
                                     </div>
@@ -163,7 +163,7 @@
                                         <div class="ml-6 space-y-2">
                                             <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/50 cursor-pointer transition group">
                                                 <input type="checkbox" name="servicos[]" value="Festas, noivas e eventos especiais" class="w-4 h-4 text-[#7B19E5] rounded border-[#FFD6F4]">
-                                                <span class="text-sm text-[#1A002B]">Festas, noivas e eventos especiais — R$ 69</span>
+                                                <span class="text-sm text-[#1A002B]">Festas, noivas e eventos especiais - R$ 69</span>
                                             </label>
                                         </div>
                                     </div>

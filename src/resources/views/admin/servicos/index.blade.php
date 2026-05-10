@@ -1,4 +1,4 @@
-<x-app-layout>
+﻿<x-app-layout>
     <x-slot name="header">
         <div class="flex items-center gap-2">
             <span class="text-[#7B19E5] text-xl">✧</span>

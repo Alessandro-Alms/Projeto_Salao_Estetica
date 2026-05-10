@@ -1,4 +1,4 @@
-<x-app-layout>
+﻿<x-app-layout>
     <x-slot name="header">
         <div class="hidden"></div>
     </x-slot>
@@ -35,7 +35,7 @@
                     
                     <a href="{{ route('admin.financeiro.fechamento.pdf', ['data' => $dataSelecionada]) }}" class="glass-card rounded-2xl overflow-hidden inline-block">
                         <div class="flex items-center gap-2 p-2 bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white px-4 py-1.5 rounded-full font-medium btn-primary shadow-md hover:shadow-lg transition-all text-sm">
-                            <i class="fa-regular fa-file-pdf mr-1"></i> Download PDF
+                            <i class="fa-regular fa-file-pdf mr-1"></i> Baixar PDF
                         </div>
                     </a>
                 </div>
@@ -77,7 +77,7 @@
                 <div class="p-6 bg-white/70 backdrop-blur-sm">
                     <!-- Faturamento Bruto -->
                     <div class="mb-6 pb-6 border-b border-[#FFD6F4]">
-                        <h4 class="font-title text-[#7B19E5] mb-3 text-sm uppercase">💰 Faturamento Bruto</h4>
+                        <h4 class="font-title text-[#7B19E5] mb-3 text-sm uppercase">Faturamento bruto</h4>
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
                             <div class="p-4 bg-blue-50/50 rounded-lg border border-blue-200">
                                 <p class="text-xs text-gray-600 mb-1">Serviços Executados</p>
@@ -106,7 +106,7 @@
 
                     <!-- Comissões Detalhadas -->
                     <div class="mb-6 pb-6 border-b border-[#FFD6F4]">
-                        <h4 class="font-title text-red-600 mb-3 text-sm uppercase">📊 Comissões a Pagar</h4>
+                        <h4 class="font-title text-red-600 mb-3 text-sm uppercase">Comissões a pagar</h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <div class="p-4 bg-red-50/50 rounded-lg border border-red-200">
                                 <p class="text-xs text-gray-600 mb-1">Comissão Serviços</p>
@@ -129,7 +129,7 @@
 
                     <!-- Lucro Líquido (Resultado) -->
                     <div class="mb-6">
-                        <h4 class="font-title text-green-600 mb-3 text-sm uppercase">💹 Resultado Líquido</h4>
+                        <h4 class="font-title text-green-600 mb-3 text-sm uppercase">Resultado líquido</h4>
                         <div class="p-4 bg-green-50/80 rounded-lg border-2 border-green-300">
                             <div class="flex justify-between items-center">
                                 <span class="font-bold text-green-700">Lucro Líquido do Salão:</span>
@@ -141,7 +141,7 @@
 
                     <!-- Resumo e Estatísticas -->
                     <div class="pt-4 border-t border-[#FFD6F4]">
-                        <h4 class="font-title text-[#7B19E5] mb-3 text-sm uppercase">📈 Resumo do Dia</h4>
+                        <h4 class="font-title text-[#7B19E5] mb-3 text-sm uppercase">Resumo do dia</h4>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                             <div class="p-3 bg-white/50 rounded-lg border border-[#FFD6F4] text-center">
                                 <p class="text-xs text-gray-600 mb-1">Agendamentos</p>

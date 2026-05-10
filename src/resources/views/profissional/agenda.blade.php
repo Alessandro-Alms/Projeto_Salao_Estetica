@@ -1,4 +1,4 @@
-<x-app-layout>
+﻿<x-app-layout>
     <x-slot name="header">
         <div class="hidden"></div>
     </x-slot>
@@ -38,17 +38,17 @@
                     
                     <button type="button" onclick="filtrarAgendamentos(7)" 
                             class="px-4 py-2 rounded-full text-sm font-medium transition-all {{ request('filtro', '7') == '7' ? 'bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white shadow-md' : 'bg-white/70 border border-[#FFD6F4] text-[#4A00B9] hover:bg-white/90' }}">
-                        📅 Próximos 7 dias
+                        Calendário Próximos 7 dias
                     </button>
 
                     <button type="button" onclick="filtrarAgendamentos(30)" 
                             class="px-4 py-2 rounded-full text-sm font-medium transition-all {{ request('filtro') == '30' ? 'bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white shadow-md' : 'bg-white/70 border border-[#FFD6F4] text-[#4A00B9] hover:bg-white/90' }}">
-                        📅 Próximos 30 dias
+                        Calendário Próximos 30 dias
                     </button>
 
                     <button type="button" onclick="filtrarAgendamentos('todos')" 
                             class="px-4 py-2 rounded-full text-sm font-medium transition-all {{ request('filtro') == 'todos' ? 'bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white shadow-md' : 'bg-white/70 border border-[#FFD6F4] text-[#4A00B9] hover:bg-white/90' }}">
-                        📅 Todos os agendamentos
+                        Calendário Todos os agendamentos
                     </button>
                 </form>
             </div>
@@ -58,7 +58,7 @@
                     <div class="flex items-center gap-2 mb-3">
                         <span class="text-[#FF2EB6] text-xl">✦</span>
                         <h2 class="bg-gradient-to-r from-[#FF2EB6]/20 to-[#7B19E5]/20 text-[#4A00B9] px-4 py-2 rounded-full font-title text-lg inline-block">
-                            📅 Dia: {{ $dia }}
+                            Calendário Dia: {{ $dia }}
                         </h2>
                     </div>
                     
@@ -70,7 +70,7 @@
                                     {{-- AVISO DE FIDELIDADE --}}
                                     @if($agenda->cliente->contador_fidelidade == 5)
                                         <div class="mb-4 inline-block px-3 py-1 text-xs font-semibold rounded-full bg-gradient-to-r from-yellow-500/20 to-orange-500/20 text-yellow-700 border border-yellow-200">
-                                            🎁 PRÓXIMO SERVIÇO COM 50% OFF!
+                                            Pacotes PRÓXIMO SERVIÇO COM 50% OFF!
                                         </div>
                                     @else
                                         <div class="mb-4 inline-block px-3 py-1 text-xs font-semibold rounded-full bg-blue-500/20 text-blue-700 border border-blue-200">
@@ -100,7 +100,7 @@
                                         </div>
                                     </div>
 
-                                    {{-- LÓGICA DE BOTÕES --}}
+                                    {{-- LÓGICA DE BOTÃ•ES --}}
                                     <div class="mt-4 pt-4 border-t border-[#FFD6F4]">
                                         
                                         {{-- PASSO 1: Marcar Presença --}}
@@ -110,13 +110,13 @@
                                                     @csrf
                                                     @method('PATCH')
                                                     <button type="submit" class="w-full text-[#FF2EB6] border border-[#FF2EB6] hover:bg-[#FF2EB6] hover:text-white font-bold py-2 px-4 rounded-full transition">
-                                                        ❌ Marcar Falta
+                                                        Marcar falta
                                                     </button>
                                                 </form>
                                                 <form action="{{ route('agendamento.presenca', $agenda->id_agendamento) }}" method="POST" class="sm:w-2/3">
                                                     @csrf
                                                     <button type="submit" class="w-full bg-gradient-to-r from-[#7B19E5] to-[#A855F7] hover:from-[#FF2EB6] hover:to-[#FF69B4] text-white font-bold py-2 px-4 rounded-full transition">
-                                                        📍 Confirmar Presença (Check-in)
+                                                        Confirmar presença
                                                     </button>
                                                 </form>
                                             </div>
@@ -206,7 +206,7 @@
                                                 @if($pacoteDisponivel)
                                                     <div class="bg-gradient-to-r from-blue-500/10 to-blue-600/10 rounded-xl p-4 border border-blue-200">
                                                         <div class="flex items-center gap-3">
-                                                            <span class="text-2xl">🎁</span>
+                                                            <span class="text-2xl">Pacotes</span>
                                                             <div>
                                                                 <h3 class="text-md font-title text-blue-700">Pacote Disponível!</h3>
                                                                 <p class="text-sm text-blue-600">Este cliente possui <strong>{{ $pacoteDisponivel->sessoes_restantes }} sessões</strong> do pacote "{{ $pacoteDisponivel->pacote->nome }}".</p>
@@ -223,7 +223,7 @@
                                                 @endif
 
                                                 <button type="submit" class="w-full bg-gradient-to-r from-green-500 to-green-600 text-white font-bold py-3 px-4 rounded-full shadow-lg hover:shadow-xl transition-all">
-                                                    ✅ Finalizar e Baixar Estoque
+                                                    ✓ Finalizar e Baixar Estoque
                                                 </button>
                                             </form>
                                         @else

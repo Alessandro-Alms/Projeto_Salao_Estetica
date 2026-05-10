@@ -26,7 +26,7 @@ class OcupacaoExport implements FromArray, WithHeadings, WithStyles
     {
         $dados = [];
         
-        $dados[] = ['OCUPAÇÃO POR HORA DO DIA'];
+        $dados[] = ['OCUPAÇÃƒO POR HORA DO DIA'];
         $dados[] = [];
         
         foreach ($this->ocupacaoPorHora as $hora) {
@@ -34,7 +34,7 @@ class OcupacaoExport implements FromArray, WithHeadings, WithStyles
         }
         
         $dados[] = [];
-        $dados[] = ['OCUPAÇÃO POR DIA DA SEMANA'];
+        $dados[] = ['OCUPAÇÃƒO POR DIA DA SEMANA'];
         $dados[] = [];
         
         $diasNomes = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];

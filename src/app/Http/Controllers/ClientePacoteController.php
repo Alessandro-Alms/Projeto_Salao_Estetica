@@ -36,7 +36,7 @@ class ClientePacoteController extends Controller
 
         return redirect()
             ->route('cliente.pacotes.index')
-            ->with('success', 'Pacote comprado com sucesso! As sessoes ja estao disponiveis para seus agendamentos.');
+            ->with('success', 'Pacote comprado com sucesso! As sessões já estão disponíveis para seus agendamentos.');
     }
 
     public function create()

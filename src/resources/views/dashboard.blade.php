@@ -1,9 +1,9 @@
-<x-app-layout>
+﻿<x-app-layout>
     <x-slot name="header">
         <div class="hidden"></div>
     </x-slot>
 
-    <div class="py-12 relative">
+    <div class="py-8 md:py-10 relative">
         <div class="fixed inset-0 -z-10 overflow-hidden">
             <div class="absolute top-0 -left-20 w-[600px] h-[600px] bg-[#7B19E5]/20 rounded-full blur-3xl"></div>
             <div class="absolute bottom-0 -right-20 w-[700px] h-[700px] bg-[#FF2EB6]/20 rounded-full blur-3xl"></div>
@@ -11,25 +11,22 @@
             <div class="absolute inset-0 bg-gradient-to-br from-[#7B19E5]/5 via-white/30 to-[#FF2EB6]/5"></div>
         </div>
 
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="glass-card rounded-2xl shadow-xl overflow-hidden mb-8">
-                <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
-                    <div class="flex items-center gap-3 mb-4">
-                        <div class="w-12 h-12 bg-gradient-to-br from-[#7B19E5] to-[#FF2EB6] rounded-xl flex items-center justify-center shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="glass-card rounded-2xl shadow-xl overflow-hidden mb-6">
+                <div class="p-5 md:p-6 bg-white/75 backdrop-blur-sm border border-white/40">
+                    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 bg-gradient-to-br from-[#7B19E5] to-[#FF2EB6] rounded-xl flex items-center justify-center shadow-lg shrink-0">
                             <span class="text-2xl text-white">✧</span>
+                            </div>
+                            <div>
+                                <h3 class="text-xl md:text-2xl font-title text-[#4A00B9]">Olá, {{ auth()->user()->name }}!</h3>
+                                <p class="text-sm text-[#7B19E5] font-body">Bem-vinda ao seu painel</p>
+                            </div>
                         </div>
-                        <div>
-                            <h3 class="text-xl font-title text-[#4A00B9]">Olá, {{ auth()->user()->name }}!</h3>
-                            <p class="text-sm text-[#7B19E5] font-body">Bem-vinda ao seu painel</p>
+                        <div class="inline-flex items-center gap-2 bg-[#FF2EB6]/10 px-4 py-2 rounded-full self-start md:self-auto">
+                            <span class="text-xs font-bold uppercase tracking-wide text-[#FF2EB6]">{{ ucfirst(auth()->user()->cargo) }}</span>
                         </div>
-                    </div>
-                    
-                    <p class="text-[#1A002B] font-body leading-relaxed">
-                        {{ __("Você está logada no sistema!") }}
-                    </p>
-
-                    <div class="mt-3 inline-flex items-center gap-2 bg-[#FF2EB6]/10 px-3 py-1 rounded-full">
-                        <span class="text-xs font-medium text-[#FF2EB6]">✦ {{ ucfirst(auth()->user()->cargo) }}</span>
                     </div>
                 </div>
             </div>

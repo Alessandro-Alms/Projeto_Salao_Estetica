@@ -1,4 +1,4 @@
-<x-app-layout>
+﻿<x-app-layout>
     <x-slot name="header">
         <div class="hidden"></div>
     </x-slot>
@@ -30,7 +30,7 @@
                     <p class="text-sm uppercase tracking-[0.25em] text-[#FF2EB6] font-bold">autoatendimento</p>
                     <h1 class="text-4xl font-title text-[#4A00B9] mt-2">Comprar Pacotes</h1>
                     <p class="text-gray-600 mt-2 max-w-2xl">
-                        Escolha um pacote e ele fica disponivel imediatamente para usar ao finalizar atendimentos do servico correspondente.
+                        Escolha um pacote e ele fica disponível imediatamente para usar ao finalizar atendimentos do serviço correspondente.
                     </p>
                 </div>
 
@@ -55,10 +55,10 @@
                                 </div>
                                 <h3 class="text-xl font-title text-[#4A00B9] mt-4">{{ $meuPacote->pacote->nome }}</h3>
                                 <p class="text-sm text-[#7B19E5] mt-1">
-                                    {{ $meuPacote->pacote->servicos->pluck('nome')->join(', ') ?: ($meuPacote->pacote->servico->nome ?? 'Servico removido') }}
+                                    {{ $meuPacote->pacote->servicos->pluck('nome')->join(', ') ?: ($meuPacote->pacote->servico->nome ?? 'Serviço removido') }}
                                 </p>
                                 <div class="mt-4 p-4 rounded-xl bg-white/60 border border-[#FFD6F4] flex items-center justify-between">
-                                    <span class="text-sm text-gray-600 font-semibold">Sessoes restantes</span>
+                                    <span class="text-sm text-gray-600 font-semibold">Sessões restantes</span>
                                     <span class="text-3xl font-black text-[#7B19E5]">{{ $meuPacote->sessoes_restantes }}</span>
                                 </div>
                             </article>
@@ -66,7 +66,7 @@
                     </div>
                 @else
                     <div class="glass-card rounded-2xl p-6 text-center border border-white/40">
-                        <p class="text-gray-500">Voce ainda nao tem pacote ativo.</p>
+                        <p class="text-gray-500">Você ainda não tem pacote ativo.</p>
                     </div>
                 @endif
             </section>
@@ -74,7 +74,7 @@
             <section>
                 <div class="flex items-center gap-2 mb-5">
                     <span class="text-[#FF2EB6] text-xl">✧</span>
-                    <h2 class="text-2xl font-title text-[#4A00B9]">Pacotes disponiveis</h2>
+                    <h2 class="text-2xl font-title text-[#4A00B9]">Pacotes disponíveis</h2>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -83,14 +83,14 @@
                             <div class="p-6 bg-white/75 h-full flex flex-col">
                                 <div class="flex items-center justify-between gap-3 mb-4">
                                     <span class="px-3 py-1 rounded-full bg-[#7B19E5]/10 text-[#7B19E5] text-xs font-bold">
-                                        {{ $pacote->quantidade_sessoes }} sessoes
+                                        {{ $pacote->quantidade_sessoes }} sessões
                                     </span>
                                     <span class="text-xs text-gray-500">{{ $pacote->validade_dias }} dias</span>
                                 </div>
 
                                 <h3 class="text-2xl font-title text-[#4A00B9]">{{ $pacote->nome }}</h3>
                                 <p class="text-sm text-gray-600 mt-2">
-                                    {{ $pacote->servicos->pluck('nome')->join(', ') ?: ($pacote->servico->nome ?? 'Servico removido') }}
+                                    {{ $pacote->servicos->pluck('nome')->join(', ') ?: ($pacote->servico->nome ?? 'Serviço removido') }}
                                 </p>
 
                                 <div class="mt-6 mb-6">

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">
@@ -27,7 +27,7 @@
             ::-webkit-scrollbar { width: 8px; background: #f8f0ff; }
             ::-webkit-scrollbar-thumb { background: linear-gradient(135deg, #7B19E5, #FF2EB6); border-radius: 10px; }
 
-            /* ✅ EFEITO DO BOTÃO */
+            /* Efeito do botão */
             .btn-primary {
                 position: relative;
                 overflow: hidden;
@@ -129,8 +129,8 @@
                     emptyState.className = 'h-full min-h-64 flex flex-col items-center justify-center text-center rounded-2xl border border-dashed border-[#FFD6F4] bg-white/40 px-6';
                     emptyState.innerHTML = [
                         '<p class="text-3xl text-[#7B19E5] mb-3">✧</p>',
-                        '<p class="font-bold text-[#4A00B9]">Sem dados para gerar este grafico</p>',
-                        '<p class="text-sm text-gray-500 mt-1">Tente outro periodo ou registre movimentos primeiro.</p>',
+                        '<p class="font-bold text-[#4A00B9]">Sem dados para gerar este gráfico</p>',
+                        '<p class="text-sm text-gray-500 mt-1">Tente outro período ou registre movimentos primeiro.</p>',
                     ].join('');
                     wrapper.appendChild(emptyState);
                 };
@@ -145,7 +145,7 @@
                     try {
                         await loadChartJs();
                     } catch (error) {
-                        console.error('Chart.js nao carregou:', error);
+                        console.error('Chart.js não carregou:', error);
                         return;
                     }
 
@@ -164,7 +164,7 @@
                         try {
                             config = JSON.parse(script.textContent || '{}');
                         } catch (error) {
-                            console.error(`Configuracao invalida do grafico ${canvasId}:`, error);
+                            console.error(`Configuração inválida do gráfico ${canvasId}:`, error);
                             return;
                         }
 

@@ -1,4 +1,4 @@
-<x-app-layout>
+﻿<x-app-layout>
     <x-slot name="header">
         <div class="hidden"></div>
     </x-slot>
@@ -100,7 +100,7 @@
                                         <td class="px-6 py-4">
                                             <div class="font-medium text-[#1A002B]">{{ $pacote->nome }}</div>
                                             <div class="text-sm text-[#7B19E5]">
-                                                {{ $pacote->servicos->pluck('nome')->join(', ') ?: ($pacote->servico->nome ?? 'Servico removido') }}
+                                                {{ $pacote->servicos->pluck('nome')->join(', ') ?: ($pacote->servico->nome ?? 'Serviço removido') }}
                                             </div>
                                         </td>
                                         <td class="px-6 py-4 text-center text-sm text-[#1A002B]">{{ $pacote->quantidade_sessoes }}</td>

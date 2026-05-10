@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -196,7 +196,7 @@
         <!-- Detalhamento de Serviços -->
         @if($agendamentos->isNotEmpty())
         <div class="section">
-            <div class="section-title">📋 Agendamentos Executados</div>
+            <div class="section-title">Agendamentos executados</div>
             <table class="agendamentos-table">
                 <thead>
                     <tr>
@@ -226,42 +226,42 @@
         
         <!-- Resumo Financeiro -->
         <div class="section">
-            <div class="section-title">💰 RESUMO FINANCEIRO DO DIA</div>
+            <div class="section-title">RESUMO FINANCEIRO DO DIA</div>
             
             <div class="row highlight positive">
-                <span class="label">✂️ Serviços Executados (Total Bruto)</span>
+                <span class="label">Serviços executados (Total bruto)</span>
                 <span class="value">R$ {{ number_format($totalServicos, 2, ',', '.') }}</span>
             </div>
             
             <div class="row highlight positive">
-                <span class="label">🛍️ Produtos Vendidos (Total Bruto)</span>
+                <span class="label">Produtos vendidos (Total bruto)</span>
                 <span class="value">R$ {{ number_format($totalProdutos, 2, ',', '.') }}</span>
             </div>
             
             <div class="row highlight positive">
-                <span class="label">🎁 Pacotes Vendidos (Total Bruto)</span>
+                <span class="label">Pacotes vendidos (Total bruto)</span>
                 <span class="value">R$ {{ number_format($totalPacotes, 2, ',', '.') }}</span>
             </div>
 
             <div class="row highlight positive">
-                <span class="label">⚠️ Multas de Cancelamento</span>
+                <span class="label">Atenção: Multas de Cancelamento</span>
                 <span class="value">R$ {{ number_format($totalMultas, 2, ',', '.') }}</span>
             </div>
             
             <div class="row total">
-                <span class="label">📊 FATURAMENTO TOTAL</span>
+                <span class="label">FATURAMENTO TOTAL</span>
                 <span class="value positive">R$ {{ number_format($totalServicos + $totalProdutos + $totalPacotes + $totalMultas, 2, ',', '.') }}</span>
             </div>
             
             <div style="margin-top: 15px;"></div>
             
             <div class="row highlight negative">
-                <span class="label">💸 Comissões a Pagar (Saída)</span>
+                <span class="label">Comissões a pagar (Saída)</span>
                 <span class="value">- R$ {{ number_format($totalComissoes, 2, ',', '.') }}</span>
             </div>
             
             <div class="row total positive">
-                <span class="label">✓ LUCRO LÍQUIDO DO SALÃO</span>
+                <span class="label">LUCRO LÍQUIDO DO SALÃO</span>
                 <span class="value">R$ {{ number_format($lucroLiquido, 2, ',', '.') }}</span>
             </div>
         </div>

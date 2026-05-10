@@ -134,7 +134,7 @@ class AgendaServiceTest extends TestCase
         $this->assertSame(20.00, $resultado['desconto_servicos']);
         $this->assertSame(200.00, $resultado['base_comissao']);
         $this->assertSame(180.00, $resultado['valor_total']);
-        $this->assertSame('Combo de 5 servicos -10%', $resultado['motivo_desconto']);
+        $this->assertSame('Combo de 5 serviços -10%', $resultado['motivo_desconto']);
     }
 
     public function test_combo_de_cinco_servicos_desconta_depois_do_acrescimo(): void

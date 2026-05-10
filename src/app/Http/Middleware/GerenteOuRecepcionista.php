@@ -19,6 +19,6 @@ class GerenteOuRecepcionista
             return $next($request);
         }
 
-        abort(403, 'Acesso negado para o seu nivel de permissao.');
+        abort(403, 'Acesso negado para o seu nível de permissão.');
     }
 }

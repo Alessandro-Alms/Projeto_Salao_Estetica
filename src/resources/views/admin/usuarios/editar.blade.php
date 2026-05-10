@@ -1,4 +1,4 @@
-<x-app-layout>
+﻿<x-app-layout>
     <x-slot name="header">
         <div class="hidden"></div>
     </x-slot>
@@ -154,7 +154,7 @@
                                                 name="servicos[{{ $servico->id_servico }}][duracao]" 
                                                 value="{{ $vinculo ? $vinculo->pivot->duracao_customizada : $servico->duracao }}" 
                                                 class="w-full px-2 py-1.5 bg-white/50 border border-[#FFD6F4] rounded focus:outline-none focus:border-[#7B19E5] focus:ring-1 focus:ring-[#7B19E5]/20 text-sm transition-all">
-                                            <p class="text-[10px] text-gray-500 mt-1">💰 Comissão: 50% (fixa)</p>
+                                            <p class="text-[10px] text-gray-500 mt-1">Comissão: 50% (fixa)</p>
                                         </div>
                                     </div>
                                 @endforeach
@@ -167,7 +167,7 @@
                                 {{ __('Cancelar') }}
                             </a>
                             <button type="submit" class="bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white px-8 py-2.5 text-sm rounded-full font-medium btn-primary shadow-md hover:shadow-lg transition-all">
-                                {{ __('SALVAR ALTERAÇÕES') }}
+                                {{ __('SALVAR ALTERAÇÃ•ES') }}
                             </button>
                         </div>
                     </form>

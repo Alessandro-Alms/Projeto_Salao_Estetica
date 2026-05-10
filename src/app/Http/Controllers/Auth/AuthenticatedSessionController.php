@@ -42,6 +42,6 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerateToken();
 
-        return redirect()->route('login')->with('status', 'SessÃ£o encerrada. Entre com outra conta.');
+        return redirect()->route('login')->with('status', 'Sessão encerrada. Entre com outra conta.');
     }
 }

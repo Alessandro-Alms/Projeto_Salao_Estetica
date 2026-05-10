@@ -1,4 +1,4 @@
-<x-app-layout>
+﻿<x-app-layout>
     <div class="py-12 relative">
         <!-- Fundo -->
         <div class="fixed inset-0 -z-10 overflow-hidden">
@@ -50,7 +50,7 @@
                                 </div>
                                 <input type="hidden" name="cliente_id" id="cliente-id" value="{{ old('cliente_id') }}" required>
                                 <div id="cliente-selecionado" class="mt-2 p-3 bg-green-50/50 border border-green-200 rounded-lg hidden">
-                                    <p class="text-sm text-green-700"><strong>✓ Cliente selecionado:</strong> <span id="cliente-nome"></span></p>
+                                    <p class="text-sm text-green-700"><strong>Cliente selecionado:</strong> <span id="cliente-nome"></span></p>
                                 </div>
                             </div>
 
@@ -70,7 +70,7 @@
                                 </div>
                                 <input type="hidden" name="profissional_id" id="profissional-id" value="{{ old('profissional_id') }}" required>
                                 <div id="profissional-selecionado" class="mt-2 p-3 bg-green-50/50 border border-green-200 rounded-lg hidden">
-                                    <p class="text-sm text-green-700"><strong>✓ Profissional selecionado:</strong> <span id="profissional-nome"></span></p>
+                                    <p class="text-sm text-green-700"><strong>Profissional selecionado:</strong> <span id="profissional-nome"></span></p>
                                 </div>
                             </div>
 
@@ -83,7 +83,7 @@
                                     <option value="">Selecione o serviço</option>
                                     @foreach($servicos as $servico)
                                         <option value="{{ $servico->id_servico }}" data-preco="{{ $servico->preco }}" {{ old('servico_id') == $servico->id_servico ? 'selected' : '' }}>
-                                            {{ $servico->nome }} — R$ {{ number_format($servico->preco, 2, ',', '.') }}
+                                            {{ $servico->nome }} - R$ {{ number_format($servico->preco, 2, ',', '.') }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -116,7 +116,7 @@
                                     ← Cancelar
                                 </a>
                                 <button type="submit" class="flex-1 px-4 py-3 bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] hover:shadow-lg text-white font-medium rounded-full transition-all">
-                                    ✓ Confirmar Agendamento
+                                    Confirmar agendamento
                                 </button>
                             </div>
                         </div>

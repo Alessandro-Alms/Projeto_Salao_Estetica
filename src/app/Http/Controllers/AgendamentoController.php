@@ -58,7 +58,7 @@ class AgendamentoController extends Controller
     }
 
     // =========================================================
-    // NOVAS FUNÇÕES PARA O AGENDAMENTO PASSO A PASSO (WIZARD)
+    // NOVAS FUNÇÃ•ES PARA O AGENDAMENTO PASSO A PASSO (WIZARD)
     // =========================================================
 
     public function novoAgendamento()
@@ -89,7 +89,7 @@ class AgendamentoController extends Controller
 
         if (count($servicosIds) > AgendaService::MAX_SERVICOS_POR_AGENDAMENTO) {
             return response()->json([
-                'message' => 'Escolha no maximo ' . AgendaService::MAX_SERVICOS_POR_AGENDAMENTO . ' servicos por agendamento.',
+                'message' => 'Escolha no máximo ' . AgendaService::MAX_SERVICOS_POR_AGENDAMENTO . ' serviços por agendamento.',
             ], 422);
         }
         
@@ -320,7 +320,7 @@ class AgendamentoController extends Controller
                 $motivosAcrescimo = [];
 
                 if (!$ocupado && $invadeAlmoco) {
-                    $motivosAcrescimo[] = 'horario de almoco';
+                    $motivosAcrescimo[] = 'horário de almoço';
                 }
 
                 if (!$ocupado && $bloqueioGeral) {
@@ -384,7 +384,7 @@ class AgendamentoController extends Controller
     }
 
     // =========================================================
-    // FUNÇÃO MASTER DE SALVAR (INTACTA - PROTEÇÃO OVERBOOKING)
+    // Função principal de salvar (proteção contra overbooking)
     // =========================================================
     public function store(Request $request)
     {
@@ -405,16 +405,16 @@ class AgendamentoController extends Controller
             'data_hora' => ['required','date','after:now','before_or_equal:' . now()->addMonths(3)->endOfDay()->toDateTimeString()],
         ], [
             'data_hora.after' => 'O agendamento deve ser para uma data futura.',
-            'data_hora.before_or_equal' => 'O agendamento deve ser feito dentro dos proximos 3 meses.',
+            'data_hora.before_or_equal' => 'O agendamento deve ser feito dentro dos próximos 3 meses.',
         ]);
 
         if (!$servicos_ids || empty($servicos_ids)) {
-            return back()->withErrors(['servicos' => 'Por favor, escolhe pelo menos um serviço.'])->withInput();
+            return back()->withErrors(['servicos' => 'Por favor, escolha pelo menos um serviço.'])->withInput();
         }
 
         if (count($servicos_ids) > AgendaService::MAX_SERVICOS_POR_AGENDAMENTO) {
             return back()->withErrors([
-                'servicos' => 'Escolha no maximo ' . AgendaService::MAX_SERVICOS_POR_AGENDAMENTO . ' servicos por agendamento.',
+                'servicos' => 'Escolha no máximo ' . AgendaService::MAX_SERVICOS_POR_AGENDAMENTO . ' serviços por agendamento.',
             ])->withInput();
         }
 
@@ -465,7 +465,7 @@ class AgendamentoController extends Controller
             || $inicio->gt($agendaService->fimExpediente($escala, $inicio))
             || $fim->gt($agendaService->limiteSaidaExpediente($escala, $inicio))
         ) {
-            return back()->withErrors(['data_hora' => 'O horario escolhido esta fora do expediente permitido do profissional.'])->withInput();
+            return back()->withErrors(['data_hora' => 'O horário escolhido está fora do expediente permitido do profissional.'])->withInput();
         }
 
         $invadeAlmoco = $agendaService->invadeAlmoco($escala, $inicio, $fim);
@@ -473,7 +473,7 @@ class AgendamentoController extends Controller
 
         $bloqueioProfissional = $agendaService->buscarBloqueioProfissionalConflitante($profissional->id, $inicio, $fim);
         if ($bloqueioProfissional) {
-            return back()->withErrors(['data_hora' => 'O profissional nao atende neste periodo: ' . $bloqueioProfissional->motivo])->withInput();
+            return back()->withErrors(['data_hora' => 'O profissional não atende neste período: ' . $bloqueioProfissional->motivo])->withInput();
         }
 
         $dadosValor = $agendaService->calcularAtendimentoEspecial(
@@ -571,7 +571,7 @@ class AgendamentoController extends Controller
         // Combinar data e hora
         $data_hora = Carbon::parse($request->data . ' ' . $request->hora);
         if ($data_hora->greaterThan(now()->addMonths(3)->endOfDay())) {
-            return back()->withErrors(['data' => 'O agendamento deve ser feito dentro dos proximos 3 meses.'])->withInput();
+            return back()->withErrors(['data' => 'O agendamento deve ser feito dentro dos próximos 3 meses.'])->withInput();
         }
 
         // Buscar serviço
@@ -603,14 +603,14 @@ class AgendamentoController extends Controller
             || $data_hora->gt($agendaService->fimExpediente($escala, $data_hora))
             || $data_hora_fim->gt($agendaService->limiteSaidaExpediente($escala, $data_hora))
         ) {
-            return back()->withErrors(['hora' => 'O horario esta fora do expediente permitido do profissional.'])->withInput();
+            return back()->withErrors(['hora' => 'O horário está fora do expediente permitido do profissional.'])->withInput();
         }
         $invadeAlmoco = $agendaService->invadeAlmoco($escala, $data_hora, $data_hora_fim);
         $excedeSaidaExpediente = $agendaService->excedeSaidaExpediente($escala, $data_hora, $data_hora_fim);
 
         $bloqueioProfissional = $agendaService->buscarBloqueioProfissionalConflitante($profissional->id, $data_hora, $data_hora_fim);
         if ($bloqueioProfissional) {
-            return back()->withErrors(['data' => 'O profissional nao atende neste periodo: ' . $bloqueioProfissional->motivo])->withInput();
+            return back()->withErrors(['data' => 'O profissional não atende neste período: ' . $bloqueioProfissional->motivo])->withInput();
         }
 
         $dadosValor = $agendaService->calcularAtendimentoEspecial(
@@ -769,7 +769,7 @@ class AgendamentoController extends Controller
         $agendamento = Agendamento::findOrFail($id_agendamento);
 
         if (!$this->usuarioPodeAlterarAgendamento($agendamento)) {
-            abort(403, 'VocÃª nÃ£o tem permissÃ£o para cancelar este agendamento.');
+            abort(403, 'Você não tem permissão para cancelar este agendamento.');
         }
 
         if ($agendamento->status === 'cancelado') {
@@ -806,11 +806,11 @@ class AgendamentoController extends Controller
         $cliente = User::findOrFail($agendamento->cliente_id);
 
         if (!$this->usuarioPodeGerenciarAgendamento($agendamento)) {
-            abort(403, 'VocÃª nÃ£o tem permissÃ£o para finalizar este agendamento.');
+            abort(403, 'Você não tem permissão para finalizar este agendamento.');
         }
 
         if (in_array($agendamento->status, ['executado', 'cancelado', 'falta'], true)) {
-            return back()->withErrors(['status' => 'Este agendamento nÃ£o pode ser finalizado no status atual.']);
+            return back()->withErrors(['status' => 'Este agendamento não pode ser finalizado no status atual.']);
         }
 
         // Iniciamos uma transação para garantir que ou faz TUDO ou não faz NADA
@@ -846,7 +846,7 @@ class AgendamentoController extends Controller
             }
 
  
-            // Fidelidade (Só ganha ponto/desconto se NÃO estiver usando pacote)
+            // Fidelidade: só ganha ponto/desconto se não estiver usando pacote.
             if ($request->has('usar_pacote') && $request->usar_pacote != null) {
                 $mensagem = 'Sessão de pacote concluída com sucesso!';
             } else {
@@ -857,7 +857,7 @@ class AgendamentoController extends Controller
                     $cliente->contador_fidelidade = 0;
                     $cliente->save();
                     
-                    $mensagem = 'Atendimento concluído! O cliente ganhou 50% de desconto pela fidelidade! 🎉';
+                    $mensagem = 'Atendimento concluído! O cliente ganhou 50% de desconto pela fidelidade! ';
                 } else {
                     // Ganha mais um "selo"
                     $cliente->increment('contador_fidelidade');
@@ -865,8 +865,8 @@ class AgendamentoController extends Controller
                 }
             }
             
-            // ⚠️ IMPORTANTE: A comissão SEMPRE deve ser calculada sobre o PREÇO BASE do serviço
-            // Descontos dados pelo SALÃO (fidelidade, pacotes, etc) NÃO afetam a comissão do profissional!
+            // Atenção: IMPORTANTE: A comissão SEMPRE deve ser calculada sobre o PREÇO BASE do serviço
+            // Descontos dados pelo salão (fidelidade, pacotes, etc.) não afetam a comissão do profissional.
             // O profissional recebe sua comissão sobre o preço original, não sobre o valor com desconto.
             
             $financeiroService = app(FinanceiroService::class);
@@ -901,7 +901,7 @@ class AgendamentoController extends Controller
         $agendamento = Agendamento::findOrFail($id);
 
         if (!$this->usuarioPodeAlterarAgendamento($agendamento)) {
-            abort(403, 'VocÃª nÃ£o tem permissÃ£o para confirmar presenÃ§a neste agendamento.');
+            abort(403, 'Você não tem permissão para confirmar presença neste agendamento.');
         }
 
         $toleranciaMinutos = 15;
@@ -910,7 +910,7 @@ class AgendamentoController extends Controller
 
         if (now()->greaterThan($limiteCheckin)) {
             return back()->withErrors([
-                'presenca' => "Check-in indisponivel: tolerancia de {$toleranciaMinutos} minutos excedida."
+                'presenca' => "Confirmação de presença indisponível: tolerância de {$toleranciaMinutos} minutos excedida."
             ]);
         }
 
@@ -920,7 +920,7 @@ class AgendamentoController extends Controller
             $agendamento->save();
         }
 
-        return back()->with('status', 'Check-in realizado!');
+        return back()->with('status', 'Presença confirmada com sucesso!');
     }
 
     public function marcarFalta($id)
@@ -928,11 +928,11 @@ class AgendamentoController extends Controller
         $agendamento = Agendamento::findOrFail($id);
 
         if (!$this->usuarioPodeGerenciarAgendamento($agendamento)) {
-            abort(403, 'VocÃª nÃ£o tem permissÃ£o para marcar falta neste agendamento.');
+            abort(403, 'Você não tem permissão para marcar falta neste agendamento.');
         }
 
         if (in_array($agendamento->status, ['executado', 'cancelado'], true)) {
-            return back()->withErrors(['status' => 'NÃ£o Ã© possÃ­vel marcar falta em um agendamento executado ou cancelado.']);
+            return back()->withErrors(['status' => 'Não é possível marcar falta em um agendamento executado ou cancelado.']);
         }
 
         $agendamento->update(['status' => 'falta']);

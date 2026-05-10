@@ -1,11 +1,11 @@
-<section class="space-y-6">
+﻿<section class="space-y-6">
     <header>
         <h2 class="text-lg font-title text-[#FF2EB6]">
-            {{ __('Deletar Conta') }}
+            {{ __('Excluir conta') }}
         </h2>
 
         <p class="mt-1 text-sm text-gray-500">
-            {{ __('Uma vez que sua conta for deletada, todos os seus dados serão permanentemente removidos. Antes de deletar, baixe qualquer informação que deseja manter.') }}
+            {{ __('Uma vez que sua conta for excluída, todos os seus dados serão permanentemente removidos. Antes de excluir, baixe qualquer informação que deseja manter.') }}
         </p>
     </header>
 
@@ -14,7 +14,7 @@
         x-on:click.prevent="$dispatch('open-modal', 'confirm-user-deletion')"
         class="bg-gradient-to-r from-[#FF2EB6] to-[#FF69B4] text-white px-6 py-2.5 text-sm rounded-full font-medium btn-primary shadow-md hover:shadow-lg transition-all"
     >
-        {{ __('DELETAR CONTA') }}
+        {{ __('EXCLUIR CONTA') }}
     </button>
 
     <x-modal name="confirm-user-deletion" :show="$errors->userDeletion->isNotEmpty()" focusable>
@@ -27,12 +27,12 @@
                     <span class="text-white text-lg">✧</span>
                 </div>
                 <h2 class="text-lg font-title text-[#FF2EB6]">
-                    {{ __('Tem certeza que deseja deletar sua conta?') }}
+                    {{ __('Tem certeza que deseja excluir sua conta?') }}
                 </h2>
             </div>
 
             <p class="mt-1 text-sm text-gray-500">
-                {{ __('Uma vez que sua conta for deletada, todos os seus dados serão permanentemente removidos. Digite sua senha para confirmar.') }}
+                {{ __('Uma vez que sua conta for excluída, todos os seus dados serão permanentemente removidos. Digite sua senha para confirmar.') }}
             </p>
 
             <div class="mt-6">
@@ -53,7 +53,7 @@
                 </button>
 
                 <button type="submit" class="bg-gradient-to-r from-[#FF2EB6] to-[#FF69B4] text-white px-6 py-2 text-sm rounded-full font-medium btn-primary shadow-md hover:shadow-lg transition-all">
-                    {{ __('DELETAR CONTA') }}
+                    {{ __('EXCLUIR CONTA') }}
                 </button>
             </div>
         </form>

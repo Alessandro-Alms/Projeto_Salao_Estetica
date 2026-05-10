@@ -18,7 +18,7 @@ class VendaProdutoService
             $quantidade = (int) ($item['quantidade'] ?? 1);
 
             if (!$produto || $produto->quantidade_estoque < $quantidade) {
-                return 'Estoque insuficiente para o produto: ' . ($produto->nome ?? 'Desconhecido');
+                return 'Estoque insuficiente para o produto: ' . ($produto->nome ?? 'produto não encontrado');
             }
         }
 

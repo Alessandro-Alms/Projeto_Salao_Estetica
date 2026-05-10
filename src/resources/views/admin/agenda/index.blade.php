@@ -1,4 +1,4 @@
-<x-app-layout>
+﻿<x-app-layout>
     <x-slot name="header">
         <div class="flex items-center gap-2">
             <span class="text-[#7B19E5] text-xl">✧</span>
@@ -24,7 +24,7 @@
                 </div>
             @endif
 
-            <!-- BLOCO DE FILTRO E BOTÃO NOVO -->
+            <!-- Bloco de filtro e botão novo -->
             <div class="glass-card rounded-2xl shadow-xl overflow-hidden mb-6">
                 <div class="p-4 bg-white/70 backdrop-blur-sm border border-white/40 flex flex-col lg:flex-row justify-between items-center gap-4">
                     

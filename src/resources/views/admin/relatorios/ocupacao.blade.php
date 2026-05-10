@@ -1,4 +1,4 @@
-<x-app-layout>
+﻿<x-app-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <div class="flex items-center gap-2">

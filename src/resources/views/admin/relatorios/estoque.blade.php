@@ -1,4 +1,4 @@
-<x-app-layout>
+﻿<x-app-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <div class="flex items-center gap-2">
@@ -43,7 +43,7 @@
                                     Produtos com estoque baixo
                                 </p>
                             </div>
-                            <div class="opacity-30 text-3xl">⚠️</div>
+                            <div class="opacity-30 text-3xl">Atenção:</div>
                         </div>
                     </div>
                 </div>
@@ -121,11 +121,11 @@
                                                 </span>
                                             @elseif($critico)
                                                 <span class="bg-[#FF2EB6]/20 text-[#FF2EB6] border border-[#FFD6F4] px-3 py-1 rounded-full font-bold text-sm inline-flex items-center gap-1">
-                                                    ⚠️ {{ $produto->quantidade_estoque }}
+                                                    Atenção: {{ $produto->quantidade_estoque }}
                                                 </span>
                                             @else
                                                 <span class="bg-[#7B19E5]/10 text-[#7B19E5] px-3 py-1 rounded-full font-bold text-sm">
-                                                    ✔️ {{ $produto->quantidade_estoque }}
+                                                    {{ $produto->quantidade_estoque }}
                                                 </span>
                                             @endif
                                         </td>

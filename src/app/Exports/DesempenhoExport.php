@@ -30,7 +30,7 @@ class DesempenhoExport implements FromArray, WithHeadings, WithStyles
                 $prof->total_servicos,
                 'R$ ' . number_format($prof->receita_gerada, 2, ',', '.'),
                 'R$ ' . number_format($prof->comissao_total, 2, ',', '.'),
-                $prof->media_nota ? $prof->media_nota . ' ⭐ (' . $prof->total_avaliacoes . ')' : 'Sem avaliações',
+                $prof->media_nota ? $prof->media_nota . ' ★ (' . $prof->total_avaliacoes . ')' : 'Sem avaliações',
             ];
         }
         

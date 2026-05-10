@@ -13,7 +13,7 @@ class EnsureUserRole
         $user = $request->user();
 
         if (!$user || !$user->hasRole($roles)) {
-            abort(403, 'Acesso negado para o seu nivel de permissao.');
+            abort(403, 'Acesso negado para o seu nível de permissão.');
         }
 
         return $next($request);

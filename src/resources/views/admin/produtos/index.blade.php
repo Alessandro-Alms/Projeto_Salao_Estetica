@@ -1,4 +1,4 @@
-<x-app-layout>
+﻿<x-app-layout>
     <x-slot name="header">
         <div class="flex items-center gap-2">
             <span class="text-[#7B19E5] text-xl">✧</span>
@@ -22,7 +22,7 @@
             @if(isset($estoqueCritico) && $estoqueCritico->count() > 0)
                 <div class="mb-6 p-4 bg-orange-50/80 backdrop-blur-sm border-l-4 border-orange-500 text-orange-800 shadow-sm rounded-r-xl rounded-l-sm">
                     <div class="flex items-center">
-                        <span class="text-xl mr-3">⚠️</span>
+                        <span class="text-xl mr-3">Atenção:</span>
                         <div>
                             <p class="font-bold text-sm uppercase text-orange-900">Estoque Crítico</p>
                             <ul class="list-disc ml-5 mt-1 text-xs text-orange-700">

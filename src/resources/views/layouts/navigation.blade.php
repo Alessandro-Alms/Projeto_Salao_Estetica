@@ -1,54 +1,52 @@
-<nav x-data="{ open: false }" class="bg-white/70 backdrop-blur-sm border-b border-[#FFD6F4] shadow-sm sticky top-0 z-30">
+<nav x-data="{ open: false }" class="bg-white/85 backdrop-blur-md border-b border-[#FFD6F4] shadow-sm sticky top-0 z-30">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-            <!-- Logo -->
-            <div class="flex items-center">
-                <a href="{{ route('dashboard') }}" class="flex items-center gap-2">
-                    <img src="{{ asset('img/Prancheta1.png') }}" alt="Cheias de Charme" class="h-10 w-auto">
+        <div class="flex items-center justify-between h-14 gap-4">
+            <div class="flex items-center min-w-0">
+                <a href="{{ route('dashboard') }}" class="flex items-center gap-3">
+                    <img src="{{ asset('img/Prancheta1.png') }}" alt="Cheias de Charme" class="h-8 w-auto">
+                    <span class="hidden md:block font-title text-base text-[#4A00B9] whitespace-nowrap">Cheias de Charme</span>
                 </a>
             </div>
 
-            <!-- Navigation Links (Desktop) -->
-            <div class="hidden sm:flex sm:items-center sm:ml-6">
-                <div class="flex space-x-4">
-                    <a href="{{ route('dashboard') }}" class="text-sm text-[#1A002B] hover:text-[#FF2EB6] transition-colors">
-                        Dashboard
+            <div class="hidden sm:flex sm:items-center">
+                <div class="flex items-center gap-1 rounded-full border border-[#FFD6F4] bg-white/70 p-0.5 shadow-sm">
+                    <a href="{{ route('dashboard') }}" class="px-4 py-1.5 rounded-full text-sm font-semibold {{ request()->routeIs('dashboard') ? 'bg-[#7B19E5] text-white shadow-md' : 'text-[#1A002B] hover:bg-[#FFD6F4]/70 hover:text-[#7B19E5]' }} transition-all">
+                        Painel
                     </a>
 
                     @if(auth()->user()->isCliente())
-                        <a href="{{ route('cliente.produtos.index') }}" class="text-sm text-[#1A002B] hover:text-[#FF2EB6] transition-colors">
+                        <a href="{{ route('cliente.produtos.index') }}" class="px-4 py-1.5 rounded-full text-sm font-semibold {{ request()->routeIs('cliente.produtos.*') ? 'bg-[#7B19E5] text-white shadow-md' : 'text-[#1A002B] hover:bg-[#FFD6F4]/70 hover:text-[#7B19E5]' }} transition-all">
                             Produtos
                         </a>
-                        <a href="{{ route('cliente.pacotes.index') }}" class="text-sm text-[#1A002B] hover:text-[#FF2EB6] transition-colors">
+                        <a href="{{ route('cliente.pacotes.index') }}" class="px-4 py-1.5 rounded-full text-sm font-semibold {{ request()->routeIs('cliente.pacotes.*') ? 'bg-[#7B19E5] text-white shadow-md' : 'text-[#1A002B] hover:bg-[#FFD6F4]/70 hover:text-[#7B19E5]' }} transition-all">
                             Pacotes
                         </a>
                     @endif
-                    
+
                     @if(auth()->user()->cargo === 'gerente')
-                        <a href="{{ route('admin.usuarios.index') }}" class="text-sm text-[#1A002B] hover:text-[#FF2EB6] transition-colors">
+                        <a href="{{ route('admin.usuarios.index') }}" class="px-4 py-1.5 rounded-full text-sm font-semibold {{ request()->routeIs('admin.usuarios.*') ? 'bg-[#7B19E5] text-white shadow-md' : 'text-[#1A002B] hover:bg-[#FFD6F4]/70 hover:text-[#7B19E5]' }} transition-all">
                             Usuários
                         </a>
-                        <a href="{{ route('admin.servicos.index') }}" class="text-sm text-[#1A002B] hover:text-[#FF2EB6] transition-colors">
+                        <a href="{{ route('admin.servicos.index') }}" class="px-4 py-1.5 rounded-full text-sm font-semibold {{ request()->routeIs('admin.servicos.*') ? 'bg-[#7B19E5] text-white shadow-md' : 'text-[#1A002B] hover:bg-[#FFD6F4]/70 hover:text-[#7B19E5]' }} transition-all">
                             Serviços
                         </a>
-                        <a href="{{ route('admin.produtos.index') }}" class="text-sm text-[#1A002B] hover:text-[#FF2EB6] transition-colors">
+                        <a href="{{ route('admin.produtos.index') }}" class="px-4 py-1.5 rounded-full text-sm font-semibold {{ request()->routeIs('admin.produtos.*') ? 'bg-[#7B19E5] text-white shadow-md' : 'text-[#1A002B] hover:bg-[#FFD6F4]/70 hover:text-[#7B19E5]' }} transition-all">
                             Produtos
                         </a>
                     @endif
                 </div>
             </div>
 
-            <!-- Dropdown do usuário -->
-            <div class="hidden sm:flex sm:items-center sm:ml-6">
+            <div class="hidden sm:flex sm:items-center">
                 <div class="relative" x-data="{ open: false }">
-                    <button @click="open = !open" class="flex items-center gap-1 text-sm text-[#1A002B] hover:text-[#FF2EB6] transition-colors">
-                        {{ Auth::user()->name }}
+                    <button @click="open = !open" class="flex items-center gap-2 rounded-full border border-[#FFD6F4] bg-white/70 px-4 py-1.5 text-sm font-semibold text-[#1A002B] shadow-sm hover:text-[#FF2EB6] transition-colors">
+                        <span class="max-w-36 truncate">{{ Auth::user()->name }}</span>
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                         </svg>
                     </button>
-                    
-                    <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg border border-[#FFD6F4] py-1 z-50">
+
+                    <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-44 bg-white rounded-xl shadow-lg border border-[#FFD6F4] py-1 z-50">
                         <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-[#1A002B] hover:bg-[#FFD6F4] transition-colors">
                             Meu Perfil
                         </a>
@@ -62,7 +60,6 @@
                 </div>
             </div>
 
-            <!-- Menu Mobile -->
             <div class="-mr-2 flex items-center sm:hidden">
                 <button @click="open = !open" class="p-2 rounded-md text-[#1A002B] hover:text-[#FF2EB6]">
                     <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
@@ -74,11 +71,10 @@
         </div>
     </div>
 
-    <!-- Mobile Menu -->
     <div :class="{'block': open, 'hidden': !open}" class="hidden sm:hidden bg-white/95 border-b border-[#FFD6F4]">
         <div class="px-2 pt-2 pb-3 space-y-1">
             <a href="{{ route('dashboard') }}" class="block px-3 py-2 text-base text-[#1A002B] hover:text-[#FF2EB6] hover:bg-[#FFD6F4] rounded-md">
-                Dashboard
+                Painel
             </a>
 
             @if(auth()->user()->isCliente())
@@ -89,7 +85,7 @@
                     Pacotes
                 </a>
             @endif
-            
+
             @if(auth()->user()->cargo === 'gerente')
                 <a href="{{ route('admin.usuarios.index') }}" class="block px-3 py-2 text-base text-[#1A002B] hover:text-[#FF2EB6] hover:bg-[#FFD6F4] rounded-md">
                     Usuários

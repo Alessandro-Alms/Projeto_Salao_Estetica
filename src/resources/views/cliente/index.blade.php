@@ -1,4 +1,4 @@
-<x-app-layout>
+﻿<x-app-layout>
     <x-slot name="header">
         <div class="hidden"></div>
     </x-slot>
@@ -29,7 +29,7 @@
                 </div>
             @endif
 
-            {{-- SECÇÃO DE PACOTES --}}
+            {{-- Seção de pacotes --}}
             <div class="mb-12">
                 <div class="flex items-center gap-2 mb-6">
                     <span class="text-[#7B19E5] text-xl">✧</span>
@@ -54,7 +54,7 @@
                                     </div>
                                     <h3 class="text-lg font-title text-[#4A00B9] mt-2 mb-1">{{ $meuPacote->pacote->nome }}</h3>
                                     <p class="text-xs text-[#7B19E5] mb-2">
-                                        {{ $meuPacote->pacote->servicos->pluck('nome')->join(', ') ?: ($meuPacote->pacote->servico->nome ?? 'Servico removido') }}
+                                        {{ $meuPacote->pacote->servicos->pluck('nome')->join(', ') ?: ($meuPacote->pacote->servico->nome ?? 'Serviço removido') }}
                                     </p>
                                     <p class="text-sm text-[#7B19E5] mb-4">
                                         Válido até: <span class="font-bold">{{ \Carbon\Carbon::parse($meuPacote->data_validade)->format('d/m/Y') }}</span>
@@ -76,7 +76,7 @@
                 @endif
             </div>
 
-            {{-- SECÇÃO DE AGENDAMENTOS --}}
+            {{-- Seção de agendamentos --}}
             <div class="flex justify-between items-center mb-6">
                 <div class="flex items-center gap-2">
                     <span class="text-[#7B19E5] text-xl">✧</span>
@@ -94,17 +94,17 @@
                     
                     <button type="button" onclick="filtrarAgendamentos(7)" 
                             class="px-4 py-2 rounded-full text-sm font-medium transition-all {{ request('filtro', '7') == '7' ? 'bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white shadow-md' : 'bg-white/70 border border-[#FFD6F4] text-[#4A00B9] hover:bg-white/90' }}">
-                        📅 Próximos 7 dias
+                        Calendário Próximos 7 dias
                     </button>
 
                     <button type="button" onclick="filtrarAgendamentos(30)" 
                             class="px-4 py-2 rounded-full text-sm font-medium transition-all {{ request('filtro') == '30' ? 'bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white shadow-md' : 'bg-white/70 border border-[#FFD6F4] text-[#4A00B9] hover:bg-white/90' }}">
-                        📅 Próximos 30 dias
+                        Calendário Próximos 30 dias
                     </button>
 
                     <button type="button" onclick="filtrarAgendamentos('todos')" 
                             class="px-4 py-2 rounded-full text-sm font-medium transition-all {{ request('filtro') == 'todos' ? 'bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white shadow-md' : 'bg-white/70 border border-[#FFD6F4] text-[#4A00B9] hover:bg-white/90' }}">
-                        📅 Todos os agendamentos
+                        Calendário Todos os agendamentos
                     </button>
                 </form>
             </div>
@@ -142,9 +142,9 @@
                             </div>
 
                             <div class="space-y-2 text-sm text-[#1A002B] mb-4">
-                                <p><strong class="text-[#7B19E5]">🕒 Horário:</strong> {{ \Carbon\Carbon::parse($agenda->data_hora_inicio)->format('H:i') }}</p>
-                                <p><strong class="text-[#7B19E5]">👤 Profissional:</strong> {{ $agenda->profissional->name }}</p>
-                                <p><strong class="text-[#7B19E5]">💰 Valor:</strong> R$ {{ number_format($agenda->valor_total, 2, ',', '.') }}</p>
+                                <p><strong class="text-[#7B19E5]">Horário:</strong> {{ \Carbon\Carbon::parse($agenda->data_hora_inicio)->format('H:i') }}</p>
+                                <p><strong class="text-[#7B19E5]">Profissional:</strong> {{ $agenda->profissional->name }}</p>
+                                <p><strong class="text-[#7B19E5]">Valor:</strong> R$ {{ number_format($agenda->valor_total, 2, ',', '.') }}</p>
                             </div>
 
                             <div class="mt-auto pt-4 border-t border-[#FFD6F4]">
@@ -159,12 +159,12 @@
                                         @endphp
                                         <button onclick="abrirModalAvaliacao({{ $agenda->id_agendamento }}, @js($servicosStr))" 
                                                 class="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white py-2 rounded-full font-medium btn-primary shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2">
-                                            ⭐ Avaliar Atendimento
+                                            ★ Avaliar Atendimento
                                         </button>
                                     @else
                                         <div class="text-center p-2 bg-green-50/50 rounded-lg border border-green-200">
                                             <span class="text-green-700 text-sm font-bold flex items-center justify-center gap-1">
-                                                ✅ Avaliado: {{ $agenda->avaliacao->nota }} / 5 estrelas
+                                                ✓ Avaliado: {{ $agenda->avaliacao->nota }} / 5 estrelas
                                             </span>
                                         </div>
                                     @endif
@@ -175,7 +175,7 @@
                                     <form action="{{ route('cliente.agendamento.cancelar', ['id' => $agenda->id_agendamento]) }}" method="POST" onsubmit="return confirmarCancelamento('{{ number_format($multaValor, 2, ',', '.') }}')">
                                         @csrf
                                         <button type="submit" class="w-full text-[#FF2EB6] border border-[#FF2EB6] py-2 rounded-full text-sm font-bold hover:bg-[#FF2EB6] hover:text-white transition-all">
-                                                ❌ Cancelar Agendamento
+                                                Cancelar agendamento
                                         </button>
                                     </form>
                                 @endif
@@ -193,7 +193,7 @@
         </div>
     </div>
 
-    {{-- MODAL DE AVALIAÇÃO --}}
+    {{-- Modal de avaliação --}}
     <div id="modalAvaliacao" class="fixed inset-0 z-50 hidden overflow-y-auto">
         <div class="flex items-center justify-center min-h-screen px-4">
             <div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div>
@@ -278,7 +278,7 @@
 
         function confirmarCancelamento(multa) {
             return confirm(
-                `Ao cancelar com menos de 24h, sera cobrada uma multa de 5% do servico.\n` +
+                `Ao cancelar com menos de 24h, será cobrada uma multa de 5% do serviço.\n` +
                 `Valor estimado da multa: R$ ${multa}.\n\n` +
                 `Deseja mesmo cancelar?`
             );

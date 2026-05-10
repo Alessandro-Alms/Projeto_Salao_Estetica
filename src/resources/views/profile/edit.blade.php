@@ -1,4 +1,4 @@
-<x-app-layout>
+﻿<x-app-layout>
     <x-slot name="header">
         <div class="hidden"></div>
     </x-slot>
@@ -36,14 +36,14 @@
                 </div>
             </div>
 
-            <!-- Card Deletar Conta -->
+            <!-- Card Excluir Conta -->
             <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
                 <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
                     <div class="flex items-center gap-3 mb-6">
                         <div class="w-10 h-10 bg-gradient-to-br from-[#FF2EB6] to-[#FF69B4] rounded-xl flex items-center justify-center shadow-md">
                             <span class="text-white text-lg">✧</span>
                         </div>
-                        <h3 class="text-lg font-title text-[#FF2EB6]">Deletar Conta</h3>
+                        <h3 class="text-lg font-title text-[#FF2EB6]">Excluir conta</h3>
                     </div>
                     <div class="max-w-xl">
                         @include('profile.partials.delete-user-form')

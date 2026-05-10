@@ -1,4 +1,4 @@
-<x-app-layout>
+﻿<x-app-layout>
     <x-slot name="header">
         <div class="flex items-center gap-2">
             <span class="text-[#7B19E5] text-xl">✧</span>
@@ -117,7 +117,7 @@
                     <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
                         <div class="flex items-center gap-2 mb-4">
                             <span class="text-[#7B19E5] text-xl">✧</span>
-                            <h3 class="font-title text-[#4A00B9] text-lg">Top Profissionais no Periodo</h3>
+                            <h3 class="font-title text-[#4A00B9] text-lg">Top Profissionais no período</h3>
                         </div>
                         <div class="h-80">
                             <canvas id="graficoTopProfissionaisCentral"></canvas>
@@ -170,7 +170,7 @@
                 
                 <a href="{{ route('admin.relatorios.faturamento', $query) }}" class="glass-card rounded-2xl shadow-xl overflow-hidden hover-lift group block">
                     <div class="p-5 bg-white/70 backdrop-blur-sm border border-white/40">
-                        <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">💰</div>
+                        <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">✧</div>
                         <h3 class="font-title text-[#4A00B9] text-lg mb-1 group-hover:text-[#7B19E5] transition-colors">Faturamento</h3>
                         <p class="text-xs text-gray-500">Total de receitas, ticket médio e comparativo com período anterior.</p>
                     </div>
@@ -178,7 +178,7 @@
 
                 <a href="{{ route('admin.relatorios.ocupacao', $query) }}" class="glass-card rounded-2xl shadow-xl overflow-hidden hover-lift group block">
                     <div class="p-5 bg-white/70 backdrop-blur-sm border border-white/40">
-                        <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">🗓️</div>
+                        <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">✧</div>
                         <h3 class="font-title text-[#4A00B9] text-lg mb-1 group-hover:text-[#7B19E5] transition-colors">Ocupação da Agenda</h3>
                         <p class="text-xs text-gray-500">Taxa de preenchimento de horários, identificação de picos e horas mortas.</p>
                     </div>
@@ -186,7 +186,7 @@
 
                 <a href="{{ route('admin.relatorios.desempenho', $query) }}" class="glass-card rounded-2xl shadow-xl overflow-hidden hover-lift group block">
                     <div class="p-5 bg-white/70 backdrop-blur-sm border border-white/40">
-                        <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">⭐</div>
+                        <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">★</div>
                         <h3 class="font-title text-[#4A00B9] text-lg mb-1 group-hover:text-[#7B19E5] transition-colors">Desempenho da Equipe</h3>
                         <p class="text-xs text-gray-500">Ranking de profissionais por serviços feitos, avaliações e valores gerados.</p>
                     </div>
@@ -194,7 +194,7 @@
 
                 <a href="{{ route('admin.relatorios.produtos', $query) }}" class="glass-card rounded-2xl shadow-xl overflow-hidden hover-lift group block">
                     <div class="p-5 bg-white/70 backdrop-blur-sm border border-white/40">
-                        <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">🛍️</div>
+                        <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">✧</div>
                         <h3 class="font-title text-[#4A00B9] text-lg mb-1 group-hover:text-[#7B19E5] transition-colors">Produtos Mais Vendidos</h3>
                         <p class="text-xs text-gray-500">Ranking de vendas físicas, giro de prateleira e lucro direto por produto.</p>
                     </div>
@@ -202,7 +202,7 @@
 
                 <a href="{{ route('admin.relatorios.fidelizacao', $query) }}" class="glass-card rounded-2xl shadow-xl overflow-hidden hover-lift group block">
                     <div class="p-5 bg-white/70 backdrop-blur-sm border border-white/40">
-                        <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">🤝</div>
+                        <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">✧</div>
                         <h3 class="font-title text-[#4A00B9] text-lg mb-1 group-hover:text-[#7B19E5] transition-colors">Fidelização e VIPs</h3>
                         <p class="text-xs text-gray-500">Taxa de retorno de clientes e ranking dos clientes que mais investem no salão.</p>
                     </div>
@@ -210,7 +210,7 @@
 
                 <a href="{{ route('admin.relatorios.cancelamentos', $query) }}" class="glass-card rounded-2xl shadow-xl overflow-hidden hover-lift group block">
                     <div class="p-5 bg-white/70 backdrop-blur-sm border border-white/40">
-                        <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">🚫</div>
+                        <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">✧</div>
                         <h3 class="font-title text-[#4A00B9] text-lg mb-1 group-hover:text-[#7B19E5] transition-colors">Análise de Cancelamentos</h3>
                         <p class="text-xs text-gray-500">Motivos de desistência, cálculo de prejuízos e ranking de clientes ofensores.</p>
                     </div>
@@ -218,7 +218,7 @@
 
                 <a href="{{ route('admin.relatorios.financeiro', $query) }}" class="glass-card rounded-2xl shadow-xl overflow-hidden hover-lift group block">
                     <div class="p-5 bg-white/70 backdrop-blur-sm border border-white/40">
-                        <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">🏦</div>
+                        <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">✧</div>
                         <h3 class="font-title text-[#4A00B9] text-lg mb-1 group-hover:text-[#7B19E5] transition-colors">Financeiro Detalhado</h3>
                         <p class="text-xs text-gray-500">Balanço de entradas (serviços e produtos) vs despesas (comissões geradas).</p>
                     </div>
@@ -226,7 +226,7 @@
 
                 <a href="{{ route('admin.relatorios.comissoes', $query) }}" class="glass-card rounded-2xl shadow-xl overflow-hidden hover-lift group block">
                     <div class="p-5 bg-white/70 backdrop-blur-sm border border-white/40">
-                        <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">💸</div>
+                        <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">✧</div>
                         <h3 class="font-title text-[#4A00B9] text-lg mb-1 group-hover:text-[#7B19E5] transition-colors">Comissões a Pagar</h3>
                         <p class="text-xs text-gray-500">Folha de pagamento exata baseada nos serviços executados. Exportável.</p>
                     </div>
@@ -234,7 +234,7 @@
 
                 <a href="{{ route('admin.relatorios.estoque', $query) }}" class="glass-card rounded-2xl shadow-xl overflow-hidden hover-lift group block">
                     <div class="p-5 bg-white/70 backdrop-blur-sm border border-white/40">
-                        <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">📦</div>
+                        <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">✧</div>
                         <h3 class="font-title text-[#4A00B9] text-lg mb-1 group-hover:text-[#7B19E5] transition-colors">Estoque de Produtos</h3>
                         <p class="text-xs text-gray-500">Saldo atual, capital empatado na prateleira e alertas de reposição urgente.</p>
                     </div>
@@ -242,7 +242,7 @@
 
                 <a href="{{ route('admin.relatorios.sazonalidade', $query) }}" class="glass-card rounded-2xl shadow-xl overflow-hidden hover-lift group block">
                     <div class="p-5 bg-white/70 backdrop-blur-sm border border-white/40">
-                        <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">📅</div>
+                        <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">Calendário</div>
                         <h3 class="font-title text-[#4A00B9] text-lg mb-1 group-hover:text-[#7B19E5] transition-colors">Sazonalidade</h3>
                         <p class="text-xs text-gray-500">Descobre quais são os dias da semana mais fortes e fracos do teu salão.</p>
                     </div>
@@ -250,7 +250,7 @@
 
                 <a href="{{ route('admin.relatorios.avaliacoes', $query) }}" class="glass-card rounded-2xl shadow-xl overflow-hidden hover-lift group block">
                     <div class="p-5 bg-white/70 backdrop-blur-sm border border-white/40">
-                        <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">💬</div>
+                        <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">✧</div>
                         <h3 class="font-title text-[#4A00B9] text-lg mb-1 group-hover:text-[#7B19E5] transition-colors">Avaliações e Reputação</h3>
                         <p class="text-xs text-gray-500">Média de estrelas, taxa de aprovação dos clientes e feed de comentários.</p>
                     </div>
@@ -258,7 +258,7 @@
 
                 <a href="{{ route('admin.relatorios.previsao', $query) }}" class="glass-card rounded-2xl shadow-xl overflow-hidden hover-lift group block">
                     <div class="p-5 bg-white/70 backdrop-blur-sm border border-white/40">
-                        <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">🔮</div>
+                        <div class="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left">✧</div>
                         <h3 class="font-title text-[#4A00B9] text-lg mb-1 group-hover:text-[#7B19E5] transition-colors">Previsão de Demanda</h3>
                         <p class="text-xs text-gray-500">Projeção inteligente de clientes para os próximos 7 dias baseada no histórico.</p>
                     </div>

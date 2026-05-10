@@ -91,7 +91,7 @@ class ServicoController extends Controller
         // Se passou, deleta.
         $servico->delete();
 
-        // AQUI ESTÁ A CORREÇÃO DO ERRO DE ROTA:
+        // Correção do erro de rota:
         return redirect()->back()->with('status', 'Serviço excluído com sucesso!');
     }
 }

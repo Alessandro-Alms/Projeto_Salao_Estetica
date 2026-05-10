@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cheias de Charme — Salão de Beleza</title>
+    <title>Cheias de Charme - Salão de Beleza</title>
     <script src="https://cdn.tailwindcss.com"></script>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -261,7 +261,7 @@
                         </div>
                         <div class="p-6">
                             <h3 class="text-xl font-title text-[#4A00B9] mb-3">{{ $servico->nome }}</h3>
-                            <p class="text-sm text-[#1A002B] mb-4 font-body leading-relaxed min-h-[72px]">{{ $servico->descricao ?? 'Servico profissional do salao.' }}</p>
+                            <p class="text-sm text-[#1A002B] mb-4 font-body leading-relaxed min-h-[72px]">{{ $servico->descricao ?? 'Serviço profissional do salão.' }}</p>
                             <div class="flex items-center justify-between gap-3">
                                 <span class="text-[#FF2EB6] font-medium">R$ {{ number_format($servico->preco, 2, ',', '.') }}</span>
                                 <span class="text-xs text-[#7B19E5] font-semibold">{{ $servico->duracao }} min</span>
@@ -270,7 +270,7 @@
                     </div>
                 @empty
                     <div class="glass-card p-8 rounded-2xl shadow-xl border border-white/40 md:col-span-2 lg:col-span-4 text-center text-[#4A00B9]">
-                        Nenhum servico cadastrado ainda.
+                        Nenhum serviço cadastrado ainda.
                     </div>
                 @endforelse
             </div>
@@ -666,7 +666,7 @@
     <footer class="bg-white/80 backdrop-blur-md py-6 border-t border-[#FFD6F4] relative z-20 shadow-sm">
         <div class="container mx-auto px-6">
             <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-                <div class="text-sm text-[#4A00B9] font-body">{{ date('Y') }} Cheias de Charme — feito com ❤️</div>
+                <div class="text-sm text-[#4A00B9] font-body">{{ date('Y') }} Cheias de Charme - feito com carinho</div>
                 <div class="flex gap-8">
                     <a href="#" target="_blank" rel="noopener noreferrer" class="text-[#7B19E5] text-sm hover:text-[#FF2EB6] transition-colors font-body">Instagram</a>
                     <a href="#" target="_blank" rel="noopener noreferrer" class="text-[#7B19E5] text-sm hover:text-[#FF2EB6] transition-colors font-body">TikTok</a>

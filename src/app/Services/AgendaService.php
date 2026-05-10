@@ -39,14 +39,14 @@ class AgendaService
         $escala = $this->buscarEscala($profissional->id, $inicio->dayOfWeek);
 
         if (!$escala || !$escala->trabalha) {
-            return 'O profissional nao trabalha neste dia da semana.';
+            return 'O profissional não trabalha neste dia da semana.';
         }
 
         $horaInicio = $inicio->format('H:i:s');
         $horaFim = $fim->format('H:i:s');
 
         if ($inicio->lt($this->inicioExpediente($escala, $inicio)) || $fim->gt($this->limiteSaidaExpediente($escala, $inicio))) {
-            return 'O horario escolhido esta fora do expediente do profissional.';
+            return 'O horário escolhido está fora do expediente do profissional.';
         }
 
         return null;
@@ -168,7 +168,7 @@ class AgendaService
             'acrescimo_especial' => $acrescimo,
             'motivo_acrescimo' => empty($motivos) ? null : implode(' + ', $motivos),
             'desconto_servicos' => $desconto,
-            'motivo_desconto' => $desconto > 0 ? 'Combo de 5 servicos -10%' : null,
+            'motivo_desconto' => $desconto > 0 ? 'Combo de 5 serviços -10%' : null,
             'base_comissao' => $baseComissao,
             'valor_total' => round($baseComissao - $desconto, 2),
         ];

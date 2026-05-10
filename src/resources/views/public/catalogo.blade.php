@@ -100,7 +100,7 @@
                 </a>
 
                 <nav class="hidden md:flex items-center gap-8" aria-label="Navegacao publica">
-                    <a href="{{ route('public.home') }}#servicos" class="text-[#1A002B] text-sm hover:text-[#7B19E5] transition-colors font-semibold">SERVICOS</a>
+                    <a href="{{ route('public.home') }}#servicos" class="text-[#1A002B] text-sm hover:text-[#7B19E5] transition-colors font-semibold">SERVIÇOS</a>
                     <a href="{{ route('public.home') }}#produtos" class="text-[#1A002B] text-sm hover:text-[#7B19E5] transition-colors font-semibold">PRODUTOS</a>
                     <a href="{{ route('public.home') }}#depoimentos" class="text-[#1A002B] text-sm hover:text-[#7B19E5] transition-colors font-semibold">DEPOIMENTOS</a>
                     <a href="{{ route('public.home') }}#contato" class="text-[#1A002B] text-sm hover:text-[#7B19E5] transition-colors font-semibold">CONTATO</a>
@@ -142,7 +142,7 @@
                                 </div>
                                 <div class="p-6">
                                     <h2 class="text-2xl font-title text-[#4A00B9] mb-3">{{ $item->nome }}</h2>
-                                    <p class="text-sm text-[#1A002B] font-body leading-relaxed mb-5 min-h-[64px]">{{ $item->descricao ?? 'Servico profissional do salao.' }}</p>
+                                    <p class="text-sm text-[#1A002B] font-body leading-relaxed mb-5 min-h-[64px]">{{ $item->descricao ?? 'Serviço profissional do salão.' }}</p>
                                     <div class="flex items-center justify-between gap-4 border-t border-[#FFD6F4] pt-4">
                                         <span class="text-[#FF2EB6] font-bold">R$ {{ number_format($item->preco, 2, ',', '.') }}</span>
                                         <span class="text-xs text-[#7B19E5] font-bold bg-[#F3E8FF] px-3 py-1 rounded-full">{{ $item->duracao }} min</span>

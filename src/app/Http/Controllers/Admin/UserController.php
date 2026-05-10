@@ -197,7 +197,7 @@ class UserController extends Controller
         $usuario = User::findOrFail($id);
 
         if (auth()->user()->isRecepcionista() && !$usuario->isCliente()) {
-            abort(403, 'Recepcionistas sÃ³ podem editar clientes.');
+            abort(403, 'Recepcionistas só podem editar clientes.');
         }
 
         $this->normalizarDocumentoContato($request);
@@ -229,11 +229,11 @@ class UserController extends Controller
     public function destroy(User $usuario)
     {
         if ($usuario->id === auth()->id()) {
-            return redirect()->route('admin.usuarios.index')->with('error', 'Você não pode deletar sua própria conta!');
+            return redirect()->route('admin.usuarios.index')->with('error', 'Você não pode excluir sua própria conta!');
         }
 
         if (auth()->user()->isRecepcionista() && !$usuario->isCliente()) {
-            abort(403, 'Recepcionistas sÃ³ podem remover clientes.');
+            abort(403, 'Recepcionistas só podem remover clientes.');
         }
 
         $temHistorico = Agendamento::where('cliente_id', $usuario->id)
@@ -243,7 +243,7 @@ class UserController extends Controller
             || DB::table('cliente_pacotes')->where('cliente_id', $usuario->id)->exists();
 
         if ($temHistorico) {
-            return redirect()->route('admin.usuarios.index')->with('error', 'NÃ£o Ã© possÃ­vel remover um usuÃ¡rio com histÃ³rico no sistema. Bloqueie ou edite o cadastro para preservar relatÃ³rios.');
+            return redirect()->route('admin.usuarios.index')->with('error', 'Não é possível remover um usuário com histórico no sistema. Bloqueie ou edite o cadastro para preservar relatórios.');
         }
 
         $usuario->delete();
@@ -311,7 +311,7 @@ class UserController extends Controller
             'data' => ['required', 'date', 'after_or_equal:' . $hoje->toDateString(), 'before_or_equal:' . $limite->toDateString()],
         ], [
             'data.after_or_equal' => 'Escolha uma data a partir de hoje.',
-            'data.before_or_equal' => 'A disponibilidade pode ser ajustada somente para os proximos 3 meses.',
+            'data.before_or_equal' => 'A disponibilidade pode ser ajustada somente para os próximos 3 meses.',
         ]);
 
         $inicio = Carbon::parse($dados['data'])->startOfDay();
@@ -319,7 +319,7 @@ class UserController extends Controller
 
         if ($this->profissionalTemAgendamentoNoPeriodo($usuario->id, $inicio, $fim)) {
             throw ValidationException::withMessages([
-                'data' => 'Esse dia ja tem agendamento ativo. Reagende ou cancele antes de desativar a disponibilidade.',
+                'data' => 'Esse dia já tem agendamento ativo. Reagende ou cancele antes de desativar a disponibilidade.',
             ]);
         }
 
@@ -351,7 +351,7 @@ class UserController extends Controller
 
         if (Carbon::parse($bloqueio->data_hora_fim)->isPast()) {
             return back()->withErrors([
-                'data' => 'Nao e possivel remover bloqueios que ja passaram.',
+                'data' => 'Não é possível remover bloqueios que já passaram.',
             ]);
         }
 
@@ -386,7 +386,7 @@ class UserController extends Controller
 
         if ($this->profissionalTemAgendamentoNoPeriodo($usuario->id, $inicio, $fim)) {
             throw ValidationException::withMessages([
-                'feriado' => 'Esse feriado ja tem agendamento ativo. Reagende ou cancele antes de desativar.',
+                'feriado' => 'Esse feriado já tem agendamento ativo. Reagende ou cancele antes de desativar.',
             ]);
         }
 
@@ -401,7 +401,7 @@ class UserController extends Controller
             ]
         );
 
-        return back()->with('sucesso', 'Feriado desativado na sua agenda. Clientes nao poderao agendar com voce nesse dia.');
+        return back()->with('sucesso', 'Feriado desativado na sua agenda. Clientes não poderão agendar com você nesse dia.');
     }
 
     public function alterarStatus(Request $request, $id)

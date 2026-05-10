@@ -1,15 +1,15 @@
-@if($mensagemProximaVisita || $avaliacoesPendentes > 0 || $pacotesVencendo->count() > 0)
+﻿@if($mensagemProximaVisita || $avaliacoesPendentes > 0 || $pacotesVencendo->count() > 0)
     <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
         <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
             <div class="flex items-center gap-2 mb-4">
                 <span class="text-[#7B19E5] text-xl">✧</span>
-                <h3 class="text-lg font-title text-[#4A00B9]">Notificacoes</h3>
+                <h3 class="text-lg font-title text-[#4A00B9]">Notificações</h3>
             </div>
 
             <div class="space-y-3">
                 @if($mensagemProximaVisita)
                     <div class="p-4 rounded-xl bg-[#7B19E5]/10 border border-[#FFD6F4] text-sm">
-                        <p class="font-semibold text-[#4A00B9]">📅 Proxima visita</p>
+                        <p class="font-semibold text-[#4A00B9]">Próxima visita</p>
                         <p class="text-gray-600 mt-1">
                             {{ $mensagemProximaVisita }}
                             <span class="font-semibold text-[#7B19E5]">
@@ -17,16 +17,16 @@
                             </span>
                         </p>
                         <p class="text-xs text-gray-500 mt-2">
-                            Cancelamentos com menos de 24h geram multa de 5% do valor do servico.
+                            Cancelamentos com menos de 24h geram multa de 5% do valor do serviço.
                         </p>
                     </div>
                 @endif
 
                 @if($avaliacoesPendentes > 0)
                     <div class="p-4 rounded-xl bg-[#FF2EB6]/10 border border-[#FFD6F4] text-sm">
-                        <p class="font-semibold text-[#FF2EB6]">⭐ Avaliacao pendente</p>
+                        <p class="font-semibold text-[#FF2EB6]">★ Avaliação pendente</p>
                         <p class="text-gray-600 mt-1">
-                            Voce tem {{ $avaliacoesPendentes }} atendimento(s) sem avaliacao. Sua opiniao e importante!
+                            Você tem {{ $avaliacoesPendentes }} atendimento(s) sem avaliação. Sua opinião é importante!
                         </p>
                         <a href="{{ route('cliente.index') }}" class="inline-block mt-2 text-[#FF2EB6] font-semibold hover:underline">
                             Avaliar agora
@@ -36,7 +36,7 @@
 
                 @if($pacotesVencendo->count() > 0)
                     <div class="p-4 rounded-xl bg-[#F59E0B]/10 border border-[#FFD6F4] text-sm">
-                        <p class="font-semibold text-[#F59E0B]">🎁 Pacotes a vencer</p>
+                        <p class="font-semibold text-[#F59E0B]">Pacotes a vencer</p>
                         <ul class="mt-2 space-y-1 text-gray-600">
                             @foreach($pacotesVencendo as $pacote)
                                 <li>
@@ -51,17 +51,25 @@
     </div>
 @endif
 
-<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
-    <a href="{{ route('cliente.agendar.novo') }}" class="flex items-center justify-center p-6 bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white rounded-full font-medium btn-primary shadow-lg hover:shadow-xl transition-all text-center">
-        Agendar Novo Horário
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+    <a href="{{ route('cliente.agendar.novo') }}" class="group min-h-28 rounded-2xl bg-gradient-to-br from-[#7B19E5] to-[#FF2EB6] p-5 text-white shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all">
+        <span class="block text-2xl mb-3">✧</span>
+        <span class="block font-title text-lg">Agendar horário</span>
+        <span class="block text-xs text-white/80 mt-1">Escolha serviço, profissional e data.</span>
     </a>
-    <a href="{{ route('cliente.produtos.index') }}" class="flex items-center justify-center p-6 bg-white text-[#FF2EB6] border-2 border-[#FFD6F4] rounded-full font-medium hover:bg-[#FF2EB6] hover:text-white transition-all text-center">
-        Comprar Produtos
+    <a href="{{ route('cliente.produtos.index') }}" class="group min-h-28 rounded-2xl bg-white/80 border border-[#FFD6F4] p-5 text-[#1A002B] shadow-md hover:shadow-lg hover:-translate-y-1 transition-all">
+        <span class="block text-2xl text-[#FF2EB6] mb-3">✧</span>
+        <span class="block font-title text-lg text-[#4A00B9]">Comprar produtos</span>
+        <span class="block text-xs text-gray-500 mt-1">Veja produtos disponíveis no estoque.</span>
     </a>
-    <a href="{{ route('cliente.pacotes.index') }}" class="flex items-center justify-center p-6 bg-white text-[#FF2EB6] border-2 border-[#FF2EB6] rounded-full font-medium hover:bg-[#FF2EB6] hover:text-white transition-all text-center">
-        Comprar Pacotes
+    <a href="{{ route('cliente.pacotes.index') }}" class="group min-h-28 rounded-2xl bg-white/80 border border-[#FFD6F4] p-5 text-[#1A002B] shadow-md hover:shadow-lg hover:-translate-y-1 transition-all">
+        <span class="block text-2xl text-[#7B19E5] mb-3">✧</span>
+        <span class="block font-title text-lg text-[#4A00B9]">Comprar pacotes</span>
+        <span class="block text-xs text-gray-500 mt-1">Use sessões em agendamentos futuros.</span>
     </a>
-    <a href="{{ route('cliente.index') }}" class="flex items-center justify-center p-6 bg-white text-[#7B19E5] border-2 border-[#7B19E5] rounded-full font-medium hover:bg-[#7B19E5] hover:text-white transition-all text-center">
-        Meus Agendamentos
+    <a href="{{ route('cliente.index') }}" class="group min-h-28 rounded-2xl bg-white/80 border border-[#FFD6F4] p-5 text-[#1A002B] shadow-md hover:shadow-lg hover:-translate-y-1 transition-all">
+        <span class="block text-2xl text-[#FF2EB6] mb-3">✧</span>
+        <span class="block font-title text-lg text-[#4A00B9]">Meus agendamentos</span>
+        <span class="block text-xs text-gray-500 mt-1">Acompanhe horários e avaliações.</span>
     </a>
 </div>  

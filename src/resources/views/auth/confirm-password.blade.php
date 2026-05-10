@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cheias de Charme — Confirmar senha</title>
+    <title>Cheias de Charme - Confirmar senha</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
@@ -109,7 +109,7 @@
                 <div class="text-center mt-6">
                     <a href="{{ route('dashboard') }}" class="text-sm text-[#7B19E5] hover:text-[#FF2EB6] transition-colors inline-flex items-center gap-1">
                         <i class="fa-solid fa-arrow-left text-xs"></i>
-                        Voltar para o dashboard
+                        Voltar para o painel
                     </a>
                 </div>
             </form>

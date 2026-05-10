@@ -1,4 +1,4 @@
-<x-app-layout>
+﻿<x-app-layout>
 <div class="container mx-auto p-4 max-w-6xl">
     <div class="glass-card rounded-2xl shadow-xl overflow-hidden p-8">
         <div class="flex items-center gap-3 mb-8">
@@ -28,7 +28,7 @@
                 <h3 class="text-2xl font-title text-[#1A002B] mb-8">Quais serviços desejas realizar? (Você escolher mais de um)</h3>
                 <div class="mb-6 p-4 bg-[#7B19E5]/10 border-2 border-[#FFD6F4] rounded-lg">
                     <p class="text-[#1A002B] font-semibold">
-                        Limite: ate 5 servicos por agendamento. Ao selecionar 5 servicos, voce ganha 10% de desconto no total do atendimento.
+                        Limite: até 5 serviços por agendamento. Ao selecionar 5 serviços, você ganha 10% de desconto no total do atendimento.
                     </p>
                     <p class="text-[#7B19E5] text-sm mt-1">
                         O desconto e beneficio do salao: a comissao do profissional continua sendo calculada sobre o valor cheio com os acrescimos aplicados.
@@ -57,7 +57,7 @@
                     <h4 class="font-semibold text-[#4A00B9] mb-3">✧ Serviços Selecionados:</h4>
                     <ul id="lista-servicos-selecionados" class="space-y-2"></ul>
                     <div class="mt-4 p-3 bg-white/50 border border-[#FFD6F4] rounded-lg">
-                        <p class="font-bold text-[#4A00B9]">Servicos: <span id="qtd-servicos">0</span>/5</p>
+                        <p class="font-bold text-[#4A00B9]">Serviços: <span id="qtd-servicos">0</span>/5</p>
                         <p id="aviso-desconto-combo" class="hidden mt-2 text-[#7B19E5] font-bold">Combo completo: 10% de desconto sera aplicado no total.</p>
                     </div>
                     <div class="mt-4 pt-4 border-t-2 border-[#FFD6F4]">
@@ -439,7 +439,7 @@
             card.classList.remove('border-[#7B19E5]', 'border-4', 'bg-white/50');
         } else {
             if (estadoAgendamento.servicosIds.length >= maxServicosPorAgendamento) {
-                alert(`Voce pode selecionar no maximo ${maxServicosPorAgendamento} servicos por agendamento.`);
+                alert(`Você pode selecionar no máximo ${maxServicosPorAgendamento} serviços por agendamento.`);
                 return;
             }
 
@@ -589,7 +589,7 @@
 
     function selecionarData(data) {
         if (data > limiteAgendamento) {
-            alert('Agendamentos so podem ser feitos para os proximos 3 meses.');
+            alert('Agendamentos só podem ser feitos para os próximos 3 meses.');
             return;
         }
 
@@ -698,7 +698,7 @@
             aviso.classList.remove('hidden');
         } else {
             if (estadoAgendamento.servicosIds.length >= maxServicosPorAgendamento) {
-                alert(`Voce pode selecionar no maximo ${maxServicosPorAgendamento} servicos por agendamento.`);
+                alert(`Você pode selecionar no máximo ${maxServicosPorAgendamento} serviços por agendamento.`);
                 return;
             }
 
@@ -764,7 +764,7 @@
         document.getElementById('info-profissional-selecionado').classList.remove('hidden');
     }
 
-    // ==================== NAVEGAÇÃO ====================
+    // ==================== Navegação ====================
     function irParaPasso(passo) {
         if (passo === 2 && estadoAgendamento.servicosIds.length === 0) {
             alert('Por favor, escolhe pelo menos um serviço!');
@@ -863,7 +863,7 @@
         const linhaMotivoDesconto = document.getElementById('linha_motivo_desconto');
         if (Number(financeiro.desconto_servicos) > 0) {
             document.getElementById('resumo_desconto_combo').innerText = `- ${formatarMoeda(financeiro.desconto_servicos)}`;
-            document.getElementById('resumo_motivo_desconto').innerText = `${financeiro.motivo_desconto || 'Combo de 5 servicos -10%'}. A comissao do profissional permanece sobre o valor cheio com acrescimos.`;
+            document.getElementById('resumo_motivo_desconto').innerText = `${financeiro.motivo_desconto || 'Combo de 5 serviços -10%'}. A comissão do profissional permanece sobre o valor cheio com acréscimos.`;
             linhaDesconto.classList.remove('hidden');
             linhaMotivoDesconto.classList.remove('hidden');
         } else {

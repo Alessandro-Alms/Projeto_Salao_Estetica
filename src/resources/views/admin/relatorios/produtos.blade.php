@@ -1,4 +1,4 @@
-<x-app-layout>
+﻿<x-app-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <div class="flex items-center gap-2">
@@ -187,7 +187,7 @@
                             <tbody>
                                 @forelse($produtosVendidos as $index => $produto)
                                     <tr class="border-b border-[#FFD6F4] hover:bg-white/50 transition">
-                                        <td class="p-3 font-bold text-gray-400">{{ $index + 1 }}º</td>
+                                        <td class="p-3 font-bold text-gray-400">{{ $index + 1 }}Âº</td>
                                         <td class="p-3 font-bold text-[#1A002B]">{{ $produto->nome }}</td>
                                         <td class="p-3 text-center">
                                             <span class="bg-[#7B19E5]/10 text-[#7B19E5] px-3 py-1 rounded-full font-bold">
@@ -197,7 +197,7 @@
                                         <td class="p-3 text-center">
                                             @if($produto->quantidade_estoque <= 5)
                                                 <span class="bg-[#FF2EB6]/20 text-[#FF2EB6] px-3 py-1 rounded-full font-bold text-sm flex items-center justify-center gap-1 w-max mx-auto" title="Estoque Baixo! Risco de faltar.">
-                                                    ⚠️ {{ $produto->quantidade_estoque }}
+                                                    Atenção: {{ $produto->quantidade_estoque }}
                                                 </span>
                                             @else
                                                 <span class="text-gray-600 font-medium">

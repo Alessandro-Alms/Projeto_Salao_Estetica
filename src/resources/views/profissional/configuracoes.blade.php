@@ -1,4 +1,4 @@
-<x-app-layout>
+﻿<x-app-layout>
     <x-slot name="header">
         <div class="hidden"></div>
     </x-slot>
@@ -49,7 +49,7 @@
                                     <div>
                                         <label class="block text-[10px] uppercase text-gray-400 font-medium mb-1">Tempo (min)</label>
                                         <input type="number" name="servicos[{{ $servico->id_servico }}][duracao]" value="{{ $vinculo ? $vinculo->pivot->duracao_customizada : $servico->duracao }}" class="w-20 px-2 py-1 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all text-sm">
-                                        <p class="text-[10px] text-gray-500 mt-1">💰 Comissão: 50% (fixa)</p>
+                                        <p class="text-[10px] text-gray-500 mt-1">Comissão: 50% (fixa)</p>
                                     </div>
                                 </div>
                             @endforeach
@@ -156,7 +156,7 @@
                             </div>
                         @empty
                             <div class="p-3 rounded-xl bg-white/50 border border-[#FFD6F4] text-sm text-gray-500">
-                                Nenhum dia desativado nos proximos 3 meses.
+                                Nenhum dia desativado nos próximos 3 meses.
                             </div>
                         @endforelse
                     </div>
@@ -183,7 +183,7 @@
                                         {{ \Carbon\Carbon::parse($feriado->data_hora_inicio)->format('d/m/Y') }} - {{ $feriado->motivo ?? 'Feriado' }}
                                     </div>
                                     <div class="text-xs {{ $trabalhaNoFeriado ? 'text-green-700' : 'text-red-600' }}">
-                                        {{ $trabalhaNoFeriado ? 'Ativo na sua agenda: clientes podem agendar com acrescimo.' : 'Desativado na sua agenda: voce nao atende nesse feriado.' }}
+                                        {{ $trabalhaNoFeriado ? 'Ativo na sua agenda: clientes podem agendar com acréscimo.' : 'Desativado na sua agenda: você não atende nesse feriado.' }}
                                     </div>
                                 </div>
 
@@ -205,7 +205,7 @@
                             </div>
                         @empty
                             <div class="p-3 rounded-xl bg-white/50 border border-[#FFD6F4] text-sm text-gray-500">
-                                Nenhum feriado geral cadastrado nos proximos 3 meses.
+                                Nenhum feriado geral cadastrado nos próximos 3 meses.
                             </div>
                         @endforelse
                     </div>

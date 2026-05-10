@@ -1,4 +1,4 @@
-<x-app-layout>
+﻿<x-app-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <div class="flex items-center gap-2">
@@ -148,7 +148,7 @@
                     <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
                         <div class="flex items-center gap-2 mb-4">
                             <span class="text-[#7B19E5] text-xl">✧</span>
-                            <h3 class="font-title text-[#4A00B9] text-lg">Periodo Atual x Anterior</h3>
+                            <h3 class="font-title text-[#4A00B9] text-lg">Período atual x anterior</h3>
                         </div>
                         <div class="h-80">
                             <canvas id="graficoComparativoFaturamento"></canvas>
@@ -156,7 +156,7 @@
                                 {
                                     "type": "bar",
                                     "data": {
-                                        "labels": ["Periodo anterior", "Periodo atual"],
+                                        "labels": ["Período anterior", "Período atual"],
                                         "datasets": [{
                                             "label": "Faturamento",
                                             "data": @json($graficoComparativoFaturamentoDados),
@@ -277,7 +277,7 @@
         window.SalaoCharts?.create('graficoComparativoFaturamento', {
             type: 'bar',
             data: {
-                labels: ['Periodo anterior', 'Periodo atual'],
+                labels: ['Período anterior', 'Período atual'],
                 datasets: [{
                     label: 'Faturamento',
                     data: [valores.anterior, valores.atual],

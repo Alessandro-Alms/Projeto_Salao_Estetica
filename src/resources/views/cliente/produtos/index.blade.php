@@ -30,7 +30,7 @@
                     <p class="text-sm uppercase tracking-[0.25em] text-[#FF2EB6] font-bold">autoatendimento</p>
                     <h1 class="text-4xl font-title text-[#4A00B9] mt-2">Comprar Produtos</h1>
                     <p class="text-gray-600 mt-2 max-w-2xl">
-                        Escolha os produtos disponiveis em estoque e confirme a compra direto na sua conta.
+                        Escolha os produtos disponíveis em estoque e confirme a compra direto na sua conta.
                     </p>
                 </div>
 
