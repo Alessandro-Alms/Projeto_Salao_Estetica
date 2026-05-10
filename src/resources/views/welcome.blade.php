@@ -135,9 +135,15 @@
                 </nav>
                 
                 <div class="flex items-center gap-2">
-                    <a href="/login" class="bg-[#7B19E5] text-white px-6 py-2.5 text-sm rounded-full btn-primary shadow-lg">
-                        LOGIN
-                    </a>
+                    @auth
+                        <a href="{{ route('dashboard') }}" class="bg-[#7B19E5] text-white px-6 py-2.5 text-sm rounded-full btn-primary shadow-lg">
+                            IR PARA O PAINEL
+                        </a>
+                    @else
+                        <a href="{{ route('login') }}" class="bg-[#7B19E5] text-white px-6 py-2.5 text-sm rounded-full btn-primary shadow-lg">
+                            LOGIN
+                        </a>
+                    @endauth
                     <a href="/agendar" class="bg-[#FF2EB6] text-white px-6 py-2.5 text-sm rounded-full btn-primary shadow-lg">
                         AGENDAR
                     </a>

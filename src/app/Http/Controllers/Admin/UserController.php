@@ -39,6 +39,7 @@ class UserController extends Controller
 
         if ($user && $user->isGerente() && DB::getSchemaBuilder()->hasTable('contato_mensagens')) {
             $contatoMensagens = DB::table('contato_mensagens')
+                ->whereNull('lida_at')
                 ->orderByDesc('created_at')
                 ->limit(5)
                 ->get();
