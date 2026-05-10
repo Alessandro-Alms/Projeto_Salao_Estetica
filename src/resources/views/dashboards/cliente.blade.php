@@ -1,4 +1,4 @@
-﻿@if($mensagemProximaVisita || $avaliacoesPendentes > 0 || $pacotesVencendo->count() > 0)
+@if($mensagemProximaVisita || $avaliacoesPendentes > 0 || $pacotesVencendo->count() > 0)
     <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
         <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
             <div class="flex items-center gap-2 mb-4">
@@ -59,12 +59,12 @@
     </a>
     <a href="{{ route('cliente.produtos.index') }}" class="group min-h-28 rounded-2xl bg-white/80 border border-[#FFD6F4] p-5 text-[#1A002B] shadow-md hover:shadow-lg hover:-translate-y-1 transition-all">
         <span class="block text-2xl text-[#FF2EB6] mb-3">✧</span>
-        <span class="block font-title text-lg text-[#4A00B9]">Comprar produtos</span>
+        <span class="block font-title text-lg text-[#4A00B9]">Comprar Produtos</span>
         <span class="block text-xs text-gray-500 mt-1">Veja produtos disponíveis no estoque.</span>
     </a>
     <a href="{{ route('cliente.pacotes.index') }}" class="group min-h-28 rounded-2xl bg-white/80 border border-[#FFD6F4] p-5 text-[#1A002B] shadow-md hover:shadow-lg hover:-translate-y-1 transition-all">
         <span class="block text-2xl text-[#7B19E5] mb-3">✧</span>
-        <span class="block font-title text-lg text-[#4A00B9]">Comprar pacotes</span>
+        <span class="block font-title text-lg text-[#4A00B9]">Comprar Pacotes</span>
         <span class="block text-xs text-gray-500 mt-1">Use sessões em agendamentos futuros.</span>
     </a>
     <a href="{{ route('cliente.index') }}" class="group min-h-28 rounded-2xl bg-white/80 border border-[#FFD6F4] p-5 text-[#1A002B] shadow-md hover:shadow-lg hover:-translate-y-1 transition-all">

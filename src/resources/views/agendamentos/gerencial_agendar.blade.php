@@ -1,4 +1,4 @@
-﻿<x-app-layout>
+<x-app-layout>
     <div class="py-12 relative">
         <!-- Fundo -->
         <div class="fixed inset-0 -z-10 overflow-hidden">

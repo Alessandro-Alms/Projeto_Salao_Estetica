@@ -1,4 +1,4 @@
-﻿<div class="glass-card rounded-2xl shadow-xl overflow-hidden mb-6">
+<div class="glass-card rounded-2xl shadow-xl overflow-hidden mb-6">
     <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
         <div class="flex items-center gap-2 mb-5">
             <span class="text-[#7B19E5] text-xl">✧</span>

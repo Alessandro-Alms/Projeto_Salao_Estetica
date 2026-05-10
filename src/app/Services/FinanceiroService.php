@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Agendamento;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class FinanceiroService
 {
@@ -21,6 +22,32 @@ class FinanceiroService
         return round($valorVenda * (self::COMISSAO_PRODUTO_PERCENTUAL / 100), 2);
     }
 
+    private function vendasTemComissaoRegistrada(): bool
+    {
+        return Schema::hasColumn('vendas', 'valor_comissao');
+    }
+
+    private function somaComissaoProdutosQuery()
+    {
+        if ($this->vendasTemComissaoRegistrada()) {
+            return DB::table('vendas');
+        }
+
+        return DB::table('vendas')
+            ->leftJoin('users', 'vendas.profissional_id', '=', 'users.id');
+    }
+
+    private function expressaoComissaoProdutos(): string
+    {
+        if ($this->vendasTemComissaoRegistrada()) {
+            return 'valor_comissao';
+        }
+
+        $percentual = self::COMISSAO_PRODUTO_PERCENTUAL / 100;
+
+        return "CASE WHEN users.cargo = 'cliente' THEN 0 ELSE ROUND(vendas.valor_venda * {$percentual}, 2) END";
+    }
+
     public function fechamentoDiario(string $dataSelecionada): array
     {
         $agendamentos = Agendamento::where('status', 'executado')
@@ -30,13 +57,13 @@ class FinanceiroService
 
         $totalServicos = $agendamentos->sum('valor_total');
         $totalComissoesPacotes = DB::table('cliente_pacotes')
-            ->whereDate('created_at', $dataSelecionada)
+            ->whereDate('cliente_pacotes.created_at', $dataSelecionada)
             ->sum('valor_comissao');
         $totalComissoesServicos = $agendamentos->sum('valor_comissao') + $totalComissoesPacotes;
         $totalProdutos = DB::table('vendas')->whereDate('created_at', $dataSelecionada)->sum('valor_venda');
-        $totalComissoesProdutos = DB::table('vendas')
-            ->whereDate('created_at', $dataSelecionada)
-            ->sum('valor_comissao');
+        $totalComissoesProdutos = $this->somaComissaoProdutosQuery()
+            ->whereDate('vendas.created_at', $dataSelecionada)
+            ->sum(DB::raw($this->expressaoComissaoProdutos()));
 
         $totalMultas = Agendamento::where('status', 'cancelado')
             ->whereDate('updated_at', $dataSelecionada)
@@ -76,8 +103,8 @@ class FinanceiroService
             ->sum('valor_total') ?? 0;
 
         $receitaProdutos = DB::table('vendas')
-            ->whereNotNull('produto_id')
-            ->whereBetween('created_at', [$inicioQuery, $fimQuery])
+            ->whereNotNull('vendas.produto_id')
+            ->whereBetween('vendas.created_at', [$inicioQuery, $fimQuery])
             ->sum('valor_venda') ?? 0;
 
         $receitaPacotes = DB::table('cliente_pacotes')
@@ -104,10 +131,10 @@ class FinanceiroService
             ->sum('valor_comissao') ?? 0;
 
         $despesaComissoesServicos += $despesaComissoesPacotes;
-        $despesaComissoesProdutos = DB::table('vendas')
-            ->whereNotNull('produto_id')
-            ->whereBetween('created_at', [$inicioQuery, $fimQuery])
-            ->sum('valor_comissao') ?? 0;
+        $despesaComissoesProdutos = $this->somaComissaoProdutosQuery()
+            ->whereNotNull('vendas.produto_id')
+            ->whereBetween('vendas.created_at', [$inicioQuery, $fimQuery])
+            ->sum(DB::raw($this->expressaoComissaoProdutos())) ?? 0;
         $despesaComissoes = $despesaComissoesServicos + $despesaComissoesProdutos;
         $totalSaidas = $despesaComissoes;
         $saldoLiquido = $totalEntradas - $totalSaidas;
@@ -227,16 +254,16 @@ class FinanceiroService
             ->get()
             ->keyBy('vendedor_id');
 
-        $vendasPorProfissional = DB::table('vendas')
-            ->whereNotNull('produto_id')
-            ->whereBetween('created_at', [$inicioQuery, $fimQuery])
+        $vendasPorProfissional = $this->somaComissaoProdutosQuery()
+            ->whereNotNull('vendas.produto_id')
+            ->whereBetween('vendas.created_at', [$inicioQuery, $fimQuery])
             ->select(
-                'profissional_id',
-                DB::raw('COUNT(id_venda) as total_vendas_produtos'),
-                DB::raw('SUM(valor_venda) as receita_produtos'),
-                DB::raw('SUM(valor_comissao) as comissao_produtos')
+                'vendas.profissional_id',
+                DB::raw('COUNT(vendas.id_venda) as total_vendas_produtos'),
+                DB::raw('SUM(vendas.valor_venda) as receita_produtos'),
+                DB::raw('SUM(' . $this->expressaoComissaoProdutos() . ') as comissao_produtos')
             )
-            ->groupBy('profissional_id')
+            ->groupBy('vendas.profissional_id')
             ->get()
             ->keyBy('profissional_id');
 

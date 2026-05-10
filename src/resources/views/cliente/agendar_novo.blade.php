@@ -1,4 +1,4 @@
-﻿<x-app-layout>
+<x-app-layout>
 <div class="container mx-auto p-4 max-w-6xl">
     <div class="glass-card rounded-2xl shadow-xl overflow-hidden p-8">
         <div class="flex items-center gap-3 mb-8">
