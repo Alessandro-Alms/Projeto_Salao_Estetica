@@ -61,13 +61,35 @@ class AgendamentoController extends Controller
     // NOVAS FUNÇÃ•ES PARA O AGENDAMENTO PASSO A PASSO (WIZARD)
     // =========================================================
 
-    public function novoAgendamento()
+    public function novoAgendamento(Request $request)
     {
-        // Passo 1: Carrega apenas os serviços para a tela inicial
+        $user = $request->user();
+
+        if ($user && $user->cargo !== 'cliente') {
+            $mensagemRestricao = 'Funcionalidade restrita ao cliente. Para agendar como equipe, use a tela de agendar para cliente.';
+
+            if ($user->cargo === 'profissional') {
+                return redirect()
+                    ->route('profissional.agendar.cliente')
+                    ->with('acesso_restrito', $mensagemRestricao);
+            }
+
+            if (in_array($user->cargo, ['gerente', 'recepcionista'], true)) {
+                return redirect()
+                    ->route('admin.agendar.cliente')
+                    ->with('acesso_restrito', $mensagemRestricao);
+            }
+
+            return redirect()
+                ->route('dashboard')
+                ->with('acesso_restrito', $mensagemRestricao);
+        }
+
+        // Passo 1: Carrega apenas os servicos para a tela inicial
         $servicos = Servico::all();
         $limiteAgendamento = now()->addMonths(3)->endOfDay();
         // Agora usa a nova view com o layout Google Calendar
-        return view('cliente.agendar_novo', compact('servicos', 'limiteAgendamento')); 
+        return view('cliente.agendar_novo', compact('servicos', 'limiteAgendamento'));
     }
 
     public function getProfissionaisAjax(Request $request)

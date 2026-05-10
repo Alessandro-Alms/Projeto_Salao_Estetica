@@ -34,7 +34,9 @@
                                 <label class="block text-sm font-medium text-[#4A00B9] mb-2">
                                     ✧ Selecione o Cliente
                                 </label>
-                                <select name="cliente_id" required 
+                                <select name="cliente_id" required
+                                    data-searchable-select
+                                    data-searchable-placeholder="Digite o nome do cliente..."
                                     class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
                                     <option value="">Buscar cliente...</option>
                                     @foreach($clientes as $cliente)
@@ -47,7 +49,9 @@
                                 <label class="block text-sm font-medium text-[#4A00B9] mb-2">
                                     ✧ Selecione o Pacote
                                 </label>
-                                <select name="pacote_id" required 
+                                <select name="pacote_id" required
+                                    data-searchable-select
+                                    data-searchable-placeholder="Digite o nome do pacote..."
                                     class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
                                     <option value="">Escolher pacote...</option>
                                     @foreach($pacotes as $pacote)

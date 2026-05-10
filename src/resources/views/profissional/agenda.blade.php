@@ -131,7 +131,7 @@
                                                     
                                                     <div id="lista-produtos">
                                                         <div class="flex gap-2 mb-2 items-center">
-                                                            <select name="produtos[0][id]" class="flex-1 px-4 py-2 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all text-sm">
+                                                            <select name="produtos[0][id]" data-searchable-select data-searchable-compact="true" data-searchable-placeholder="Digite o nome do produto..." class="flex-1 px-4 py-2 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all text-sm">
                                                                 <option value="">Selecione um produto...</option>
                                                                 @foreach($produtos as $p)
                                                                     <option value="{{ $p->id_produto }}">{{ $p->nome }} (Disp: {{ $p->quantidade_estoque }})</option>
@@ -241,12 +241,18 @@
     function addProduto() {
         const container = document.getElementById('lista-produtos');
         const novoItem = container.firstElementChild.cloneNode(true);
+        novoItem.querySelector('[data-searchable-wrapper]')?.remove();
         
-        novoItem.querySelector('select').name = `produtos[${produtoIndex}][id]`;
+        const select = novoItem.querySelector('select');
+        select.name = `produtos[${produtoIndex}][id]`;
+        select.value = '';
+        select.classList.remove('hidden');
+        select.dataset.searchableReady = 'false';
         novoItem.querySelector('input').name = `produtos[${produtoIndex}][quantidade]`;
         novoItem.querySelector('input').value = 1;
         
         container.appendChild(novoItem);
+        window.iniciarSelectsPesquisaveis?.(novoItem);
         produtoIndex++;
     }
 

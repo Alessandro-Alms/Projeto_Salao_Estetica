@@ -22,7 +22,7 @@
             <div id="passo-1" class="passo">
                 <h3 class="text-lg font-title text-[#4A00B9] mb-4">Qual serviço desejas realizar?</h3>
                 <div class="grid gap-3">
-                    <select id="servico_id" name="servico_id" class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all" required>
+                    <select id="servico_id" name="servico_id" data-searchable-select data-searchable-placeholder="Digite o nome do serviço..." class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all" required>
                         <option value="">Selecione um serviço...</option>
                         @foreach($servicos as $servico)
                             <option value="{{ $servico->id_servico }}">{{ $servico->nome }} - R$ {{ number_format($servico->preco, 2, ',', '.') }}</option>
@@ -38,7 +38,7 @@
 
             <div id="passo-2" class="passo hidden">
                 <h3 class="text-lg font-title text-[#4A00B9] mb-4">Escolhe o profissional</h3>
-                <select id="profissional_id" name="profissional_id" class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all" required>
+                <select id="profissional_id" name="profissional_id" data-searchable-select data-searchable-placeholder="Digite o nome do profissional..." class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all" required>
                     <option value="">Aguardando seleção do serviço...</option>
                 </select>
                 <div class="mt-6 flex justify-between">
@@ -189,6 +189,7 @@
     inputServico.addEventListener('change', function() {
         const servicoId = this.value;
         inputProfissional.innerHTML = '<option value="">Carregando...</option>';
+        inputProfissional.dispatchEvent(new Event('searchable:refresh'));
         
         if (!servicoId) return;
 
@@ -199,6 +200,7 @@
                 data.forEach(prof => {
                     inputProfissional.innerHTML += `<option value="${prof.id}">${prof.name}</option>`;
                 });
+                inputProfissional.dispatchEvent(new Event('searchable:refresh'));
             });
     });
 

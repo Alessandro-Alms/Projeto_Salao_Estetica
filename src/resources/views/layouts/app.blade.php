@@ -80,12 +80,214 @@
             @endisset
 
             <!-- Page Content -->
-            <main>
+            <main class="pt-6 md:pt-8">
                 {{ $slot }}
             </main>
         </div>
 
         <script>
+            (() => {
+                const baseInputClasses = 'w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all';
+                const compactInputClasses = 'w-full px-4 py-2.5 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all text-sm';
+
+                const closeAllSearchableSelects = (except = null) => {
+                    document.querySelectorAll('[data-searchable-dropdown]').forEach((dropdown) => {
+                        if (dropdown !== except) {
+                            dropdown.classList.add('hidden');
+                        }
+                    });
+                };
+
+                const normalizeText = (text) => {
+                    return (text || '')
+                        .toString()
+                        .normalize('NFD')
+                        .replace(/[\u0300-\u036f]/g, '')
+                        .toLowerCase();
+                };
+
+                const buildSearchableSelect = (select) => {
+                    if (select.dataset.searchableReady === 'true') {
+                        return;
+                    }
+
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'relative';
+                    wrapper.dataset.searchableWrapper = 'true';
+
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.autocomplete = 'off';
+                    input.placeholder = select.dataset.searchablePlaceholder || select.options[0]?.text?.trim() || 'Pesquise uma opção...';
+                    input.className = select.dataset.searchableCompact === 'true' ? compactInputClasses : baseInputClasses;
+
+                    const isRequired = select.required || select.dataset.searchableRequired === 'true';
+                    if (isRequired) {
+                        select.dataset.searchableRequired = 'true';
+                        select.required = false;
+                        input.required = true;
+                    }
+
+                    const dropdown = document.createElement('div');
+                    dropdown.dataset.searchableDropdown = 'true';
+                    dropdown.className = 'hidden absolute top-full left-0 right-0 mt-1 bg-white/95 border border-[#FFD6F4] rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto';
+
+                    const emptyState = document.createElement('div');
+                    emptyState.className = 'hidden px-4 py-3 text-sm text-gray-500';
+                    emptyState.textContent = 'Nenhum resultado encontrado.';
+
+                    const options = Array.from(select.options).map((option) => {
+                        const item = document.createElement('button');
+                        item.type = 'button';
+                        item.className = 'block w-full px-4 py-3 text-left hover:bg-[#7B19E5]/10 transition-colors';
+                        item.dataset.value = option.value;
+                        item.dataset.search = normalizeText(option.text);
+                        item.disabled = option.disabled;
+                        const label = document.createElement('span');
+                        label.className = `block font-medium ${option.value ? 'text-[#4A00B9]' : 'text-gray-500'}`;
+                        label.textContent = option.text.trim();
+                        item.appendChild(label);
+
+                        item.addEventListener('click', () => {
+                            select.value = option.value;
+                            input.value = option.value ? option.text.trim() : '';
+                            input.setCustomValidity(option.value || !isRequired ? '' : 'Selecione uma opção da lista.');
+                            dropdown.classList.add('hidden');
+                            select.dispatchEvent(new Event('change', { bubbles: true }));
+                        });
+
+                        dropdown.appendChild(item);
+                        return item;
+                    });
+
+                    dropdown.appendChild(emptyState);
+                    select.classList.add('hidden');
+                    select.dataset.searchableReady = 'true';
+                    select.parentNode.insertBefore(wrapper, select.nextSibling);
+                    wrapper.appendChild(input);
+                    wrapper.appendChild(dropdown);
+                    select.addEventListener('searchable:refresh', () => {
+                        wrapper.remove();
+                        select.classList.remove('hidden');
+                        select.dataset.searchableReady = 'false';
+                        buildSearchableSelect(select);
+                    }, { once: true });
+
+                    const selected = select.selectedOptions[0];
+                    if (selected?.value) {
+                        input.value = selected.text.trim();
+                    }
+                    input.setCustomValidity(select.value || !isRequired ? '' : 'Selecione uma opção da lista.');
+
+                    const filterOptions = () => {
+                        const query = normalizeText(input.value);
+                        let visible = 0;
+
+                        options.forEach((item) => {
+                            const matches = !query || item.dataset.search.includes(query);
+                            item.classList.toggle('hidden', !matches);
+                            if (matches) {
+                                visible++;
+                            }
+                        });
+
+                        emptyState.classList.toggle('hidden', visible > 0);
+                    };
+
+                    input.addEventListener('focus', () => {
+                        closeAllSearchableSelects(dropdown);
+                        filterOptions();
+                        dropdown.classList.remove('hidden');
+                    });
+
+                    input.addEventListener('input', () => {
+                        if (select.value) {
+                            select.value = '';
+                            input.setCustomValidity(isRequired ? 'Selecione uma opção da lista.' : '');
+                            select.dispatchEvent(new Event('change', { bubbles: true }));
+                        }
+
+                        filterOptions();
+                        dropdown.classList.remove('hidden');
+                    });
+
+                    document.addEventListener('click', (event) => {
+                        if (!wrapper.contains(event.target)) {
+                            dropdown.classList.add('hidden');
+                        }
+                    });
+                };
+
+                window.iniciarSelectsPesquisaveis = (root = document) => {
+                    root.querySelectorAll('select[data-searchable-select]').forEach(buildSearchableSelect);
+                };
+
+                document.addEventListener('DOMContentLoaded', () => window.iniciarSelectsPesquisaveis());
+            })();
+
+            (() => {
+                document.addEventListener('DOMContentLoaded', () => {
+                    const normalizeText = (text) => {
+                        return (text || '')
+                            .toString()
+                            .normalize('NFD')
+                            .replace(/[\u0300-\u036f]/g, '')
+                            .toLowerCase();
+                    };
+
+                    document.querySelectorAll('[data-local-table-filter]').forEach((filter) => {
+                        const targetSelector = filter.dataset.localTableFilter;
+                        const rows = Array.from(document.querySelectorAll(`${targetSelector} [data-filter-row]`));
+                        const emptyRow = document.querySelector(`${targetSelector} [data-filter-empty]`);
+                        const searchInput = filter.querySelector('[data-filter-search]');
+                        const selectFilters = Array.from(filter.querySelectorAll('[data-filter-select]'));
+
+                        const applyFilter = () => {
+                            const search = normalizeText(searchInput?.value || '');
+                            let visibleCount = 0;
+
+                            rows.forEach((row) => {
+                                const matchesSearch = !search || normalizeText(row.dataset.filterText).includes(search);
+                                const matchesSelects = selectFilters.every((select) => {
+                                    const key = select.dataset.filterSelect;
+                                    return !select.value || row.dataset[`filter${key.charAt(0).toUpperCase()}${key.slice(1)}`] === select.value;
+                                });
+                                const visible = matchesSearch && matchesSelects;
+
+                                row.classList.toggle('hidden', !visible);
+                                if (visible) {
+                                    visibleCount++;
+                                }
+                            });
+
+                            emptyRow?.classList.toggle('hidden', visibleCount > 0);
+                        };
+
+                        filter.addEventListener('submit', (event) => event.preventDefault());
+                        searchInput?.addEventListener('input', applyFilter);
+                        selectFilters.forEach((select) => select.addEventListener('change', applyFilter));
+                        applyFilter();
+                    });
+
+                    document.querySelectorAll('form[data-auto-submit]').forEach((form) => {
+                        let timeoutId = null;
+
+                        const submitForm = () => {
+                            window.clearTimeout(timeoutId);
+                            form.requestSubmit();
+                        };
+
+                        form.querySelectorAll('[data-auto-submit-control]').forEach((field) => {
+                            const delay = field.tagName === 'SELECT' ? 0 : 450;
+                            field.addEventListener(field.tagName === 'SELECT' ? 'change' : 'input', () => {
+                                window.clearTimeout(timeoutId);
+                                timeoutId = window.setTimeout(submitForm, delay);
+                            });
+                        });
+                    });
+                });
+            })();
+
             (() => {
                 const loadChartJs = () => new Promise((resolve, reject) => {
                     if (window.Chart) {

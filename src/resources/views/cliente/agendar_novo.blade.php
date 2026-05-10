@@ -1,5 +1,4 @@
-<<<<<<< HEAD
-﻿<x-app-layout>
+<x-app-layout>
 <div class="py-12 relative">
     <!-- Fundo -->
     <div class="fixed inset-0 -z-10 overflow-hidden">
@@ -8,17 +7,6 @@
         <div class="absolute top-1/3 left-1/3 w-[400px] h-[400px] bg-[#A955D3]/15 rounded-full blur-3xl"></div>
         <div class="absolute inset-0 bg-gradient-to-br from-[#7B19E5]/5 via-white/30 to-[#FF2EB6]/5"></div>
     </div>
-=======
-<x-app-layout>
-<div class="container mx-auto p-4 max-w-6xl">
-    <div class="glass-card rounded-2xl shadow-xl overflow-hidden p-8">
-        <div class="flex items-center gap-3 mb-8">
-            <div class="w-10 h-10 bg-gradient-to-br from-[#7B19E5] to-[#FF2EB6] rounded-xl flex items-center justify-center shadow-md">
-                <span class="text-white text-lg">✧</span>
-            </div>
-            <h2 class="text-3xl font-title text-[#4A00B9]">Agendar Novo Atendimento</h2>
-        </div>
->>>>>>> 86d7a6490519a60b3e5c5ef033670b57afae8aec
 
     <div class="max-w-6xl mx-auto px-4">
         <div class="glass-card rounded-3xl shadow-xl overflow-hidden">
@@ -75,7 +63,11 @@
                                 </div>
                             </div>
                         </div>
-                        
+                        <div class="relative mb-4">
+                            <input type="text" id="servico-search" placeholder="Digite o nome do serviço..."
+                                class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
+                        </div>
+
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             @foreach($servicos as $servico)
                                 <div class="servico-card border-2 border-[#FFD6F4] rounded-xl p-4 cursor-pointer transition-all hover:border-[#7B19E5] hover:shadow-md" 
@@ -173,6 +165,11 @@
                             <p class="text-[#1A002B]"> Escolha o profissional que fará seu atendimento</p>
                         </div>
                         
+                        <div class="relative mb-4">
+                            <input type="text" id="profissional-search" placeholder="Digite o nome do profissional..."
+                                class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
+                        </div>
+
                         <div id="grade_profissionais" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             <p class="text-gray-500 col-span-full text-center py-8">Carregando profissionais...</p>
                         </div>
@@ -437,11 +434,30 @@
                 profs.forEach(prof => {
                     const card = document.createElement('div');
                     card.className = 'profissional-card';
+                    card.dataset.nome = prof.name;
                     card.innerHTML = `<h4>✧ ${prof.name}</h4><p>✓ Disponível</p><p class="text-[#7B19E5] font-bold mt-2">Total: ${formatarMoeda(prof.valor_total)}</p>`;
                     card.onclick = () => selecionarProfissional(prof, card);
                     grade.appendChild(card);
                 });
+                filtrarProfissionais();
             });
+    }
+
+    function filtrarProfissionais() {
+        const busca = document.getElementById('profissional-search');
+        const termo = (busca?.value || '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase();
+
+        document.querySelectorAll('.profissional-card').forEach(card => {
+            const nome = (card.dataset.nome || '')
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase();
+
+            card.classList.toggle('hidden', termo && !nome.includes(termo));
+        });
     }
 
     function selecionarProfissional(prof, card) {
@@ -497,6 +513,24 @@
             }
         });
     });
+
+    document.getElementById('servico-search')?.addEventListener('input', function() {
+        const termo = this.value
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase();
+
+        document.querySelectorAll('.servico-card').forEach(card => {
+            const nome = card.dataset.nome
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase();
+
+            card.classList.toggle('hidden', termo && !nome.includes(termo));
+        });
+    });
+
+    document.getElementById('profissional-search')?.addEventListener('input', filtrarProfissionais);
     
     irParaPasso(1);
 </script>

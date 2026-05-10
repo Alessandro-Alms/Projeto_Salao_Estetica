@@ -20,15 +20,15 @@
             <div class="glass-card rounded-2xl shadow-xl overflow-hidden mb-6">
                 <div class="p-4 bg-white/70 backdrop-blur-sm border border-white/40 flex flex-col lg:flex-row justify-between items-center gap-4">
                     
-                    <form action="{{ route('admin.usuarios.index') }}" method="GET" class="flex flex-col md:flex-row gap-4 w-full lg:flex-1">
+                    <form action="{{ route('admin.usuarios.index') }}" method="GET" data-local-table-filter="#usuarios-table" class="flex flex-col md:flex-row gap-4 w-full lg:flex-1">
                         <div class="flex-1">
-                            <input type="text" name="search" placeholder="Buscar por nome, e-mail ou CPF..." value="{{ request('search') }}"
+                            <input type="text" name="search" data-filter-search placeholder="Buscar por nome, e-mail ou CPF..." value="{{ request('search') }}"
                                 class="w-full px-4 py-2.5 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all" />
                         </div>
                         
                         @if(auth()->user()->cargo === 'gerente')
                         <div class="w-full md:w-48">
-                            <select name="cargo" 
+                            <select name="cargo" data-filter-select="cargo"
                                 class="w-full px-4 py-2.5 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
                                 <option value="">Todos os Cargos</option>
                                 <option value="cliente" {{ request('cargo') == 'cliente' ? 'selected' : '' }}>Cliente</option>
@@ -69,7 +69,7 @@
             <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
                 <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
                     <div class="overflow-x-auto">
-                        <table class="min-w-full">
+                        <table id="usuarios-table" class="min-w-full">
                             <thead>
                                 <tr class="border-b border-[#FFD6F4]">
                                     <th class="px-6 py-4 text-left text-xs font-medium text-[#4A00B9] uppercase tracking-wider">Nome</th>
@@ -81,7 +81,7 @@
                             </thead>
                             <tbody class="divide-y divide-[#FFD6F4]">
                                 @forelse ($usuarios as $usuario)
-                                    <tr class="hover:bg-white/50 transition-colors">
+                                    <tr data-filter-row data-filter-cargo="{{ $usuario->cargo }}" data-filter-text="{{ $usuario->name }} {{ $usuario->email }} {{ $usuario->cpf }} {{ $usuario->telefone }} {{ $usuario->cargo }} {{ $usuario->status }}" class="hover:bg-white/50 transition-colors">
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <div class="text-sm font-medium text-[#1A002B]">{{ $usuario->name }}</div>
                                             <div class="text-xs text-gray-500 mt-1">
@@ -151,6 +151,11 @@
                                         </td>
                                     </tr>
                                 @endforelse
+                                <tr data-filter-empty class="hidden">
+                                    <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                                        ✧ Nenhum usuário encontrado nessa busca.
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>

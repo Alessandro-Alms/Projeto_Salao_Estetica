@@ -306,6 +306,8 @@ Route::middleware(['auth', 'role:gerente'])->prefix('admin')->name('admin.')->gr
 // ROTAS PROFISSIONAL
 // ==========================================
 Route::middleware(['auth', 'role:profissional'])->prefix('profissional')->name('profissional.')->group(function () {
+    Route::get('/agendar-cliente', [AgendamentoController::class, 'agendarGerencial'])->name('agendar.cliente');
+    Route::post('/agendar-cliente', [AgendamentoController::class, 'salvarAgendamentoGerencial'])->name('agendar.cliente.salvar');
     Route::get('/configuracoes', [UserController::class, 'configuracoesservicos'])->name('servicos.editar');
     Route::put('/configuracoes', [UserController::class, 'atualizarconfiguracoesservicos'])->name('servicos.atualizar');
     Route::post('/configuracoes/bloqueios', [UserController::class, 'bloquearDiaDisponibilidade'])->name('servicos.bloqueios.store');

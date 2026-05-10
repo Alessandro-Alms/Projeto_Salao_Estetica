@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-﻿{{-- Recepção --}}
-=======
->>>>>>> 86d7a6490519a60b3e5c5ef033670b57afae8aec
+{{-- Recepcao --}}
 <div class="glass-card rounded-2xl shadow-xl overflow-hidden mb-6">
     <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
         <div class="flex items-center gap-2 mb-5">

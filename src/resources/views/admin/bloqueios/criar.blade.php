@@ -28,7 +28,9 @@
                         <!-- Profissional -->
                         <div class="mb-5">
                             <label class="block text-sm font-medium text-[#4A00B9] mb-2">Profissional (Opcional)</label>
-                            <select name="profissional_id" 
+                            <select name="profissional_id"
+                                data-searchable-select
+                                data-searchable-placeholder="Digite o nome do profissional..."
                                 class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
                                 <option value="">-- TODO O SALÃO (Feriado/Geral) --</option>
                                 @foreach($profissionais as $p)

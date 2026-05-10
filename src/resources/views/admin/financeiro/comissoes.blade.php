@@ -24,7 +24,7 @@
                     <form action="{{ route('admin.financeiro.comissoes') }}" method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                         <div>
                             <label class="block text-xs font-medium text-[#4A00B9] uppercase mb-1">Profissional</label>
-                            <select name="profissional_id" class="w-full px-4 py-2.5 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all text-sm">
+                            <select name="profissional_id" data-searchable-select data-searchable-compact="true" data-searchable-placeholder="Digite o nome do profissional..." class="w-full px-4 py-2.5 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all text-sm">
                                 <option value="">Selecione um profissional</option>
                                 @foreach($profissionais as $p)
                                     @php 

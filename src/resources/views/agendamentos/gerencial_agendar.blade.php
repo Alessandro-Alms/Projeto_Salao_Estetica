@@ -18,6 +18,12 @@
                         <h1 class="text-2xl font-title text-[#4A00B9]">Agendar para Cliente</h1>
                     </div>
 
+                    @if(session('acesso_restrito'))
+                        <div class="mb-6 rounded-xl border border-[#FFD6F4] bg-[#FF2EB6]/10 px-4 py-3 text-sm font-semibold text-[#4A00B9]">
+                            {{ session('acesso_restrito') }}
+                        </div>
+                    @endif
+
                     @if ($errors->any())
                         <div class="mb-6 p-4 rounded-lg bg-red-50/80 border border-red-200 text-red-700">
                             <p class="font-medium mb-1">✧ Não foi possível agendar:</p>
@@ -77,7 +83,9 @@
                             <!-- Serviço - Single select -->
                             <div>
                                 <label class="block text-sm font-medium text-[#4A00B9] mb-2">✧ Selecione o Serviço</label>
-                                <select name="servico_id" 
+                                <select name="servico_id"
+                                    data-searchable-select
+                                    data-searchable-placeholder="Digite o nome do serviço..."
                                     class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all"
                                     id="servico-select" required>
                                     <option value="">Selecione o serviço</option>

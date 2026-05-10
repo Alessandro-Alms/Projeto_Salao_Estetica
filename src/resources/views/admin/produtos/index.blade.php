@@ -38,15 +38,14 @@
             <div class="glass-card rounded-2xl shadow-xl overflow-hidden mb-6">
                 <div class="p-4 bg-white/70 backdrop-blur-sm border border-white/40 flex flex-col lg:flex-row justify-between items-center gap-4">
                     
-                    <form action="{{ route('admin.produtos.index') }}" method="GET" class="flex flex-col md:flex-row gap-4 w-full lg:flex-1">
+                    <form action="{{ route('admin.produtos.index') }}" method="GET" data-local-table-filter="#produtos-table" class="flex flex-col md:flex-row gap-4 w-full lg:flex-1">
                         <div class="flex-1">
-                            <input type="text" name="search" placeholder="Buscar produto..." value="{{ request('search') }}"
+                            <input type="text" name="search" data-filter-search placeholder="Buscar produto..." value="{{ request('search') }}"
                                 class="w-full px-4 py-2.5 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all" />
                         </div>
                         
                         <div class="w-full md:w-48">
-                            <select name="tipo" 
-                                class="w-full px-4 py-2.5 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
+                            <select name="tipo" data-filter-select="type" class="w-full px-4 py-2.5 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
                                 <option value="">Todos os Tipos</option>
                                 <option value="acessorios" {{ request('tipo') == 'acessorios' ? 'selected' : '' }}>Acessórios</option>
                                 <option value="kits" {{ request('tipo') == 'kits' ? 'selected' : '' }}>Kits</option>
@@ -79,7 +78,7 @@
             <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
                 <div class="p-0 bg-white/70 backdrop-blur-sm border border-white/40">
                     <div class="overflow-x-auto">
-                        <table class="min-w-full">
+                        <table id="produtos-table" class="min-w-full">
                             <thead>
                                 <tr class="border-b border-[#FFD6F4] bg-white/50">
                                     <th class="px-6 py-4 text-left text-xs font-medium text-[#4A00B9] uppercase tracking-wider">Nome</th>
@@ -91,7 +90,7 @@
                             </thead>
                             <tbody class="divide-y divide-[#FFD6F4]">
                                 @forelse($produtos as $produto)
-                                    <tr class="hover:bg-white/50 transition-colors">
+                                    <tr data-filter-row data-filter-type="{{ $produto->tipo }}" data-filter-text="{{ $produto->nome }} {{ $produto->tipo }} {{ $produto->valor_unitario }} {{ $produto->quantidade_estoque }}" class="hover:bg-white/50 transition-colors">
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-[#1A002B] font-medium">
                                             {{ $produto->nome }}
                                         </td>
@@ -142,6 +141,11 @@
                                         </td>
                                     </tr>
                                 @endforelse
+                                <tr data-filter-empty class="hidden">
+                                    <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                                        ✧ Nenhum produto encontrado nessa busca.
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
