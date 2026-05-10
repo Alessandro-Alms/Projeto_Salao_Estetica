@@ -1,10 +1,10 @@
-<nav x-data="{ open: false }" class="bg-white/85 backdrop-blur-md border-b border-[#FFD6F4] shadow-sm sticky top-0 z-30">
+<nav x-data="{ open: false }" class="fixed inset-x-0 top-0 w-full z-50 bg-white/85 backdrop-blur-md border-b border-[#FFD6F4] shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between h-14 gap-4">
+        <div class="flex items-center justify-between py-3 gap-4">
+            
             <div class="flex items-center min-w-0">
-                <a href="{{ route('dashboard') }}" class="flex items-center gap-3">
+                <a href="{{ route('dashboard') }}" class="flex items-center">
                     <img src="{{ asset('img/Prancheta1.png') }}" alt="Cheias de Charme" class="h-8 w-auto">
-                    <span class="hidden md:block font-title text-base text-[#4A00B9] whitespace-nowrap">Cheias de Charme</span>
                 </a>
             </div>
 
@@ -46,7 +46,8 @@
                         </svg>
                     </button>
 
-                    <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-44 bg-white rounded-xl shadow-lg border border-[#FFD6F4] py-1 z-50">
+                    <div x-show="open" @click.away="open = false" 
+                         class="absolute right-0 mt-2 w-44 bg-white rounded-xl shadow-lg border border-[#FFD6F4] py-1 z-50">
                         <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-[#1A002B] hover:bg-[#FFD6F4] transition-colors">
                             Meu Perfil
                         </a>
@@ -71,31 +72,25 @@
         </div>
     </div>
 
-    <div :class="{'block': open, 'hidden': !open}" class="hidden sm:hidden bg-white/95 border-b border-[#FFD6F4]">
+    <div x-show="open" 
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 -translate-y-1"
+         x-transition:enter-end="opacity-100 translate-y-0"
+         class="sm:hidden bg-white/95 border-b border-[#FFD6F4]">
         <div class="px-2 pt-2 pb-3 space-y-1">
             <a href="{{ route('dashboard') }}" class="block px-3 py-2 text-base text-[#1A002B] hover:text-[#FF2EB6] hover:bg-[#FFD6F4] rounded-md">
                 Painel
             </a>
 
             @if(auth()->user()->isCliente())
-                <a href="{{ route('cliente.produtos.index') }}" class="block px-3 py-2 text-base text-[#1A002B] hover:text-[#FF2EB6] hover:bg-[#FFD6F4] rounded-md">
-                    Produtos
-                </a>
-                <a href="{{ route('cliente.pacotes.index') }}" class="block px-3 py-2 text-base text-[#1A002B] hover:text-[#FF2EB6] hover:bg-[#FFD6F4] rounded-md">
-                    Pacotes
-                </a>
+                <a href="{{ route('cliente.produtos.index') }}" class="block px-3 py-2 text-base text-[#1A002B] hover:text-[#FF2EB6] hover:bg-[#FFD6F4] rounded-md">Produtos</a>
+                <a href="{{ route('cliente.pacotes.index') }}" class="block px-3 py-2 text-base text-[#1A002B] hover:text-[#FF2EB6] hover:bg-[#FFD6F4] rounded-md">Pacotes</a>
             @endif
 
             @if(auth()->user()->cargo === 'gerente')
-                <a href="{{ route('admin.usuarios.index') }}" class="block px-3 py-2 text-base text-[#1A002B] hover:text-[#FF2EB6] hover:bg-[#FFD6F4] rounded-md">
-                    Usuários
-                </a>
-                <a href="{{ route('admin.servicos.index') }}" class="block px-3 py-2 text-base text-[#1A002B] hover:text-[#FF2EB6] hover:bg-[#FFD6F4] rounded-md">
-                    Serviços
-                </a>
-                <a href="{{ route('admin.produtos.index') }}" class="block px-3 py-2 text-base text-[#1A002B] hover:text-[#FF2EB6] hover:bg-[#FFD6F4] rounded-md">
-                    Produtos
-                </a>
+                <a href="{{ route('admin.usuarios.index') }}" class="block px-3 py-2 text-base text-[#1A002B] hover:text-[#FF2EB6] hover:bg-[#FFD6F4] rounded-md">Usuários</a>
+                <a href="{{ route('admin.servicos.index') }}" class="block px-3 py-2 text-base text-[#1A002B] hover:text-[#FF2EB6] hover:bg-[#FFD6F4] rounded-md">Serviços</a>
+                <a href="{{ route('admin.produtos.index') }}" class="block px-3 py-2 text-base text-[#1A002B] hover:text-[#FF2EB6] hover:bg-[#FFD6F4] rounded-md">Produtos</a>
             @endif
         </div>
         <div class="pt-4 pb-3 border-t border-[#FFD6F4]">

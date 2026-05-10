@@ -26,7 +26,6 @@
                                 class="w-full px-4 py-2.5 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all" />
                         </div>
                         
-                        {{-- Apenas Gerentes podem filtrar por cargos específicos --}}
                         @if(auth()->user()->cargo === 'gerente')
                         <div class="w-full md:w-48">
                             <select name="cargo" 
@@ -111,7 +110,6 @@
                                                 <span class="bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-bold">Bloqueado</span>
                                             @endif
                                             
-                                            {{-- Gerentes bloqueiam/reativam --}}
                                             @if(auth()->user()->cargo === 'gerente')
                                                 <form action="{{ route('admin.usuarios.status', $usuario->id) }}" method="POST" class="mt-2">
                                                     @csrf
@@ -129,7 +127,6 @@
                                                     Editar
                                                 </a>
 
-                                                {{-- Somente o Gerente pode excluir --}}
                                                 @if(auth()->user()->cargo === 'gerente' && $usuario->id !== auth()->user()->id)
                                                     <form action="{{ route('admin.usuarios.deletar', $usuario->id) }}" method="POST" onsubmit="return confirm('Tem certeza que deseja excluir este usuário?')" class="inline m-0">
                                                         @csrf
@@ -222,5 +219,63 @@
         outline: none;
         box-shadow: 0 0 0 2px rgba(123, 25, 229, 0.3);
         border-color: #7B19E5;
+    }
+
+    /* Estilização da paginação */
+    nav[role="navigation"] {
+        display: flex;
+        justify-content: center;
+    }
+    
+    .pagination {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .pagination .page-item {
+        list-style: none;
+    }
+    
+    .pagination .page-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 2.5rem;
+        height: 2.5rem;
+        padding: 0 0.75rem;
+        border-radius: 0.75rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #4A00B9;
+        background: rgba(255, 255, 255, 0.5);
+        border: 1px solid #FFD6F4;
+        transition: all 0.2s ease;
+    }
+    
+    .pagination .page-link:hover {
+        background: linear-gradient(135deg, #7B19E5, #FF2EB6);
+        color: white;
+        border-color: transparent;
+        transform: translateY(-1px);
+    }
+    
+    .pagination .active .page-link {
+        background: linear-gradient(135deg, #7B19E5, #FF2EB6);
+        color: white;
+        border-color: transparent;
+        box-shadow: 0 4px 12px rgba(123, 25, 229, 0.3);
+    }
+    
+    .pagination .disabled .page-link {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+    
+    .pagination .disabled .page-link:hover {
+        transform: none;
+        background: rgba(255, 255, 255, 0.5);
+        color: #4A00B9;
     }
 </style>
