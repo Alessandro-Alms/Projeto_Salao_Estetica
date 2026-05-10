@@ -14,7 +14,10 @@ use App\Http\Controllers\VendaProdutoController;
 use App\Http\Controllers\RelatorioController;
 use App\Models\Produto;
 use App\Models\Servico;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 
 Route::get('/', function () {
@@ -86,6 +89,56 @@ Route::get('/depoimentos', function () {
 
     return view('public.catalogo', compact('titulo', 'subtitulo', 'tipo', 'itens'));
 })->name('public.depoimentos');
+
+Route::post('/contato/enviar', function (Request $request) {
+    $dados = $request->validate([
+        'nome' => ['required', 'string', 'max:120'],
+        'email' => ['required', 'email', 'max:255'],
+        'assunto' => ['required', 'string', 'max:160'],
+        'mensagem' => ['required', 'string', 'max:2000'],
+    ]);
+
+    $destinatario = env('CONTACT_TO_ADDRESS', config('mail.from.address'));
+
+    $conteudo = implode(PHP_EOL, [
+        'Nova mensagem enviada pelo site Cheias de Charme',
+        '',
+        'Nome: ' . $dados['nome'],
+        'E-mail: ' . $dados['email'],
+        'Assunto: ' . $dados['assunto'],
+        '',
+        'Mensagem:',
+        $dados['mensagem'],
+    ]);
+
+    Mail::raw($conteudo, function ($message) use ($dados, $destinatario) {
+        $message->to($destinatario)
+            ->replyTo($dados['email'], $dados['nome'])
+            ->subject('Contato pelo site: ' . $dados['assunto']);
+    });
+
+    if (Schema::hasTable('contato_mensagens')) {
+        DB::table('contato_mensagens')->insert([
+            'nome' => $dados['nome'],
+            'email' => $dados['email'],
+            'assunto' => $dados['assunto'],
+            'mensagem' => $dados['mensagem'],
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+    Log::info('Mensagem de contato recebida pelo site.', [
+        'nome' => $dados['nome'],
+        'email' => $dados['email'],
+        'assunto' => $dados['assunto'],
+    ]);
+
+    return redirect()
+        ->route('public.home')
+        ->withFragment('contato')
+        ->with('contato_sucesso', 'Mensagem enviada com sucesso! Em breve entraremos em contato.');
+})->name('public.contato.enviar');
 
 Route::get('/dashboard', [UserController::class, 'dashboard'])
     ->middleware(['auth', 'verified'])
@@ -164,6 +217,31 @@ Route::middleware(['auth', 'role:gerente,recepcionista'])->prefix('admin')->name
 // ROTAS ADMIN (Apenas Gerente)
 // ==========================================
 Route::middleware(['auth', 'role:gerente'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/contatos', function () {
+        $mensagens = Schema::hasTable('contato_mensagens')
+            ? DB::table('contato_mensagens')->orderByDesc('created_at')->paginate(12)
+            : collect();
+
+        return view('admin.contatos.index', compact('mensagens'));
+    })->name('contatos.index');
+
+    Route::patch('/contatos/{id}/lida', function (int $id) {
+        if (Schema::hasTable('contato_mensagens')) {
+            $dados = [
+                'lida_at' => now(),
+                'updated_at' => now(),
+            ];
+
+            if (Schema::hasColumn('contato_mensagens', 'cliente_notificado_at')) {
+                $dados['cliente_notificado_at'] = null;
+            }
+
+            DB::table('contato_mensagens')->where('id', $id)->update($dados);
+        }
+
+        return back()->with('status', 'Mensagem marcada como lida.');
+    })->name('contatos.lida');
+
     Route::resource('servicos', ServicoController::class)->names([
         'index'   => 'servicos.index',
         'create'  => 'servicos.criar',

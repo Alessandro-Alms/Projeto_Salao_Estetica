@@ -93,6 +93,8 @@ return new class extends Migration
             $table->foreignId('servico_id')->nullable()->constrained('servicos', 'id_servico');
             $table->integer('quantidade')->default(1);
             $table->decimal('valor_venda', 10, 2);
+            $table->decimal('valor_comissao', 10, 2)->default(0);
+            $table->decimal('comissao_paga_percentual', 5, 2)->default(0);
             $table->timestamps();
         });
         // Tabelas de relacionamento para Profissionais
@@ -150,9 +152,12 @@ return new class extends Migration
             $table->id();
             $table->foreignId('cliente_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('pacote_id')->constrained('pacotes', 'id_pacote');
+            $table->foreignId('vendedor_id')->nullable()->constrained('users')->nullOnDelete();
             $table->integer('sessoes_restantes'); // Começa com 5, vai caindo até 0
             $table->date('data_compra');
             $table->date('data_validade'); // data_compra + validade_dias do pacote
+            $table->decimal('valor_comissao', 10, 2)->default(0);
+            $table->decimal('comissao_paga_percentual', 5, 2)->default(0);
             $table->enum('status', ['ativo', 'finalizado', 'vencido'])->default('ativo');
             $table->timestamps();
         });
@@ -182,10 +187,22 @@ return new class extends Migration
             // Evitar duplicatas: um serviço só pode estar uma vez por agendamento
             $table->unique(['agendamento_id', 'servico_id']);
         });
+
+        Schema::create('contato_mensagens', function (Blueprint $table) {
+            $table->id();
+            $table->string('nome');
+            $table->string('email');
+            $table->string('assunto');
+            $table->text('mensagem');
+            $table->timestamp('lida_at')->nullable();
+            $table->timestamp('cliente_notificado_at')->nullable();
+            $table->timestamps();
+        });
     }
 
     public function down(): void
     {
+        Schema::dropIfExists('contato_mensagens');
         Schema::dropIfExists('agendamento_servico');
         Schema::dropIfExists('avaliacoes');
         Schema::dropIfExists('cliente_pacotes');

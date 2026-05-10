@@ -33,6 +33,20 @@ class UserController extends Controller
         $avaliacoesPendentes = 0;
         $pacotesVencendo = collect();
         $mensagemProximaVisita = null;
+        $contatoMensagens = collect();
+        $contatoMensagensNaoLidas = 0;
+        $contatoMensagensLidasCliente = collect();
+
+        if ($user && $user->isGerente() && DB::getSchemaBuilder()->hasTable('contato_mensagens')) {
+            $contatoMensagens = DB::table('contato_mensagens')
+                ->orderByDesc('created_at')
+                ->limit(5)
+                ->get();
+
+            $contatoMensagensNaoLidas = DB::table('contato_mensagens')
+                ->whereNull('lida_at')
+                ->count();
+        }
 
         if ($user && $user->isProfissional()) {
             $mediaAvaliacao = DB::table('avaliacoes')
@@ -68,6 +82,28 @@ class UserController extends Controller
         }
 
         if ($user && $user->isCliente()) {
+            if (
+                DB::getSchemaBuilder()->hasTable('contato_mensagens')
+                && DB::getSchemaBuilder()->hasColumn('contato_mensagens', 'cliente_notificado_at')
+            ) {
+                $contatoMensagensLidasCliente = DB::table('contato_mensagens')
+                    ->where('email', $user->email)
+                    ->whereNotNull('lida_at')
+                    ->whereNull('cliente_notificado_at')
+                    ->orderByDesc('lida_at')
+                    ->limit(3)
+                    ->get();
+
+                if ($contatoMensagensLidasCliente->isNotEmpty()) {
+                    DB::table('contato_mensagens')
+                        ->whereIn('id', $contatoMensagensLidasCliente->pluck('id'))
+                        ->update([
+                            'cliente_notificado_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                }
+            }
+
             $agendamentoProximo = Agendamento::where('cliente_id', $user->id)
                 ->whereIn('status', ['confirmado', 'presente'])
                 ->where('data_hora_inicio', '>', now())
@@ -115,7 +151,10 @@ class UserController extends Controller
             'agendamentoProximo',
             'avaliacoesPendentes',
             'pacotesVencendo',
-            'mensagemProximaVisita'
+            'mensagemProximaVisita',
+            'contatoMensagens',
+            'contatoMensagensNaoLidas',
+            'contatoMensagensLidasCliente'
         ));
     }
 

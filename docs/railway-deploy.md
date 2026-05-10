@@ -21,6 +21,7 @@ Este projeto Laravel fica dentro da pasta `src`, entao na Railway o servico deve
    - `DB_DATABASE`
    - `DB_USERNAME`
    - `DB_PASSWORD`
+   - `CONTACT_TO_ADDRESS`
 6. Mantenha `APP_ENV=production` e `APP_DEBUG=false`.
 7. Em `Networking`, gere o dominio publico e use esse dominio em `APP_URL`.
 8. Faca um redeploy.

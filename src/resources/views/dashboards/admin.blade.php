@@ -1,3 +1,44 @@
+@if(($contatoMensagens ?? collect())->count() > 0)
+    <div class="glass-card rounded-2xl shadow-xl overflow-hidden mb-6">
+        <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+                <div class="flex items-center gap-2">
+                    <span class="text-[#7B19E5] text-xl">✧</span>
+                    <h3 class="text-lg font-title text-[#4A00B9]">Mensagens do site</h3>
+                </div>
+                <a href="{{ route('admin.contatos.index') }}" class="text-sm font-bold text-[#7B19E5] hover:text-[#FF2EB6] transition-colors">
+                    Ver todas
+                </a>
+            </div>
+
+            @if(($contatoMensagensNaoLidas ?? 0) > 0)
+                <div class="mb-4 rounded-xl border border-[#FFD6F4] bg-[#FF2EB6]/10 px-4 py-3 text-sm font-semibold text-[#FF2EB6]">
+                    {{ $contatoMensagensNaoLidas }} mensagem(ns) nova(s) aguardando leitura.
+                </div>
+            @endif
+
+            <div class="space-y-3">
+                @foreach($contatoMensagens as $mensagem)
+                    <div class="rounded-xl border border-[#FFD6F4] bg-white/60 p-4">
+                        <div class="flex flex-wrap items-start justify-between gap-3">
+                            <div>
+                                <p class="font-title text-[#4A00B9]">{{ $mensagem->assunto }}</p>
+                                <p class="text-xs text-gray-500">
+                                    {{ $mensagem->nome }} · {{ $mensagem->email }}
+                                </p>
+                            </div>
+                            @if(!$mensagem->lida_at)
+                                <span class="rounded-full bg-[#FF2EB6]/10 px-3 py-1 text-xs font-bold text-[#FF2EB6]">Nova</span>
+                            @endif
+                        </div>
+                        <p class="mt-2 text-sm text-[#1A002B] line-clamp-2">{{ $mensagem->mensagem }}</p>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+@endif
+
 <div class="glass-card rounded-2xl shadow-xl overflow-hidden mb-6">
     <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
         <div class="flex items-center gap-2 mb-5">
@@ -92,6 +133,18 @@
                 </div>
             </a>
             
+            <a href="{{ route('admin.contatos.index') }}" class="group flex items-center gap-4 p-4 rounded-xl bg-white/50 hover:bg-white/80 transition-all hover:shadow-lg hover:-translate-y-1 border border-[#FFD6F4]">
+                <div class="w-12 h-12 bg-gradient-to-br from-[#FF2EB6] to-[#FF69B4] rounded-xl flex items-center justify-center text-white text-xl shadow-md">
+                    ✧
+                </div>
+                <div>
+                    <h4 class="font-title text-[#4A00B9]">Mensagens do site</h4>
+                    <p class="text-xs text-gray-500">
+                        {{ ($contatoMensagensNaoLidas ?? 0) > 0 ? ($contatoMensagensNaoLidas . ' nova(s) para ler') : 'Ver contatos recebidos' }}
+                    </p>
+                </div>
+            </a>
+
             {{-- Pacotes --}}
             <a href="{{ route('admin.pacotes.index') }}" class="group flex items-center gap-4 p-4 rounded-xl bg-white/50 hover:bg-white/80 transition-all hover:shadow-lg hover:-translate-y-1 border border-[#FFD6F4]">
                 <div class="w-12 h-12 bg-gradient-to-br from-[#7B19E5] to-[#A855F7] rounded-xl flex items-center justify-center text-white text-xl shadow-md">

@@ -611,7 +611,19 @@
                 <p class="text-white/90 font-body text-lg">Tire dúvidas ou agende seu horário</p>
             </div>
             
-            <form method="POST" action="{{ url('/contato/enviar') }}" class="space-y-6">
+            @if(session('contato_sucesso'))
+                <div class="mb-6 rounded-2xl border border-white/30 bg-white/20 px-5 py-4 text-white shadow-lg">
+                    {{ session('contato_sucesso') }}
+                </div>
+            @endif
+
+            @if($errors->any())
+                <div class="mb-6 rounded-2xl border border-white/30 bg-white/20 px-5 py-4 text-white shadow-lg">
+                    Confira os campos e tente enviar novamente.
+                </div>
+            @endif
+
+            <form method="POST" action="{{ route('public.contato.enviar') }}" class="space-y-6">
                 @csrf
                 <div class="grid md:grid-cols-2 gap-6">
                     <input type="text" name="nome" placeholder="Seu nome completo" required

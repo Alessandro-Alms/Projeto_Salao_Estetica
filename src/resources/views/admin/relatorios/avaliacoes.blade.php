@@ -226,17 +226,10 @@
                         </div>
                         @if($rankingProfissionais->count() > 0)
                             <ul class="space-y-4">
-                                @foreach($rankingProfissionais as $index => $prof)
+                                @foreach($rankingProfissionais as $prof)
                                     <li class="flex justify-between items-center bg-white/50 p-3 rounded-lg border border-[#FFD6F4]">
                                         <div>
-                                            <p class="font-bold text-[#1A002B] flex items-center gap-2">
-                                                @if($index == 0) ✧ 
-                                                @elseif($index == 1) ✦ 
-                                                @elseif($index == 2) ✧ 
-                                                @else <span class="w-5 text-center text-gray-400">#{{ $index + 1 }}</span>
-                                                @endif
-                                                {{ $prof->nome }}
-                                            </p>
+                                            <p class="font-bold text-[#1A002B]">{{ $prof->nome }}</p>
                                             <p class="text-xs text-gray-500 mt-1">{{ $prof->total_avaliacoes }} avaliações</p>
                                         </div>
                                         <div class="text-right">
@@ -260,7 +253,7 @@
                             <span class="text-[#7B19E5] text-xl">✧</span>
                             <h3 class="font-title text-[#4A00B9]">Feed de Comentários Recentes</h3>
                         </div>
-                        
+
                         <div class="space-y-4 max-h-[500px] overflow-y-auto pr-2">
                             @forelse($avaliacoes->whereNotNull('comentario')->where('comentario', '!=', '')->take(15) as $av)
                                 <div class="bg-white/50 p-4 rounded-xl border-l-4 {{ $av->nota >= 4 ? 'border-[#7B19E5]' : ($av->nota == 3 ? 'border-[#FF2EB6]' : 'border-gray-400') }}">

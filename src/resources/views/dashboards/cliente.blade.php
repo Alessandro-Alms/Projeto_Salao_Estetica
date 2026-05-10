@@ -1,4 +1,4 @@
-@if($mensagemProximaVisita || $avaliacoesPendentes > 0 || $pacotesVencendo->count() > 0)
+@if(($contatoMensagensLidasCliente ?? collect())->count() > 0 || $mensagemProximaVisita || $avaliacoesPendentes > 0 || $pacotesVencendo->count() > 0)
     <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
         <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
             <div class="flex items-center gap-2 mb-4">
@@ -7,6 +7,22 @@
             </div>
 
             <div class="space-y-3">
+                @foreach(($contatoMensagensLidasCliente ?? collect()) as $mensagemContato)
+                    <div x-data="{ visivel: true }" x-show="visivel" class="p-4 rounded-xl bg-[#7B19E5]/10 border border-[#FFD6F4] text-sm">
+                        <div class="flex flex-wrap items-start justify-between gap-3">
+                            <div>
+                                <p class="font-semibold text-[#4A00B9]">Sua mensagem foi lida</p>
+                                <p class="text-gray-600 mt-1">
+                                    A equipe já visualizou sua mensagem sobre "{{ $mensagemContato->assunto }}".
+                                </p>
+                            </div>
+                            <button type="button" @click="visivel = false" class="rounded-full bg-white/80 px-4 py-2 text-xs font-bold text-[#7B19E5] hover:bg-[#7B19E5] hover:text-white transition-colors">
+                                OK
+                            </button>
+                        </div>
+                    </div>
+                @endforeach
+
                 @if($mensagemProximaVisita)
                     <div class="p-4 rounded-xl bg-[#7B19E5]/10 border border-[#FFD6F4] text-sm">
                         <p class="font-semibold text-[#4A00B9]">Próxima visita</p>
