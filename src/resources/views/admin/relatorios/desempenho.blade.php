@@ -225,7 +225,7 @@
                                                     ★ {{ number_format($prof->media_nota, 1) }}
                                                 </div>
                                             @else
-                                                <span class="text-xs text-gray-400">Sem nota<\/span>
+                                                <span class="text-xs text-gray-400">Sem nota</span>
                                             @endif
                                         </td>
                                         <td class="p-3 text-center">
