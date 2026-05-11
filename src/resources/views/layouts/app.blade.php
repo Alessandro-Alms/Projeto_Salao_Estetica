@@ -23,10 +23,92 @@
             * { font-family: 'Syne', sans-serif; }
             .font-title { font-family: 'Playfair Display', serif; font-weight: 700; letter-spacing: -0.02em; }
             .font-body { font-family: 'Space Grotesk', sans-serif; }
+            html { color-scheme: light; }
+            html.dark-mode { color-scheme: dark; }
             
             ::-webkit-scrollbar { width: 8px; background: #f8f0ff; }
             ::-webkit-scrollbar-thumb { background: linear-gradient(135deg, #7B19E5, #FF2EB6); border-radius: 10px; }
+            html.dark-mode ::-webkit-scrollbar { background: #12091f; }
 
+
+            html.dark-mode body {
+                background: radial-gradient(circle at top left, rgba(123, 25, 229, 0.22), transparent 34%),
+                    radial-gradient(circle at bottom right, rgba(255, 46, 182, 0.18), transparent 38%),
+                    linear-gradient(135deg, #0B0712 0%, #150B22 48%, #1D0F2A 100%) !important;
+                color: #F7ECFF;
+            }
+
+            html.dark-mode nav,
+            html.dark-mode header {
+                background: rgba(13, 7, 22, 0.9) !important;
+                border-color: rgba(255, 214, 244, 0.18) !important;
+                box-shadow: 0 14px 36px rgba(0, 0, 0, 0.35);
+            }
+
+            html.dark-mode .glass-card,
+            html.dark-mode [class*="bg-white/70"],
+            html.dark-mode [class*="bg-white/75"],
+            html.dark-mode [class*="bg-white/80"],
+            html.dark-mode [class*="bg-white/95"] {
+                background: rgba(20, 10, 32, 0.84) !important;
+                border-color: rgba(255, 214, 244, 0.16) !important;
+                box-shadow: 0 18px 42px rgba(0, 0, 0, 0.32) !important;
+            }
+
+            html.dark-mode [class*="bg-white/30"],
+            html.dark-mode [class*="bg-white/40"],
+            html.dark-mode [class*="bg-white/50"],
+            html.dark-mode [class*="bg-white/60"],
+            html.dark-mode [class*="bg-white "] {
+                background-color: rgba(31, 16, 48, 0.78) !important;
+            }
+
+            html.dark-mode input,
+            html.dark-mode select,
+            html.dark-mode textarea,
+            html.dark-mode [data-searchable-dropdown] {
+                background-color: rgba(13, 7, 22, 0.88) !important;
+                border-color: rgba(255, 214, 244, 0.28) !important;
+                color: #F7ECFF !important;
+            }
+
+            html.dark-mode input::placeholder,
+            html.dark-mode textarea::placeholder {
+                color: #BFAED0 !important;
+            }
+
+            html.dark-mode [class*="text-[#1A002B]"],
+            html.dark-mode [class*="text-[#4A00B9]"],
+            html.dark-mode [class*="text-gray-400"],
+            html.dark-mode [class*="text-gray-500"],
+            html.dark-mode [class*="text-gray-600"],
+            html.dark-mode [class*="text-gray-700"],
+            html.dark-mode [class*="text-gray-800"],
+            html.dark-mode [class*="text-gray-900"] {
+                color: #F7ECFF !important;
+            }
+
+            html.dark-mode [class*="text-[#7B19E5]"] {
+                color: #C99BFF !important;
+            }
+
+            html.dark-mode [class*="border-[#FFD6F4]"],
+            html.dark-mode [class*="border-white/40"],
+            html.dark-mode [class*="divide-[#FFD6F4]"] > :not([hidden]) ~ :not([hidden]) {
+                border-color: rgba(255, 214, 244, 0.18) !important;
+            }
+
+            html.dark-mode [class*="hover:bg-white/"]:hover,
+            html.dark-mode [class*="hover:bg-[#FFD6F4]"]:hover,
+            html.dark-mode [class*="hover:bg-[#FFD6F4]/70"]:hover {
+                background-color: rgba(123, 25, 229, 0.22) !important;
+            }
+
+            html.dark-mode .dark-mode-toggle {
+                background: rgba(31, 16, 48, 0.86);
+                border-color: rgba(255, 214, 244, 0.25);
+                color: #F7ECFF;
+            }
             /* Efeito do botão */
             .btn-primary {
                 position: relative;
@@ -62,6 +144,13 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        <script>
+            (() => {
+                if (localStorage.getItem('salao-tema') === 'escuro') {
+                    document.documentElement.classList.add('dark-mode');
+                }
+            })();
+        </script>
         <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     </head>
     <body class="font-body antialiased bg-gradient-to-br from-[#7B19E5]/5 via-white to-[#FF2EB6]/5">
@@ -86,6 +175,28 @@
         </div>
 
         <script>
+            (() => {
+                const updateThemeButtons = () => {
+                    const isDark = document.documentElement.classList.contains('dark-mode');
+                    document.querySelectorAll('[data-theme-toggle]').forEach((button) => {
+                        button.textContent = isDark ? 'Claro' : 'Escuro';
+                        button.setAttribute('aria-label', isDark ? 'Ativar modo claro' : 'Ativar modo escuro');
+                    });
+                };
+
+                document.addEventListener('DOMContentLoaded', () => {
+                    updateThemeButtons();
+
+                    document.querySelectorAll('[data-theme-toggle]').forEach((button) => {
+                        button.addEventListener('click', () => {
+                            const isDark = document.documentElement.classList.toggle('dark-mode');
+                            localStorage.setItem('salao-tema', isDark ? 'escuro' : 'claro');
+                            updateThemeButtons();
+                        });
+                    });
+                });
+            })();
+
             (() => {
                 const baseInputClasses = 'w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all';
                 const compactInputClasses = 'w-full px-4 py-2.5 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all text-sm';

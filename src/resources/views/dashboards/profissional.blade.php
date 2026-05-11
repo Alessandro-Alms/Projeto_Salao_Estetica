@@ -77,7 +77,7 @@
                     <span class="text-white text-lg">✧</span>
                 </div>
                 <div>
-                    <h3 class="text-lg font-title text-[#4A00B9]">REL011: Avaliações e Reputação</h3>
+                    <h3 class="text-lg font-title text-[#4A00B9]">Avaliações e Reputação</h3>
                     <p class="text-xs text-gray-500">Média de estrelas e comentários dos seus clientes</p>
                 </div>
             </div>

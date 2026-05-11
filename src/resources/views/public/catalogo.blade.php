@@ -51,7 +51,26 @@
 
         .title-glow { text-shadow: 0 2px 10px rgba(123, 25, 229, 0.2); }
         header.bg-white { background: rgba(255, 255, 255, 0.9) !important; backdrop-filter: blur(8px); box-shadow: 0 2px 20px rgba(0,0,0,0.05); }
+        html.dark-mode { color-scheme: dark; }
+        html.dark-mode body { background: linear-gradient(135deg, #0B0712, #150B22 48%, #1D0F2A) !important; color: #F7ECFF; }
+        html.dark-mode header,
+        html.dark-mode .glass-card,
+        html.dark-mode [class*="bg-white/"],
+        html.dark-mode [class*="bg-white "] { background: rgba(20, 10, 32, 0.84) !important; border-color: rgba(255, 214, 244, 0.16) !important; box-shadow: 0 18px 42px rgba(0,0,0,.32) !important; }
+        html.dark-mode [class*="text-[#1A002B]"],
+        html.dark-mode [class*="text-[#4A00B9]"],
+        html.dark-mode [class*="text-gray-"],
+        html.dark-mode .font-title { color: #F7ECFF !important; }
+        html.dark-mode [class*="text-[#7B19E5]"] { color: #C99BFF !important; }
+        html.dark-mode .dark-mode-toggle { background: rgba(31, 16, 48, 0.86) !important; border-color: rgba(255, 214, 244, 0.25) !important; color: #F7ECFF !important; }
     </style>
+    <script>
+        (() => {
+            if (localStorage.getItem('salao-tema') === 'escuro') {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
 </head>
 <body class="font-body antialiased relative text-[#1A002B]">
     @php
@@ -107,6 +126,7 @@
                 </nav>
 
                 <div class="flex items-center gap-2">
+                    <button type="button" data-theme-toggle class="dark-mode-toggle border border-[#FFD6F4] bg-white text-[#7B19E5] px-5 py-2.5 text-sm rounded-full font-semibold shadow-lg transition-all">Escuro</button>
                     <a href="{{ route('login') }}" class="bg-[#7B19E5] text-white px-5 py-2.5 text-sm rounded-full btn-primary shadow-lg">LOGIN</a>
                     <a href="{{ route('agendar') }}" class="bg-[#FF2EB6] text-white px-5 py-2.5 text-sm rounded-full btn-primary shadow-lg">AGENDAR</a>
                 </div>
@@ -192,5 +212,24 @@
             </div>
         </section>
     </main>
+    <script>
+        (() => {
+            const updateThemeButtons = () => {
+                const isDark = document.documentElement.classList.contains('dark-mode');
+                document.querySelectorAll('[data-theme-toggle]').forEach((button) => {
+                    button.textContent = isDark ? 'Claro' : 'Escuro';
+                });
+            };
+
+            updateThemeButtons();
+            document.querySelectorAll('[data-theme-toggle]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    const isDark = document.documentElement.classList.toggle('dark-mode');
+                    localStorage.setItem('salao-tema', isDark ? 'escuro' : 'claro');
+                    updateThemeButtons();
+                });
+            });
+        })();
+    </script>
 </body>
 </html>

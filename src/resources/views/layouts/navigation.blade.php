@@ -40,7 +40,10 @@
                 </div>
             </div>
 
-            <div class="hidden sm:flex sm:items-center">
+            <div class="hidden sm:flex sm:items-center gap-2">
+                <button type="button" data-theme-toggle class="dark-mode-toggle rounded-full border border-[#FFD6F4] bg-white/70 px-4 py-1.5 text-sm font-semibold text-[#1A002B] shadow-sm hover:text-[#FF2EB6] transition-colors">
+                    Escuro
+                </button>
                 <div class="relative" x-data="{ open: false }">
                     <button @click="open = !open" class="flex items-center gap-2 rounded-full border border-[#FFD6F4] bg-white/70 px-4 py-1.5 text-sm font-semibold text-[#1A002B] shadow-sm hover:text-[#FF2EB6] transition-colors">
                         <span class="max-w-36 truncate">{{ Auth::user()->name }}</span>
@@ -101,6 +104,9 @@
         </div>
         <div class="pt-4 pb-3 border-t border-[#FFD6F4]">
             <div class="px-4 py-2 text-sm text-[#1A002B]">{{ Auth::user()->name }}</div>
+            <button type="button" data-theme-toggle class="dark-mode-toggle mx-4 mb-2 rounded-full border border-[#FFD6F4] bg-white/70 px-4 py-2 text-sm font-semibold text-[#1A002B] shadow-sm hover:text-[#FF2EB6] transition-colors">
+                Escuro
+            </button>
             <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-[#1A002B] hover:bg-[#FFD6F4]">Meu Perfil</a>
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
