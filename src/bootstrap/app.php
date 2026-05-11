@@ -31,6 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'gerente' => \App\Http\Middleware\Gerente::class,
             'role' => \App\Http\Middleware\EnsureUserRole::class,
             'profissional' => \App\Http\Middleware\CheckProfissional::class,
+            'cliente_redirect' => \App\Http\Middleware\EnsureClienteRedirect::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

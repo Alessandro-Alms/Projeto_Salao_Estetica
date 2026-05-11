@@ -158,26 +158,46 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     
     // ✅ Mantido intacto para não quebrar a view atual
-    Route::get('/agendar-servico', [AgendamentoController::class, 'clienteAgendar'])->name('cliente.agendar');
-    Route::post('/agendar-servico', [AgendamentoController::class, 'storeCliente'])->name('cliente.agendar.salvar');
+    Route::get('/agendar-servico', [AgendamentoController::class, 'clienteAgendar'])
+        ->middleware('cliente_redirect:agendar')
+        ->name('cliente.agendar');
+    Route::post('/agendar-servico', [AgendamentoController::class, 'storeCliente'])
+        ->middleware('cliente_redirect:agendar')
+        ->name('cliente.agendar.salvar');
     
     // ======== NOVAS ROTAS DO WIZARD ========
-    Route::get('/agendar-novo', [AgendamentoController::class, 'novoAgendamento'])->name('cliente.agendar.novo');
+    Route::get('/agendar-novo', [AgendamentoController::class, 'novoAgendamento'])
+        ->middleware('cliente_redirect:agendar')
+        ->name('cliente.agendar.novo');
     
     // ✅ CORREÇÃO 1: Nomes adicionados às rotas AJAX
     Route::get('/api/profissionais-por-servico', [AgendamentoController::class, 'getProfissionaisAjax'])->name('api.profissionais');
     Route::get('/api/horarios-disponiveis', [AgendamentoController::class, 'getHorariosAjax'])->name('api.horarios');
     // =======================================
 
-    Route::get('/meus-agendamentos', [AgendamentoController::class, 'indexCliente'])->name('cliente.index');
-    Route::get('/meus-produtos', [VendaProdutoController::class, 'indexCliente'])->name('cliente.produtos.index');
-    Route::post('/meus-produtos/comprar', [VendaProdutoController::class, 'comprarCliente'])->name('cliente.produtos.comprar');
-    Route::get('/meus-pacotes', [ClientePacoteController::class, 'indexCliente'])->name('cliente.pacotes.index');
-    Route::post('/meus-pacotes/comprar', [ClientePacoteController::class, 'comprarCliente'])->name('cliente.pacotes.comprar');
-    Route::post('/agendamento/{id}/cancelar', [AgendamentoController::class, 'cancelarCliente'])->name('cliente.agendamento.cancelar');
+    Route::get('/meus-agendamentos', [AgendamentoController::class, 'indexCliente'])
+        ->middleware('cliente_redirect:agendamentos')
+        ->name('cliente.index');
+    Route::get('/meus-produtos', [VendaProdutoController::class, 'indexCliente'])
+        ->middleware('cliente_redirect:produtos')
+        ->name('cliente.produtos.index');
+    Route::post('/meus-produtos/comprar', [VendaProdutoController::class, 'comprarCliente'])
+        ->middleware('cliente_redirect:produtos')
+        ->name('cliente.produtos.comprar');
+    Route::get('/meus-pacotes', [ClientePacoteController::class, 'indexCliente'])
+        ->middleware('cliente_redirect:pacotes')
+        ->name('cliente.pacotes.index');
+    Route::post('/meus-pacotes/comprar', [ClientePacoteController::class, 'comprarCliente'])
+        ->middleware('cliente_redirect:pacotes')
+        ->name('cliente.pacotes.comprar');
+    Route::post('/agendamento/{id}/cancelar', [AgendamentoController::class, 'cancelarCliente'])
+        ->middleware('cliente_redirect:agendamentos')
+        ->name('cliente.agendamento.cancelar');
     Route::post('/agendamentos/{id}/presenca', [AgendamentoController::class, 'confirmarPresenca'])->name('agendamento.presenca');
     Route::patch('/agendamentos/{id}/falta', [AgendamentoController::class, 'marcarFalta'])->name('agendamentos.falta');
-    Route::post('/avaliar-agendamento', [AgendamentoController::class, 'salvarAvaliacao'])->name('cliente.avaliar.salvar');
+    Route::post('/avaliar-agendamento', [AgendamentoController::class, 'salvarAvaliacao'])
+        ->middleware('cliente_redirect:agendamentos')
+        ->name('cliente.avaliar.salvar');
 });
 
 // ==========================================
@@ -306,8 +326,6 @@ Route::middleware(['auth', 'role:gerente'])->prefix('admin')->name('admin.')->gr
 // ROTAS PROFISSIONAL
 // ==========================================
 Route::middleware(['auth', 'role:profissional'])->prefix('profissional')->name('profissional.')->group(function () {
-    Route::get('/agendar-cliente', [AgendamentoController::class, 'agendarGerencial'])->name('agendar.cliente');
-    Route::post('/agendar-cliente', [AgendamentoController::class, 'salvarAgendamentoGerencial'])->name('agendar.cliente.salvar');
     Route::get('/configuracoes', [UserController::class, 'configuracoesservicos'])->name('servicos.editar');
     Route::put('/configuracoes', [UserController::class, 'atualizarconfiguracoesservicos'])->name('servicos.atualizar');
     Route::post('/configuracoes/bloqueios', [UserController::class, 'bloquearDiaDisponibilidade'])->name('servicos.bloqueios.store');

@@ -51,7 +51,7 @@ class AccessControlTest extends TestCase
         $this->actingAs($recepcionista)->post('/admin/usuarios', [
             'name' => 'Tentativa Privilegiada',
             'email' => 'privilegio@example.com',
-            'cpf' => '12345678901',
+            'cpf' => '52998224725',
             'telefone' => '11999999999',
             'cargo' => User::ROLE_GERENTE,
             'password' => 'password123',
@@ -74,7 +74,7 @@ class AccessControlTest extends TestCase
         $this->post('/register', [
             'name' => 'Cadastro Publico',
             'email' => 'cadastro-publico@example.com',
-            'cpf' => '98765432109',
+            'cpf' => '11144477735',
             'telefone' => '11988888888',
             'cargo' => User::ROLE_GERENTE,
             'password' => 'password123',
@@ -186,7 +186,7 @@ class AccessControlTest extends TestCase
         $this->actingAs($cliente)
             ->get(route('dashboard'))
             ->assertOk()
-            ->assertSee('Comprar Pacotes');
+            ->assertSee('Comprar pacotes');
 
         $this->actingAs($cliente)
             ->get(route('cliente.pacotes.index'))
@@ -267,7 +267,7 @@ class AccessControlTest extends TestCase
         $this->actingAs($cliente)
             ->get(route('dashboard'))
             ->assertOk()
-            ->assertSee('Comprar Produtos');
+            ->assertSee('Comprar produtos');
 
         $this->actingAs($cliente)
             ->get(route('cliente.produtos.index'))

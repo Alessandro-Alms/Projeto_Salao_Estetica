@@ -706,7 +706,7 @@
             </form>
             
             <div class="flex flex-wrap justify-center gap-8 mt-12 pt-8 border-t border-white/20">
-                <div class="flex items-center gap-2 font-body"><span class="text-white/90">(85) 98765-4321</span></div>
+                <div class="flex items-center gap-2 font-body"><span class="text-white/90">(85) 99198-9160</sp//an></div>
                 <div class="flex items-center gap-2 font-body"><span class="text-white/90">cheiasdecharme@gmail.com</span></div>
                 <div class="flex items-center gap-2 font-body"><span class="text-white/90">Fortaleza, Ceará</span></div>
             </div>

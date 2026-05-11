@@ -172,6 +172,13 @@
 
             <!-- Page Content -->
             <main class="pt-6 md:pt-8">
+                @if(session('acesso_restrito'))
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div class="mb-4 rounded-xl border border-[#FFD6F4] bg-[#FF2EB6]/10 px-4 py-3 text-sm font-semibold text-[#4A00B9]">
+                            {{ session('acesso_restrito') }}
+                        </div>
+                    </div>
+                @endif
                 {{ $slot }}
             </main>
         </div>

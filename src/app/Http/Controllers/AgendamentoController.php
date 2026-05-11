@@ -66,11 +66,11 @@ class AgendamentoController extends Controller
         $user = $request->user();
 
         if ($user && $user->cargo !== 'cliente') {
-            $mensagemRestricao = 'Funcionalidade restrita ao cliente. Para agendar como equipe, use a tela de agendar para cliente.';
+            $mensagemRestricao = 'Opcao restrita a clientes e cargos gerenciais.';
 
             if ($user->cargo === 'profissional') {
                 return redirect()
-                    ->route('profissional.agendar.cliente')
+                    ->route('profissional.agenda')
                     ->with('acesso_restrito', $mensagemRestricao);
             }
 

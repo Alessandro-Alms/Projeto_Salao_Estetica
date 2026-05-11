@@ -18,12 +18,6 @@
                         <h1 class="text-2xl font-title text-[#4A00B9]">Agendar para Cliente</h1>
                     </div>
 
-                    @if(session('acesso_restrito'))
-                        <div class="mb-6 rounded-xl border border-[#FFD6F4] bg-[#FF2EB6]/10 px-4 py-3 text-sm font-semibold text-[#4A00B9]">
-                            {{ session('acesso_restrito') }}
-                        </div>
-                    @endif
-
                     @if ($errors->any())
                         <div class="mb-6 p-4 rounded-lg bg-red-50/80 border border-red-200 text-red-700">
                             <p class="font-medium mb-1">✧ Não foi possível agendar:</p>
@@ -35,7 +29,7 @@
                         </div>
                     @endif
 
-                    <form action="@if(auth()->user()->cargo === 'profissional'){{ route('profissional.agendar.cliente.salvar') }}@else{{ route('admin.agendar.cliente.salvar') }}@endif" method="POST" id="form-agendar">
+                    <form action="{{ route('admin.agendar.cliente.salvar') }}" method="POST" id="form-agendar">
                         @csrf
                         
                         <div class="space-y-5">
