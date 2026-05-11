@@ -11,7 +11,7 @@
             <div class="absolute inset-0 bg-gradient-to-br from-[#7B19E5]/5 via-white/30 to-[#FF2EB6]/5"></div>
         </div>
 
-        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
             <div class="flex items-center gap-2 mb-6">
                 <span class="text-[#7B19E5] text-2xl">✧</span>
                 <h1 class="text-3xl font-title text-[#4A00B9]">Vender Produto</h1>
@@ -33,8 +33,8 @@
                 </div>
             @endif
 
-            <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
-                <div class="p-8 bg-white/70 backdrop-blur-sm border border-white/40">
+            <div class="glass-card rounded-2xl shadow-xl overflow-visible">
+                <div class="p-8 md:p-10 bg-white/70 backdrop-blur-sm border border-white/40 min-h-[360px]">
                     <form action="{{ route('admin.vendas.produtos.store') }}" method="POST">
                         @csrf
 
