@@ -50,7 +50,7 @@
                                 <label for="cpf" class="block text-sm font-medium text-[#4A00B9] mb-2">
                                     {{ __('CPF') }}
                                 </label>
-                                <input id="cpf" type="text" name="cpf" value="{{ old('cpf', $usuario->cpf) }}" required
+                                <input id="cpf" type="text" name="cpf" value="{{ old('cpf', $usuario->cpf) }}" required data-mask="cpf"
                                     class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all" />
                                 <x-input-error :messages="$errors->get('cpf')" class="mt-2 text-red-500 text-xs" />
                             </div>
@@ -59,7 +59,7 @@
                                 <label for="telefone" class="block text-sm font-medium text-[#4A00B9] mb-2">
                                     {{ __('Telefone') }}
                                 </label>
-                                <input id="telefone" type="text" name="telefone" value="{{ old('telefone', $usuario->telefone) }}" required
+                                <input id="telefone" type="text" name="telefone" value="{{ old('telefone', $usuario->telefone) }}" required data-mask="telefone"
                                     class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all" />
                                 <x-input-error :messages="$errors->get('telefone')" class="mt-2 text-red-500 text-xs" />
                             </div>
@@ -176,27 +176,6 @@
         </div>
     </div>
 
-    <script src="https://unpkg.com/imask"></script>
-    <script>
-        // Máscara CPF
-        var cpfMask = IMask(document.getElementById('cpf'), {
-            mask: '000.000.000-00'
-        });
-        
-        // Máscara Telefone
-        var phoneMask = IMask(document.getElementById('telefone'), {
-            mask: '(00) 00000-0000'
-        });
-        
-        // Remove máscara antes de enviar
-        document.querySelector('form').addEventListener('submit', function() {
-            const cpfInput = document.getElementById('cpf');
-            if (cpfInput) cpfInput.value = cpfInput.value.replace(/\D/g, '');
-            
-            const telInput = document.getElementById('telefone');
-            if (telInput) telInput.value = telInput.value.replace(/\D/g, '');
-        });
-    </script>
 </x-app-layout>
 
 <style>

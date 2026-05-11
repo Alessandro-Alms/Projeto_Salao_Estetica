@@ -19,6 +19,8 @@
         <!-- Fontes Cheias de Charme -->
         <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Playfair+Display:wght@700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
+        <script src="https://unpkg.com/imask"></script>
+
         <style>
             * { font-family: 'Syne', sans-serif; }
             .font-title { font-family: 'Playfair Display', serif; font-weight: 700; letter-spacing: -0.02em; }

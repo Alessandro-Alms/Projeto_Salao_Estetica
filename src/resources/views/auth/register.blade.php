@@ -107,7 +107,7 @@
                 <!-- CPF -->
                 <div class="mb-4">
                     <label for="cpf" class="block text-sm font-medium text-[#4A00B9] mb-2">CPF</label>
-                    <input id="cpf" type="text" name="cpf" value="{{ old('cpf') }}" required
+                          <input id="cpf" type="text" name="cpf" value="{{ old('cpf') }}" required data-mask="cpf"
                            class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
                     @error('cpf')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -117,7 +117,7 @@
                 <!-- Telefone -->
                 <div class="mb-4">
                     <label for="telefone" class="block text-sm font-medium text-[#4A00B9] mb-2">Telefone</label>
-                    <input id="telefone" type="text" name="telefone" value="{{ old('telefone') }}" required
+                          <input id="telefone" type="text" name="telefone" value="{{ old('telefone') }}" required data-mask="telefone"
                            class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
                     @error('telefone')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -164,5 +164,31 @@
             </a>
         </div>
     </div>
+
+    <script src="https://unpkg.com/imask"></script>
+    <script>
+        (() => {
+            const cpfInput = document.getElementById('cpf');
+            const telefoneInput = document.getElementById('telefone');
+            const form = document.querySelector('form');
+
+            if (cpfInput) {
+                IMask(cpfInput, { mask: '000.000.000-00' });
+                cpfInput.setAttribute('inputmode', 'numeric');
+            }
+
+            if (telefoneInput) {
+                IMask(telefoneInput, { mask: '(00) 00000-0000' });
+                telefoneInput.setAttribute('inputmode', 'numeric');
+            }
+
+            if (form) {
+                form.addEventListener('submit', () => {
+                    if (cpfInput) cpfInput.value = cpfInput.value.replace(/\D/g, '');
+                    if (telefoneInput) telefoneInput.value = telefoneInput.value.replace(/\D/g, '');
+                });
+            }
+        })();
+    </script>
 </body>
 </html>

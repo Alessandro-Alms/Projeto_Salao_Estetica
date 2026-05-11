@@ -164,4 +164,52 @@ window.SalaoCharts.ready(() => {
     window.SalaoCharts.renderConfiguredCharts();
 });
 
+const applyInputMasks = () => {
+    if (!window.IMask) {
+        return;
+    }
+
+    const masks = [
+        { selector: '[data-mask="cpf"], input[name="cpf"], input#cpf', pattern: '000.000.000-00' },
+        { selector: '[data-mask="telefone"], input[name="telefone"], input#telefone', pattern: '(00) 00000-0000' },
+    ];
+
+    masks.forEach(({ selector, pattern }) => {
+        document.querySelectorAll(selector).forEach((input) => {
+            if (!(input instanceof HTMLInputElement)) {
+                return;
+            }
+
+            if (input.dataset.maskApplied === 'true') {
+                return;
+            }
+
+            window.IMask(input, { mask: pattern });
+            input.setAttribute('inputmode', 'numeric');
+            input.dataset.maskApplied = 'true';
+        });
+    });
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applyInputMasks);
+} else {
+    applyInputMasks();
+}
+
+document.addEventListener('submit', (event) => {
+    const form = event.target;
+
+    if (!(form instanceof HTMLFormElement)) {
+        return;
+    }
+
+    form.querySelectorAll('[data-mask="cpf"], input[name="cpf"], input#cpf, [data-mask="telefone"], input[name="telefone"], input#telefone')
+        .forEach((input) => {
+            if (input instanceof HTMLInputElement) {
+                input.value = input.value.replace(/\D/g, '');
+            }
+        });
+}, true);
+
 Alpine.start();

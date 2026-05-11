@@ -9,6 +9,7 @@ use App\Models\ClientePacote;
 use App\Models\HorarioTrabalho;
 use App\Models\Servico;
 use App\Models\User;
+use App\Rules\Cpf;
 use App\Services\FinanceiroService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -516,7 +517,7 @@ class UserController extends Controller
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email' . $ignorarUsuario],
-            'cpf' => ['required', 'string', 'size:11', 'regex:/^[0-9]+$/', 'unique:users,cpf' . $ignorarUsuario],
+            'cpf' => ['required', 'string', 'size:11', 'regex:/^[0-9]+$/', new Cpf(), 'unique:users,cpf' . $ignorarUsuario],
             'telefone' => ['required', 'string', 'size:11', 'regex:/^[0-9]+$/'],
             'cargo' => ['required', 'in:gerente,recepcionista,profissional,cliente'],
             'password' => $regraSenha,
