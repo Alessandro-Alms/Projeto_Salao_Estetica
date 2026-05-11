@@ -153,6 +153,17 @@
 
         <section class="py-24 relative">
             <div class="container mx-auto px-6">
+                <div class="mb-12 flex justify-end lg:pr-0">
+                    <a href="{{ route('public.home') }}"
+                    class="group inline-flex items-center gap-3 rounded-full bg-gradient-to-r from-[#7B19E5] via-[#A955D3] to-[#FF2EB6] px-8 py-3.5 text-sm font-bold tracking-wider text-white shadow-xl shadow-purple-500/25 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-pink-500/30 focus:outline-none focus:ring-4 focus:ring-purple-300">
+
+                        <span class="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 transition-transform duration-300 group-hover:-translate-x-1">
+                            <i class="fa-solid fa-arrow-left text-xs"></i>
+                        </span>
+
+                        VOLTAR PARA A HOME
+                    </a>
+                </div>
                 <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                     @forelse($itens as $item)
                         @if($tipo === 'servicos')
@@ -202,12 +213,6 @@
                             Nenhum item encontrado.
                         </div>
                     @endforelse
-                </div>
-
-                <div class="text-center mt-14">
-                    <a href="{{ route('public.home') }}" class="bg-[#7B19E5] text-white px-8 py-3.5 text-sm tracking-wider rounded-full font-medium btn-primary inline-block shadow-xl">
-                        VOLTAR PARA A HOME
-                    </a>
                 </div>
             </div>
         </section>

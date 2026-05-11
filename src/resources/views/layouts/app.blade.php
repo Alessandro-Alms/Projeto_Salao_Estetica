@@ -33,83 +33,326 @@
             html.dark-mode ::-webkit-scrollbar { background: #12091f; }
 
 
-            html.dark-mode body {
-                background: radial-gradient(circle at top left, rgba(123, 25, 229, 0.22), transparent 34%),
-                    radial-gradient(circle at bottom right, rgba(255, 46, 182, 0.18), transparent 38%),
-                    linear-gradient(135deg, #0B0712 0%, #150B22 48%, #1D0F2A 100%) !important;
-                color: #F7ECFF;
+            /* =========================
+            DARK MODE GLOBAL
+            ========================= */
+
+            html.dark-mode {
+                color-scheme: dark;
+
+                --salao-bg: #0B0712;
+                --salao-bg-soft: #150B22;
+                --salao-card: rgba(24, 13, 38, 0.94);
+                --salao-card-soft: rgba(34, 18, 54, 0.92);
+                --salao-border: rgba(255, 214, 244, 0.20);
+                --salao-border-strong: rgba(255, 214, 244, 0.32);
+
+                --salao-text: #F8ECFF;
+                --salao-muted: #D8C6E8;
+                --salao-soft: #BFAED0;
+
+                --salao-purple: #D8B4FE;
+                --salao-pink: #FDA4D9;
             }
 
+            html.dark-mode body {
+                background:
+                    radial-gradient(circle at top left, rgba(123, 25, 229, 0.24), transparent 32%),
+                    radial-gradient(circle at bottom right, rgba(255, 46, 182, 0.18), transparent 35%),
+                    linear-gradient(135deg, var(--salao-bg), var(--salao-bg-soft)) !important;
+                color: var(--salao-text) !important;
+            }
+
+            /* Header e navegação */
             html.dark-mode nav,
             html.dark-mode header {
-                background: rgba(13, 7, 22, 0.9) !important;
-                border-color: rgba(255, 214, 244, 0.18) !important;
-                box-shadow: 0 14px 36px rgba(0, 0, 0, 0.35);
+                background: rgba(13, 7, 22, 0.92) !important;
+                border-color: var(--salao-border) !important;
+                box-shadow: 0 14px 36px rgba(0, 0, 0, 0.35) !important;
             }
 
+            /* Cards, blocos e fundos claros */
             html.dark-mode .glass-card,
-            html.dark-mode [class*="bg-white/70"],
-            html.dark-mode [class*="bg-white/75"],
-            html.dark-mode [class*="bg-white/80"],
-            html.dark-mode [class*="bg-white/95"] {
-                background: rgba(20, 10, 32, 0.84) !important;
-                border-color: rgba(255, 214, 244, 0.16) !important;
-                box-shadow: 0 18px 42px rgba(0, 0, 0, 0.32) !important;
+            html.dark-mode .bg-white,
+            html.dark-mode [class*="bg-white"],
+            html.dark-mode [class*="bg-gray-50"],
+            html.dark-mode [class*="bg-gray-100"],
+            html.dark-mode [class*="bg-gray-200"],
+            html.dark-mode [class*="bg-gray-300"] {
+                background: var(--salao-card) !important;
+                color: var(--salao-text) !important;
+                border-color: var(--salao-border) !important;
+                box-shadow: 0 18px 42px rgba(0, 0, 0, 0.35) !important;
             }
 
-            html.dark-mode [class*="bg-white/30"],
-            html.dark-mode [class*="bg-white/40"],
-            html.dark-mode [class*="bg-white/50"],
-            html.dark-mode [class*="bg-white/60"],
-            html.dark-mode [class*="bg-white "] {
-                background-color: rgba(31, 16, 48, 0.78) !important;
+            /* Corrige gradientes que usam via-white */
+            html.dark-mode [class*="via-white"] {
+                --tw-gradient-via: rgba(24, 13, 38, 0.50) !important;
             }
 
+            /* Textos escuros */
+            html.dark-mode .text-black,
+            html.dark-mode .text-gray-700,
+            html.dark-mode .text-gray-800,
+            html.dark-mode .text-gray-900,
+            html.dark-mode [class*="text-[#1A002B]"],
+            html.dark-mode [class*="text-[#4A00B9]"] {
+                color: var(--salao-text) !important;
+            }
+
+            /* Textos secundários */
+            html.dark-mode .text-gray-400,
+            html.dark-mode .text-gray-500,
+            html.dark-mode .text-gray-600,
+            html.dark-mode [class*="text-gray-400"],
+            html.dark-mode [class*="text-gray-500"],
+            html.dark-mode [class*="text-gray-600"] {
+                color: var(--salao-muted) !important;
+            }
+
+            /* Roxo e rosa no dark */
+            html.dark-mode [class*="text-[#7B19E5]"] {
+                color: var(--salao-purple) !important;
+            }
+
+            html.dark-mode [class*="text-[#FF2EB6]"] {
+                color: var(--salao-pink) !important;
+            }
+
+            /* Títulos */
+            html.dark-mode h1,
+            html.dark-mode h2,
+            html.dark-mode h3,
+            html.dark-mode h4,
+            html.dark-mode .font-title {
+                color: var(--salao-text) !important;
+            }
+
+            /* Bordas */
+            html.dark-mode .border,
+            html.dark-mode [class*="border-[#FFD6F4]"],
+            html.dark-mode [class*="border-white"],
+            html.dark-mode [class*="divide-[#FFD6F4]"] > :not([hidden]) ~ :not([hidden]) {
+                border-color: var(--salao-border) !important;
+            }
+
+            /* Inputs, selects e textarea */
             html.dark-mode input,
             html.dark-mode select,
             html.dark-mode textarea,
             html.dark-mode [data-searchable-dropdown] {
-                background-color: rgba(13, 7, 22, 0.88) !important;
-                border-color: rgba(255, 214, 244, 0.28) !important;
-                color: #F7ECFF !important;
+                background: rgba(13, 7, 22, 0.96) !important;
+                color: var(--salao-text) !important;
+                border-color: var(--salao-border-strong) !important;
             }
 
             html.dark-mode input::placeholder,
             html.dark-mode textarea::placeholder {
-                color: #BFAED0 !important;
+                color: var(--salao-soft) !important;
             }
 
-            html.dark-mode [class*="text-[#1A002B]"],
-            html.dark-mode [class*="text-[#4A00B9]"],
-            html.dark-mode [class*="text-gray-400"],
-            html.dark-mode [class*="text-gray-500"],
-            html.dark-mode [class*="text-gray-600"],
-            html.dark-mode [class*="text-gray-700"],
-            html.dark-mode [class*="text-gray-800"],
-            html.dark-mode [class*="text-gray-900"] {
-                color: #F7ECFF !important;
+            html.dark-mode input[type="date"] {
+                color-scheme: dark;
             }
 
-            html.dark-mode [class*="text-[#7B19E5]"] {
-                color: #C99BFF !important;
+            /* Dropdown pesquisável */
+            html.dark-mode [data-searchable-dropdown] button {
+                color: var(--salao-text) !important;
             }
 
-            html.dark-mode [class*="border-[#FFD6F4]"],
-            html.dark-mode [class*="border-white/40"],
-            html.dark-mode [class*="divide-[#FFD6F4]"] > :not([hidden]) ~ :not([hidden]) {
-                border-color: rgba(255, 214, 244, 0.18) !important;
+            html.dark-mode [data-searchable-dropdown] button:hover {
+                background: rgba(123, 25, 229, 0.22) !important;
             }
 
+            /* Tabelas */
+            html.dark-mode table,
+            html.dark-mode th,
+            html.dark-mode td {
+                color: var(--salao-text) !important;
+                border-color: var(--salao-border) !important;
+            }
+
+            html.dark-mode thead,
+            html.dark-mode th {
+                background: rgba(123, 25, 229, 0.20) !important;
+            }
+
+            html.dark-mode tbody tr:hover {
+                background: rgba(255, 255, 255, 0.06) !important;
+            }
+
+            /* Alertas verdes */
+            html.dark-mode .bg-green-50,
+            html.dark-mode .bg-green-100,
+            html.dark-mode [class*="bg-green-50/"] {
+                background: rgba(34, 197, 94, 0.16) !important;
+                color: #BBF7D0 !important;
+                border-color: rgba(34, 197, 94, 0.35) !important;
+            }
+
+            html.dark-mode .text-green-500,
+            html.dark-mode .text-green-600,
+            html.dark-mode .text-green-700 {
+                color: #BBF7D0 !important;
+            }
+
+            /* Alertas amarelos */
+            html.dark-mode .bg-yellow-50,
+            html.dark-mode .bg-yellow-100,
+            html.dark-mode .bg-amber-50,
+            html.dark-mode .bg-amber-100,
+            html.dark-mode [class*="bg-yellow-50/"],
+            html.dark-mode [class*="bg-amber-50/"] {
+                background: rgba(245, 158, 11, 0.18) !important;
+                color: #FDE68A !important;
+                border-color: rgba(245, 158, 11, 0.35) !important;
+            }
+
+            html.dark-mode .text-yellow-600,
+            html.dark-mode .text-yellow-700,
+            html.dark-mode .text-amber-600,
+            html.dark-mode .text-amber-700 {
+                color: #FDE68A !important;
+            }
+
+            /* Alertas vermelhos */
+            html.dark-mode .bg-red-50,
+            html.dark-mode .bg-red-100,
+            html.dark-mode [class*="bg-red-50/"] {
+                background: rgba(239, 68, 68, 0.17) !important;
+                color: #FECACA !important;
+                border-color: rgba(239, 68, 68, 0.35) !important;
+            }
+
+            html.dark-mode .text-red-500,
+            html.dark-mode .text-red-600,
+            html.dark-mode .text-red-700 {
+                color: #FECACA !important;
+            }
+
+            /* Fundos personalizados do projeto */
+            html.dark-mode [class*="bg-[#F3E8FF]"],
+            html.dark-mode [class*="bg-[#7B19E5]/5"],
+            html.dark-mode [class*="bg-[#7B19E5]/10"] {
+                background: rgba(123, 25, 229, 0.18) !important;
+            }
+
+            html.dark-mode [class*="bg-[#FFD6F4]"],
+            html.dark-mode [class*="bg-[#FF2EB6]/5"],
+            html.dark-mode [class*="bg-[#FF2EB6]/10"] {
+                background: rgba(255, 46, 182, 0.14) !important;
+            }
+
+            /* Calendário, horários, serviços e profissionais */
+            html.dark-mode .calendar-day-name {
+                background: rgba(123, 25, 229, 0.22) !important;
+                color: var(--salao-text) !important;
+            }
+
+            html.dark-mode .calendar-date,
+            html.dark-mode .horario-option,
+            html.dark-mode .profissional-card,
+            html.dark-mode .servico-card {
+                background: rgba(24, 13, 38, 0.94) !important;
+                color: var(--salao-text) !important;
+                border-color: var(--salao-border) !important;
+            }
+
+            html.dark-mode .calendar-date:hover:not(.outro-mes):not(.indisponivel),
+            html.dark-mode .horario-option:hover:not(.ocupado),
+            html.dark-mode .profissional-card:hover,
+            html.dark-mode .servico-card:hover {
+                background: rgba(123, 25, 229, 0.22) !important;
+                border-color: var(--salao-purple) !important;
+            }
+
+            html.dark-mode .calendar-date.outro-mes,
+            html.dark-mode .calendar-date.indisponivel,
+            html.dark-mode .horario-option.ocupado {
+                background: rgba(255, 255, 255, 0.06) !important;
+                color: #8B7A9C !important;
+                border-color: rgba(255, 255, 255, 0.10) !important;
+            }
+
+            html.dark-mode .calendar-date.selecionado,
+            html.dark-mode .horario-option.selecionado,
+            html.dark-mode .profissional-card.selecionado {
+                background: linear-gradient(135deg, #7B19E5, #FF2EB6) !important;
+                color: #FFFFFF !important;
+                border-color: var(--salao-purple) !important;
+            }
+
+            html.dark-mode .profissional-card h4,
+            html.dark-mode .profissional-card p,
+            html.dark-mode .servico-card p {
+                color: var(--salao-text) !important;
+            }
+
+            html.dark-mode .horario-option .badge {
+                background: rgba(245, 158, 11, 0.22) !important;
+                color: #FDE68A !important;
+            }
+
+            /* Estado vazio dos gráficos */
+            html.dark-mode [data-chart-empty] {
+                background: rgba(24, 13, 38, 0.94) !important;
+                border-color: var(--salao-border) !important;
+            }
+
+            html.dark-mode [data-chart-empty] p {
+                color: var(--salao-text) !important;
+            }
+
+            /* Botão modo escuro */
+            html.dark-mode .dark-mode-toggle {
+                background: var(--salao-card-soft) !important;
+                color: var(--salao-text) !important;
+                border-color: var(--salao-border-strong) !important;
+            }
+
+            /* Hover claro */
             html.dark-mode [class*="hover:bg-white/"]:hover,
             html.dark-mode [class*="hover:bg-[#FFD6F4]"]:hover,
             html.dark-mode [class*="hover:bg-[#FFD6F4]/70"]:hover {
                 background-color: rgba(123, 25, 229, 0.22) !important;
             }
 
-            html.dark-mode .dark-mode-toggle {
-                background: rgba(31, 16, 48, 0.86);
-                border-color: rgba(255, 214, 244, 0.25);
-                color: #F7ECFF;
+            /* Scrollbar */
+            html.dark-mode ::-webkit-scrollbar {
+                background: #12091E;
+            }
+
+            html.dark-mode ::-webkit-scrollbar-thumb {
+                background: linear-gradient(135deg, #7B19E5, #FF2EB6);
+                border-radius: 10px;
+            }
+            /* Destaque de serviço selecionado no dark mode */
+            html.dark-mode .servico-card[class*="bg-[#7B19E5]/5"],
+            html.dark-mode .servico-card:has(input[type="checkbox"]:checked) {
+                background: rgba(123, 25, 229, 0.34) !important;
+                border-color: #D8B4FE !important;
+                box-shadow:
+                    0 0 0 2px rgba(216, 180, 254, 0.35),
+                    0 14px 28px rgba(123, 25, 229, 0.28) !important;
+            }
+
+            html.dark-mode .servico-card[class*="bg-[#7B19E5]/5"] p,
+            html.dark-mode .servico-card:has(input[type="checkbox"]:checked) p {
+                color: #FFFFFF !important;
+            }
+
+            html.dark-mode .servico-card[class*="bg-[#7B19E5]/5"] input[type="checkbox"],
+            html.dark-mode .servico-card:has(input[type="checkbox"]:checked) input[type="checkbox"] {
+                accent-color: #D8B4FE;
+            }
+
+            /* Efeito do botão */
+            .btn-primary {
+                position: relative;
+                overflow: hidden;
+                transition: all 0.3s ease;
+                z-index: 1;
+                transform: translateY(0);
             }
             /* Efeito do botão */
             .btn-primary {
@@ -516,7 +759,7 @@
                                 plugins: {
                                     legend: {
                                         labels: {
-                                            color: '#4A00B9',
+                                            color: document.documentElement.classList.contains('dark-mode') ? '#F8ECFF' : '#4A00B9',
                                             font: {
                                                 family: 'Syne',
                                                 weight: '700',

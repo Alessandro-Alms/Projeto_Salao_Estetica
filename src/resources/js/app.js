@@ -191,10 +191,52 @@ const applyInputMasks = () => {
     });
 };
 
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', applyInputMasks);
-} else {
+const scrollRestoreKey = 'salao-scroll-restore';
+
+const saveScrollPosition = () => {
+    const payload = {
+        path: `${window.location.pathname}${window.location.search}`,
+        y: window.scrollY || 0,
+    };
+
+    sessionStorage.setItem(scrollRestoreKey, JSON.stringify(payload));
+};
+
+const restoreScrollPosition = () => {
+    const raw = sessionStorage.getItem(scrollRestoreKey);
+
+    if (!raw) {
+        return;
+    }
+
+    sessionStorage.removeItem(scrollRestoreKey);
+
+    let payload;
+
+    try {
+        payload = JSON.parse(raw);
+    } catch (error) {
+        return;
+    }
+
+    if (!payload || payload.path !== `${window.location.pathname}${window.location.search}`) {
+        return;
+    }
+
+    requestAnimationFrame(() => {
+        window.scrollTo(0, Math.max(0, Number(payload.y) || 0));
+    });
+};
+
+const onDomReady = () => {
     applyInputMasks();
+    restoreScrollPosition();
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', onDomReady);
+} else {
+    onDomReady();
 }
 
 document.addEventListener('submit', (event) => {
@@ -203,6 +245,8 @@ document.addEventListener('submit', (event) => {
     if (!(form instanceof HTMLFormElement)) {
         return;
     }
+
+    saveScrollPosition();
 
     form.querySelectorAll('[data-mask="cpf"], input[name="cpf"], input#cpf, [data-mask="telefone"], input[name="telefone"], input#telefone')
         .forEach((input) => {

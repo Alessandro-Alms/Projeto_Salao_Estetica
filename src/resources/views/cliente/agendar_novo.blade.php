@@ -235,7 +235,75 @@
     .btn-primary:hover { transform: translateY(-2px); }
     
     .hidden { display: none; }
-    
+    /* Checkbox dos serviços */
+    .servico-card input[type="checkbox"] {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 20px;
+        height: 20px;
+        min-width: 20px;
+        border: 2px solid #FFD6F4;
+        border-radius: 5px;
+        background: transparent;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    .servico-card input[type="checkbox"]:checked {
+        background: linear-gradient(135deg, #7B19E5, #FF2EB6);
+        border-color: #D8B4FE;
+    }
+
+    .servico-card input[type="checkbox"]:checked::after {
+        content: "✓";
+        color: #FFFFFF;
+        font-size: 14px;
+        font-weight: 900;
+        line-height: 1;
+    }
+
+    html.dark-mode .servico-card input[type="checkbox"] {
+        border-color: #D8B4FE !important;
+        background: rgba(255, 255, 255, 0.04);
+    }
+
+    html.dark-mode .servico-card input[type="checkbox"]:checked {
+        background: linear-gradient(135deg, #D8B4FE, #FF2EB6) !important;
+        border-color: #FFFFFF !important;
+    }
+
+    html.dark-mode .servico-card input[type="checkbox"]:checked::after {
+        color: #1A002B;
+    }
+    /* Serviço selecionado */
+    .servico-card.selecionado {
+        background: rgba(123, 25, 229, 0.10) !important;
+        border-color: #7B19E5 !important;
+        box-shadow: 0 0 0 2px rgba(123, 25, 229, 0.20);
+    }
+
+    html.dark-mode .servico-card.selecionado {
+        background: rgba(123, 25, 229, 0.45) !important;
+        border-color: #D8B4FE !important;
+        box-shadow:
+            0 0 0 2px rgba(216, 180, 254, 0.45),
+            0 14px 30px rgba(123, 25, 229, 0.30) !important;
+    }
+
+    html.dark-mode .servico-card.selecionado p {
+        color: #FFFFFF !important;
+    }
+
+    .servico-card input[type="checkbox"] {
+        accent-color: #7B19E5;
+    }
+
+    html.dark-mode .servico-card input[type="checkbox"] {
+        accent-color: #D8B4FE;
+    }
     /* Calendário */
     .calendar-container { max-width: 100%; }
     .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
@@ -290,7 +358,7 @@
             delete estadoAgendamento.servicosDuracao[id];
             delete estadoAgendamento.servicosPrecos[id];
             checkbox.checked = false;
-            card.classList.remove('border-[#7B19E5]', 'bg-[#7B19E5]/5');
+            card.classList.remove('border-[#7B19E5]', 'bg-[#7B19E5]/5', 'selecionado');
         } else {
             if (estadoAgendamento.servicosIds.length >= maxServicosPorAgendamento) {
                 alert(`Máximo de ${maxServicosPorAgendamento} serviços por agendamento`);
@@ -301,7 +369,7 @@
             estadoAgendamento.servicosDuracao[id] = duracao;
             estadoAgendamento.servicosPrecos[id] = preco;
             checkbox.checked = true;
-            card.classList.add('border-[#7B19E5]', 'bg-[#7B19E5]/5');
+            card.classList.add('border-[#7B19E5]', 'bg-[#7B19E5]/5', 'selecionado');
         }
         atualizarResumo();
     }
@@ -507,10 +575,23 @@
     }
 
     document.querySelectorAll('.servico-card').forEach(card => {
+        const id = parseInt(card.dataset.id);
+        const nome = card.dataset.nome;
+        const duracao = parseInt(card.dataset.duracao);
+        const preco = parseFloat(card.dataset.preco);
+        const checkbox = card.querySelector('input[type="checkbox"]');
+
         card.addEventListener('click', function(e) {
-            if (e.target.type !== 'checkbox') {
-                toggleServico(parseInt(this.dataset.id), this.dataset.nome, parseInt(this.dataset.duracao), parseFloat(this.dataset.preco));
+            if (e.target.matches('input[type="checkbox"]')) {
+                return;
             }
+
+            toggleServico(id, nome, duracao, preco);
+        });
+
+        checkbox?.addEventListener('change', function(e) {
+            e.stopPropagation();
+            toggleServico(id, nome, duracao, preco);
         });
     });
 
