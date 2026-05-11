@@ -18,12 +18,6 @@
         </div>
 
         <div class="container mx-auto px-4">
-            @php
-                $graficoStatusAgendamentosDados = [
-                    (int) ($totalExecutados ?? 0),
-                    max((int) ($totalAgendamentos ?? 0) - (int) ($totalExecutados ?? 0), 0),
-                ];
-            @endphp
             
             <!-- Filtro e Exportação -->
             <div class="glass-card rounded-2xl shadow-xl overflow-hidden mb-6">
@@ -94,12 +88,10 @@
                             <canvas id="graficoStatusAgendamentos"></canvas>
                             <script type="application/json" data-salao-chart="graficoStatusAgendamentos">
                                 {
-                                    "type": "doughnut",
-                                    "data": {
-                                        "labels": ["Executados", "Outros status"],
+                                    "labels": @json($graficoStatusAgendamentosLabels->values()),
                                         "datasets": [{
                                             "data": @json($graficoStatusAgendamentosDados),
-                                            "backgroundColor": ["#7B19E5", "#FFD6F4"],
+                                            "backgroundColor": @json($graficoStatusAgendamentosCores),
                                             "borderColor": "#FFFFFF",
                                             "borderWidth": 4
                                         }]
@@ -107,7 +99,6 @@
                                     "options": {
                                         "cutout": "62%"
                                     }
-                                }
                             </script>
                         </div>
                     </div>
@@ -203,8 +194,9 @@
 
 @php
     $chartResumo = [
-        'executados' => (int) ($totalExecutados ?? 0),
-        'demais' => max((int) ($totalAgendamentos ?? 0) - (int) ($totalExecutados ?? 0), 0),
+        'labels' => $graficoStatusAgendamentosLabels->values(),
+        'dados' => $graficoStatusAgendamentosDados,
+        'cores' => $graficoStatusAgendamentosCores,
     ];
 
     $chartProfissionais = $desempenhoProfissionais->take(8)->map(function ($prof) {
@@ -224,10 +216,10 @@
         window.SalaoCharts?.create('graficoStatusAgendamentos', {
             type: 'doughnut',
             data: {
-                labels: ['Executados', 'Outros status'],
+                labels: resumo.labels,
                 datasets: [{
-                    data: [resumo.executados, resumo.demais],
-                    backgroundColor: ['#7B19E5', '#FFD6F4'],
+                    data: resumo.dados,
+                    backgroundColor: resumo.cores,
                     borderColor: '#FFFFFF',
                     borderWidth: 4,
                 }],

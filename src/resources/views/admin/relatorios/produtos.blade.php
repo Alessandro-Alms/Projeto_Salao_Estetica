@@ -177,9 +177,9 @@
                         <table class="w-full text-left border-collapse whitespace-nowrap">
                             <thead>
                                 <tr class="bg-[#7B19E5]/10 border-b border-[#FFD6F4]">
-                                    <th class="p-3 rounded-tl-lg text-[#4A00B9] text-xs font-medium uppercase">#</th>
+                                    <th class="p-3 rounded-tl-lg text-[#4A00B9] text-xs font-medium uppercase">Classificação</th>
                                     <th class="p-3 text-[#4A00B9] text-xs font-medium uppercase">Produto</th>
-                                    <th class="p-3 text-center text-[#4A00B9] text-xs font-medium uppercase">Giro (Qtd Vendida)</th>
+                                    <th class="p-3 text-center text-[#4A00B9] text-xs font-medium uppercase">Qtd Vendida</th>
                                     <th class="p-3 text-center text-[#4A00B9] text-xs font-medium uppercase">Estoque Atual</th>
                                     <th class="p-3 text-right rounded-tr-lg text-[#4A00B9] text-xs font-medium uppercase">Receita Gerada</th>
                                 </tr>
@@ -187,7 +187,7 @@
                             <tbody>
                                 @forelse($produtosVendidos as $index => $produto)
                                     <tr class="border-b border-[#FFD6F4] hover:bg-white/50 transition">
-                                        <td class="p-3 font-bold text-gray-400">{{ $index + 1 }}Âº</td>
+                                        <td class="p-3 font-bold text-gray-400">{{ $index + 1 }}º</td>
                                         <td class="p-3 font-bold text-[#1A002B]">{{ $produto->nome }}</td>
                                         <td class="p-3 text-center">
                                             <span class="bg-[#7B19E5]/10 text-[#7B19E5] px-3 py-1 rounded-full font-bold">

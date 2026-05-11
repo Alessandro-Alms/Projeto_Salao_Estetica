@@ -218,7 +218,7 @@
                             <tbody>
                                 @forelse($profissionais as $prof)
                                     <tr class="border-b border-[#FFD6F4] hover:bg-white/50 transition">
-                                        <td class="p-3 font-bold text-[#1A002B]">{{ $prof->name }}<\/td>
+                                        <td class="p-3 font-bold text-[#1A002B]">{{ $prof->name }}</td>
                                         <td class="p-3 text-center">
                                             @if($prof->media_nota)
                                                 <div class="inline-flex items-center gap-1 bg-[#FF2EB6]/20 text-[#FF2EB6] px-2 py-1 rounded-full font-bold text-sm border border-[#FFD6F4]">
@@ -227,24 +227,24 @@
                                             @else
                                                 <span class="text-xs text-gray-400">Sem nota<\/span>
                                             @endif
-                                        <\/td>
+                                        </td>
                                         <td class="p-3 text-center">
                                             <span class="bg-[#7B19E5]/10 text-[#7B19E5] px-3 py-1 rounded-full font-bold text-xs">
                                                 {{ $prof->total_servicos }}
-                                            <\/span>
-                                        <\/td>
+                                            </span>
+                                        </td>
                                         <td class="p-3 text-right font-medium text-[#7B19E5]">
                                             R$ {{ number_format($prof->receita_gerada ?? 0, 2, ',', '.') }}
-                                        <\/td>
+                                        </td>
                                         <td class="p-3 text-right font-bold text-[#FF2EB6]">
                                             R$ {{ number_format($prof->comissao_total ?? 0, 2, ',', '.') }}
-                                        <\/td>
-                                    <td>
+                                        </td>
+                                    </tr>
                                 @empty
                                     <tr>
                                         <td colspan="5" class="p-8 text-center text-gray-500">
                                             ✧ Nenhum profissional cadastrado no sistema.
-                                        <\/td>
+                                        </td>
                                     </tr>
                                 @endforelse
                             </tbody>

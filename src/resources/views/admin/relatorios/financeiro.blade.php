@@ -239,18 +239,6 @@
                             </div>
                             <p class="text-xl font-black text-[#FF2EB6]">R$ {{ number_format($despesaComissoes, 2, ',', '.') }}</p>
                         </div>
-
-                        <div class="bg-white/50 border border-[#FFD6F4] p-4 rounded-lg flex items-center justify-between opacity-50">
-                            <div>
-                                <p class="font-bold text-gray-600">Despesas Fixas (Água, Luz, etc.)</p>
-                                <p class="text-sm text-gray-500">Módulo ainda não integrado</p>
-                            </div>
-                            <p class="text-xl font-bold text-gray-400">R$ 0,00</p>
-                        </div>
-                        
-                        <div class="mt-6 p-4 bg-[#7B19E5]/5 text-[#7B19E5] text-sm rounded-xl border border-[#FFD6F4]">
-                            <strong class="text-[#7B19E5]">✧ Nota:</strong> Atualmente o sistema calcula automaticamente as despesas geradas pelas comissões de serviços executados. Para calcular o lucro real e total do salão, futuramente podes adicionar um módulo de contas a pagar (fornecedores, impostos e custos fixos).
-                        </div>
                     </div>
                 </div>
             </div>

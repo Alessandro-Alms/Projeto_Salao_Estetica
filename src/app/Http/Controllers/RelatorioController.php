@@ -31,22 +31,50 @@ class RelatorioController extends Controller
             ->whereBetween('updated_at', [$inicioQuery, $fimQuery])
             ->sum('valor_comissao'); 
 
-        $totalAgendamentos = Agendamento::whereBetween('created_at', [$inicioQuery, $fimQuery])->count();
+        $totalAgendamentos = Agendamento::whereBetween('data_hora_inicio', [$inicioQuery, $fimQuery])->count();
         $totalExecutados = Agendamento::where('status', 'executado')
-            ->whereBetween('updated_at', [$inicioQuery, $fimQuery])->count();
+            ->whereBetween('data_hora_inicio', [$inicioQuery, $fimQuery])->count();
+
+        // Dados separados por status para o gráfico
+        $statusAgendamentos = Agendamento::select('status', DB::raw('COUNT(*) as total'))
+            ->whereBetween('data_hora_inicio', [$inicioQuery, $fimQuery])
+            ->whereIn('status', ['confirmado', 'cancelado', 'falta', 'executado', 'presente'])
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        $graficoStatusAgendamentosLabels = collect([
+            'confirmado' => 'Confirmados',
+            'cancelado' => 'Cancelados',
+            'falta' => 'Faltas',
+            'executado' => 'Executados',
+            'presente' => 'Presentes',
+        ]);
+
+        $graficoStatusAgendamentosDados = $graficoStatusAgendamentosLabels
+            ->keys()
+            ->map(fn ($status) => (int) ($statusAgendamentos[$status] ?? 0))
+            ->values();
+
+        $graficoStatusAgendamentosCores = [
+            '#7B19E5',
+            '#FF2EB6',
+            '#FFB020',
+            '#22C55E',
+            '#38BDF8',
+        ];
 
         $desempenhoProfissionais = DB::table('agendamentos')
             ->join('users', 'agendamentos.profissional_id', '=', 'users.id')
             ->select('users.name', DB::raw('COUNT(agendamentos.id_agendamento) as total_atendimentos'), DB::raw('SUM(agendamentos.valor_comissao) as total_gerado'))
             ->where('agendamentos.status', 'executado')
-            ->whereBetween('agendamentos.updated_at', [$inicioQuery, $fimQuery])
+            ->whereBetween('agendamentos.data_hora_inicio', [$inicioQuery, $fimQuery])
             ->groupBy('users.id', 'users.name')
             ->orderByDesc('total_atendimentos')
             ->get();
 
         return view('admin.relatorios.index', compact(
             'faturamentoTotal', 'totalAgendamentos', 'totalExecutados', 
-            'desempenhoProfissionais', 'dataInicio', 'dataFim'
+            'desempenhoProfissionais', 'dataInicio', 'dataFim', 'graficoStatusAgendamentosLabels', 'graficoStatusAgendamentosDados', 'graficoStatusAgendamentosCores'
         ));
     }
     public function faturamento(Request $request, FinanceiroService $financeiroService)
