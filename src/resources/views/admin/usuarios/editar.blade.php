@@ -95,11 +95,8 @@
                             </div>
                         </div>
 
-                        @if($usuario->cargo === 'cliente')
                         <div class="mt-8 p-6 bg-white/40 rounded-xl border border-[#FFD6F4]">
-                            <h3 class="text-lg font-title text-[#4A00B9] mb-4 flex items-center">
-                                <span class="mr-2">✧</span> Perfil do Cliente
-                            </h3>
+                            
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label for="d_nasc" class="block text-sm font-medium text-[#4A00B9] mb-2">
@@ -117,51 +114,6 @@
                                 </div>
                             </div>
                         </div>
-                        @endif
-
-                        @if($usuario->cargo === 'profissional')
-                        <div class="mt-8 p-6 bg-white/40 rounded-xl border border-[#FFD6F4]">
-                            
-                            {{-- Bloco de Horários --}}
-                            <div class="mb-6 p-5 bg-white/60 rounded-xl border border-[#FFD6F4] shadow-sm">
-                                <h3 class="text-md font-bold text-[#4A00B9] mb-2 flex items-center">
-                                    <span class="mr-2">✧</span> Horário de Atendimento
-                                </h3>
-                                <p class="text-sm text-gray-600">O horário padrão é das 08:00 às 18:00. <br>Exceções e turnos específicos serão configurados na próxima etapa.</p>
-                            </div>
-                            
-                            <h3 class="text-lg font-title text-[#4A00B9] mb-4 flex items-center">
-                                <span class="mr-2">✦</span> Serviços e Comissões do Profissional
-                            </h3>
-                            
-                            <div class="space-y-3">
-                                @foreach($servicos as $servico)
-                                    @php 
-                                        $vinculo = $usuario->servicos->find($servico->id_servico); 
-                                    @endphp
-                                    <div class="flex items-center bg-white/70 p-4 rounded-lg shadow-sm border border-[#FFD6F4] transition-all hover:shadow-md">
-                                        <input type="checkbox" name="servicos[{{ $servico->id_servico }}][ativo]" {{ $vinculo ? 'checked' : '' }} 
-                                            class="rounded text-[#FF2EB6] focus:ring-[#FF2EB6] border-[#FFD6F4] h-5 w-5 bg-white">
-                                        
-                                        <div class="ml-4 flex-1">
-                                            <span class="font-bold text-[#4A00B9]">{{ $servico->nome }}</span>
-                                            <span class="text-xs text-gray-500 block">Duração padrão: {{ $servico->duracao }} min</span>
-                                        </div>
-
-                                        <div>
-                                            <label class="block text-[10px] uppercase font-bold text-gray-500 mb-1">Tempo (min)</label>
-                                            <input type="number" 
-                                                name="servicos[{{ $servico->id_servico }}][duracao]" 
-                                                value="{{ $vinculo ? $vinculo->pivot->duracao_customizada : $servico->duracao }}" 
-                                                class="w-full px-2 py-1.5 bg-white/50 border border-[#FFD6F4] rounded focus:outline-none focus:border-[#7B19E5] focus:ring-1 focus:ring-[#7B19E5]/20 text-sm transition-all">
-                                            <p class="text-[10px] text-gray-500 mt-1">Comissão: 50% (fixa)</p>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-                        @endif
-
                         <div class="flex items-center justify-end gap-3 mt-8 pt-4 border-t border-[#FFD6F4]">
                             <a href="{{ route('admin.usuarios.index') }}" class="px-6 py-2.5 text-sm font-medium text-gray-500 hover:text-[#7B19E5] transition-colors">
                                 {{ __('Cancelar') }}

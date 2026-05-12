@@ -37,11 +37,19 @@
                             <span class="text-[#7B19E5] text-xl">✧</span>
                             <h3 class="text-lg font-title text-[#4A00B9]">Meus Serviços e Especialidades</h3>
                         </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="mb-5">
+                            <input 
+                                type="text" 
+                                id="pesquisa-servicos-profissional"
+                                placeholder="Pesquisar serviço..."
+                                class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-xl focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all"
+                            >
+                        </div>
+                        <div id="servicos-profissional-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             @foreach($servicos as $servico)
                                 @php $vinculo = $usuario->servicos->find($servico->id_servico); @endphp
-                                <div class="flex flex-wrap items-center gap-3 p-4 rounded-xl transition-all {{ $vinculo ? 'bg-[#FF2EB6]/10 border border-[#FF2EB6]/30' : 'bg-white/50 border border-[#FFD6F4]' }}">
-                                    <input type="checkbox" name="servicos[{{ $servico->id_servico }}][ativo]" {{ $vinculo ? 'checked' : '' }} class="rounded text-[#7B19E5] focus:ring-[#FF2EB6] w-5 h-5 border-[#FFD6F4]">
+                                <div class="especialidade-card flex flex-wrap items-center gap-3 p-4 rounded-xl transition-all cursor-pointer {{ $vinculo ? 'selecionado bg-[#FF2EB6]/10 border border-[#FF2EB6]/30' : 'bg-white/50 border border-[#FFD6F4]' }}" data-nome="{{ e($servico->nome) }}">
+                                    <input type="checkbox" name="servicos[{{ $servico->id_servico }}][ativo]" {{ $vinculo ? 'checked' : '' }} class="especialidade-checkbox rounded text-[#7B19E5] focus:ring-[#FF2EB6] w-5 h-5 border-[#FFD6F4]">
                                     <div class="flex-1">
                                         <span class="block font-title text-[#4A00B9]">{{ $servico->nome }}</span>
                                         <span class="text-xs text-gray-500">Padrão: {{ $servico->duracao }} min</span>
@@ -54,9 +62,17 @@
                                 </div>
                             @endforeach
                         </div>
+
+                        <div id="servicos-profissional-vazio" class="hidden mt-4 p-4 rounded-xl bg-white/50 border border-[#FFD6F4] text-sm text-gray-500 text-center">
+                            Nenhum serviço encontrado.
+                        </div>
+
+                        <div class="mt-4 mb-1 flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-t border-[#FFD6F4] pt-4">
+                            <p id="servicos-profissional-info" class="text-sm text-gray-500"></p>
+                            <div id="servicos-profissional-paginacao" class="flex flex-wrap gap-2 justify-end"></div>
+                        </div>
                     </div>
                 </div>
-
                 <!-- Minha Grade de Horários -->
                 <div class="glass-card rounded-2xl shadow-xl overflow-hidden mb-6">
                     <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
@@ -70,7 +86,7 @@
                             @endphp
                             @foreach($dias as $num => $nome)
                                 @php $h = $usuario->horariosTrabalho->where('dia_semana', $num)->first(); @endphp
-                                <div class="flex flex-wrap items-center gap-3 p-3 rounded-xl hover:bg-white/30 transition border border-[#FFD6F4]">
+                                <div class="horario-card flex flex-wrap items-center gap-3 p-3 rounded-xl hover:bg-white/30 transition border border-[#FFD6F4] cursor-pointer {{ ($h->trabalha ?? true) ? 'trabalha' : '' }}">
                                     <div class="w-32 font-semibold text-[#1A002B]">{{ $nome }}</div>
                                     <div class="flex items-center gap-2">
                                         <input type="time" name="horarios[{{ $num }}][inicio]" value="{{ $h->hora_inicio ?? '08:00' }}" class="px-3 py-2 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all text-sm">
@@ -78,7 +94,7 @@
                                         <input type="time" name="horarios[{{ $num }}][fim]" value="{{ $h->hora_fim ?? '18:00' }}" class="px-3 py-2 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all text-sm">
                                     </div>
                                     <div class="flex items-center gap-2">
-                                        <input type="checkbox" name="horarios[{{ $num }}][trabalha]" value="1" {{ ($h->trabalha ?? true) ? 'checked' : '' }} class="rounded text-[#7B19E5] focus:ring-[#FF2EB6] border-[#FFD6F4]">
+                                        <input type="checkbox" name="horarios[{{ $num }}][trabalha]" value="1" {{ ($h->trabalha ?? true) ? 'checked' : '' }} class="horario-checkbox rounded text-[#7B19E5] focus:ring-[#FF2EB6] border-[#FFD6F4]">
                                         <span class="text-xs font-medium text-gray-500 uppercase">Ativo</span>
                                     </div>
                                     <div class="flex items-center gap-2">
@@ -214,7 +230,168 @@
         </div>
     </div>
 </x-app-layout>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const porPagina = 8;
+        let paginaAtual = 1;
 
+        const inputBusca = document.getElementById('pesquisa-servicos-profissional');
+        const cards = Array.from(document.querySelectorAll('.especialidade-card'));
+        const paginacao = document.getElementById('servicos-profissional-paginacao');
+        const info = document.getElementById('servicos-profissional-info');
+        const vazio = document.getElementById('servicos-profissional-vazio');
+
+        const normalizar = (texto) => {
+            return (texto || '')
+                .toString()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase();
+        };
+
+        const atualizarVisualCard = (card) => {
+            const checkbox = card.querySelector('.especialidade-checkbox');
+            card.classList.toggle('selecionado', checkbox?.checked);
+        };
+
+        cards.forEach(card => {
+            const checkbox = card.querySelector('.especialidade-checkbox');
+
+            if (!checkbox) return;
+
+            atualizarVisualCard(card);
+
+            card.addEventListener('click', (event) => {
+                if (event.target.matches('input[type="checkbox"], input[type="number"], label, button')) {
+                    return;
+                }
+
+                checkbox.checked = !checkbox.checked;
+                checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+            });
+
+            checkbox.addEventListener('change', (event) => {
+                event.stopPropagation();
+                atualizarVisualCard(card);
+            });
+        });
+        document.querySelectorAll('.horario-card').forEach(card => {
+            const checkbox = card.querySelector('.horario-checkbox');
+
+            if (!checkbox) return;
+
+            const atualizarVisualHorario = () => {
+                card.classList.toggle('trabalha', checkbox.checked);
+            };
+
+            atualizarVisualHorario();
+
+            card.addEventListener('click', (event) => {
+                if (event.target.matches('input[type="checkbox"], input[type="time"], label, button')) {
+                    return;
+                }
+
+                checkbox.checked = !checkbox.checked;
+                checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+            });
+
+            checkbox.addEventListener('change', (event) => {
+                event.stopPropagation();
+                atualizarVisualHorario();
+            });
+        });
+
+        const obterCardsFiltrados = () => {
+            const termo = normalizar(inputBusca?.value || '');
+
+            return cards.filter(card => {
+                const nome = normalizar(card.dataset.nome);
+                return !termo || nome.includes(termo);
+            });
+        };
+
+        const renderizarServicos = () => {
+            const filtrados = obterCardsFiltrados();
+            const totalItens = filtrados.length;
+            const totalPaginas = Math.ceil(totalItens / porPagina);
+
+            if (paginaAtual > totalPaginas) {
+                paginaAtual = totalPaginas || 1;
+            }
+
+            cards.forEach(card => card.classList.add('hidden'));
+
+            const inicio = (paginaAtual - 1) * porPagina;
+            const fim = inicio + porPagina;
+
+            filtrados.slice(inicio, fim).forEach(card => {
+                card.classList.remove('hidden');
+            });
+
+            vazio?.classList.toggle('hidden', totalItens > 0);
+
+            if (info) {
+                if (totalItens === 0) {
+                    info.textContent = 'Nenhum serviço para mostrar';
+                } else {
+                    const mostrandoInicio = inicio + 1;
+                    const mostrandoFim = Math.min(fim, totalItens);
+                    info.textContent = `Mostrando ${mostrandoInicio}-${mostrandoFim} de ${totalItens} serviços`;
+                }
+            }
+
+            if (!paginacao) return;
+
+            paginacao.innerHTML = '';
+
+            if (totalPaginas <= 1) {
+                return;
+            }
+
+            const criarBotaoNavegacao = (texto, acao, desabilitado = false, principal = false) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.textContent = texto;
+            button.disabled = desabilitado;
+
+            button.className = desabilitado
+                ? 'px-5 py-2 rounded-full text-sm font-bold bg-white/30 border border-[#FFD6F4] text-gray-400 cursor-not-allowed'
+                : principal
+                    ? 'px-5 py-2 rounded-full text-sm font-bold bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white shadow-md hover:shadow-lg transition-all'
+                    : 'px-5 py-2 rounded-full text-sm font-bold bg-white/50 border border-[#FFD6F4] text-[#4A00B9] hover:bg-white/80 transition-all';
+
+            if (!desabilitado) {
+                button.addEventListener('click', acao);
+            }
+
+            paginacao.appendChild(button);
+        };
+
+        criarBotaoNavegacao('Anterior', () => {
+            if (paginaAtual > 1) {
+                paginaAtual--;
+                renderizarServicos();
+            }
+        }, paginaAtual === 1);
+
+        criarBotaoNavegacao('Próxima', () => {
+            if (paginaAtual < totalPaginas) {
+                paginaAtual++;
+                renderizarServicos();
+            }
+        }, paginaAtual === totalPaginas, true);
+
+        criarBotaoPagina('Próxima', paginaAtual + 1, false, paginaAtual === totalPaginas);
+        };
+
+        inputBusca?.addEventListener('input', () => {
+            paginaAtual = 1;
+            renderizarServicos();
+        });
+
+        renderizarServicos();
+    });
+</script>
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Playfair+Display:wght@700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
     
@@ -223,7 +400,131 @@
         font-weight: 700;
         letter-spacing: -0.02em;
     }
-    
+    /* Serviços e especialidades selecionados */
+    .especialidade-card.selecionado {
+        background: rgba(123, 25, 229, 0.12) !important;
+        border-color: #7B19E5 !important;
+        box-shadow: 0 0 0 2px rgba(123, 25, 229, 0.22);
+    }
+
+    html.dark-mode .especialidade-card.selecionado {
+        background: rgba(123, 25, 229, 0.45) !important;
+        border-color: #D8B4FE !important;
+        box-shadow:
+            0 0 0 2px rgba(216, 180, 254, 0.45),
+            0 14px 30px rgba(123, 25, 229, 0.30) !important;
+    }
+
+    html.dark-mode .especialidade-card.selecionado span,
+    html.dark-mode .especialidade-card.selecionado label,
+    html.dark-mode .especialidade-card.selecionado p {
+        color: #FFFFFF !important;
+    }
+
+    .especialidade-card input[type="checkbox"] {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 20px;
+        height: 20px;
+        min-width: 20px;
+        border: 2px solid #FFD6F4;
+        border-radius: 5px;
+        background: transparent;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    .especialidade-card input[type="checkbox"]:checked {
+        background: linear-gradient(135deg, #7B19E5, #FF2EB6);
+        border-color: #D8B4FE;
+    }
+
+    .especialidade-card input[type="checkbox"]:checked::after {
+        content: "✓";
+        color: #FFFFFF;
+        font-size: 14px;
+        font-weight: 900;
+        line-height: 1;
+    }
+
+    html.dark-mode .especialidade-card input[type="checkbox"] {
+        border-color: #D8B4FE !important;
+        background: rgba(255, 255, 255, 0.04);
+    }
+
+    html.dark-mode .especialidade-card input[type="checkbox"]:checked {
+        background: linear-gradient(135deg, #D8B4FE, #FF2EB6) !important;
+        border-color: #FFFFFF !important;
+    }
+
+    html.dark-mode .especialidade-card input[type="checkbox"]:checked::after {
+        color: #1A002B;
+    }
+    /* Grade de horários ativa */
+    .horario-card.trabalha {
+        background: rgba(123, 25, 229, 0.10) !important;
+        border-color: #7B19E5 !important;
+        box-shadow: 0 0 0 1px rgba(123, 25, 229, 0.20);
+    }
+
+    html.dark-mode .horario-card.trabalha {
+        background: rgba(123, 25, 229, 0.28) !important;
+        border-color: #D8B4FE !important;
+        box-shadow: 0 0 0 1px rgba(216, 180, 254, 0.35) !important;
+    }
+
+    html.dark-mode .horario-card.trabalha,
+    html.dark-mode .horario-card.trabalha div,
+    html.dark-mode .horario-card.trabalha span,
+    html.dark-mode .horario-card.trabalha label {
+        color: #FFFFFF !important;
+    }
+
+    .horario-card input[type="checkbox"] {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 18px;
+        height: 18px;
+        min-width: 18px;
+        border: 2px solid #FFD6F4;
+        border-radius: 5px;
+        background: transparent;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    .horario-card input[type="checkbox"]:checked {
+        background: linear-gradient(135deg, #7B19E5, #FF2EB6);
+        border-color: #D8B4FE;
+    }
+
+    .horario-card input[type="checkbox"]:checked::after {
+        content: "✓";
+        color: #FFFFFF;
+        font-size: 13px;
+        font-weight: 900;
+        line-height: 1;
+    }
+
+    html.dark-mode .horario-card input[type="checkbox"] {
+        border-color: #D8B4FE !important;
+        background: rgba(255, 255, 255, 0.04);
+    }
+
+    html.dark-mode .horario-card input[type="checkbox"]:checked {
+        background: linear-gradient(135deg, #D8B4FE, #FF2EB6) !important;
+        border-color: #FFFFFF !important;
+    }
+
+    html.dark-mode .horario-card input[type="checkbox"]:checked::after {
+        color: #1A002B;
+    }
     .btn-primary {
         position: relative;
         overflow: hidden;

@@ -30,10 +30,28 @@ class AgendamentoController extends Controller
                 Carbon::parse($dataInicio)->startOfDay(),
                 Carbon::parse($dataFim)->endOfDay()
             ])
-            ->orderBy('data_hora_inicio', 'asc')
             ->get();
 
-        // Agrupar por data para o calendário
+        $agora = Carbon::now();
+
+        // Agendamentos futuros: do mais próximo para o mais distante
+        $proximos = $agendamentos
+            ->filter(function ($agendamento) use ($agora) {
+                return $agendamento->data_hora_inicio->greaterThanOrEqualTo($agora);
+            })
+            ->sortBy('data_hora_inicio');
+
+        // Agendamentos passados: ficam embaixo, do mais recente para o mais antigo
+        $passados = $agendamentos
+            ->filter(function ($agendamento) use ($agora) {
+                return $agendamento->data_hora_inicio->lessThan($agora);
+            })
+            ->sortByDesc('data_hora_inicio');
+
+        // Junta primeiro os próximos, depois os passados
+        $agendamentos = $proximos->concat($passados)->values();
+
+        // Agrupar por data para o calendário mantendo essa ordem
         $agendamentosPorData = $agendamentos->groupBy(function($item) {
             return $item->data_hora_inicio->format('Y-m-d');
         });

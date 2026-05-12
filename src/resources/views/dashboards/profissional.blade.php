@@ -70,6 +70,15 @@
         </div>
     </div>
 
+    @php
+        $temAvaliacoes = 
+            (($mediaAvaliacao ?? 0) > 0) ||
+            (($totalAvaliacoes ?? 0) > 0) ||
+            (isset($comentariosAvaliacao) && $comentariosAvaliacao->count() > 0);
+    @endphp
+
+    @if($temAvaliacoes)
+
     <div class="glass-card rounded-2xl shadow-xl overflow-hidden mb-6">
         <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
             <div class="flex items-center gap-3 mb-6">
@@ -134,4 +143,5 @@
             </div>
         </div>
     </div>
+    @endif
 @endif

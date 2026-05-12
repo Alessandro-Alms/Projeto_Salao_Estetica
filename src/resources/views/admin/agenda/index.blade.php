@@ -99,8 +99,12 @@
                             <div class="space-y-4">
                                 @forelse($agendamentosPorData as $data => $agendamentosData)
                                     <div class="bg-white/50 p-4 rounded-lg border border-[#FFD6F4]">
+                                        @php
+                                            $dataFormatada = \Carbon\Carbon::parse($data)->locale('pt_BR');
+                                        @endphp
+
                                         <h3 class="text-lg font-bold text-[#4A00B9] mb-3">
-                                            ✧ {{ \Carbon\Carbon::parse($data)->format('d/m/Y - l') }}
+                                            ✧ {{ $dataFormatada->translatedFormat('d/m/Y') }} - {{ ucfirst($dataFormatada->translatedFormat('l')) }}
                                         </h3>
                                         <div class="space-y-2">
                                             @foreach($agendamentosData as $agendamento)
