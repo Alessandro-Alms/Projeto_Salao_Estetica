@@ -109,8 +109,22 @@
                 </form>
             </div>
             
+            @php
+                $agora = \Carbon\Carbon::now();
+
+                $futuros = collect($agendamentos)
+                    ->filter(fn($agenda) => \Carbon\Carbon::parse($agenda->data_hora_inicio)->gte($agora))
+                    ->sortBy(fn($agenda) => \Carbon\Carbon::parse($agenda->data_hora_inicio)->timestamp);
+
+                $passados = collect($agendamentos)
+                    ->filter(fn($agenda) => \Carbon\Carbon::parse($agenda->data_hora_inicio)->lt($agora))
+                    ->sortByDesc(fn($agenda) => \Carbon\Carbon::parse($agenda->data_hora_inicio)->timestamp);
+
+                $agendamentosOrdenados = $futuros->concat($passados)->values();
+            @endphp
+
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                @forelse($agendamentos as $agenda)
+                @forelse($agendamentosOrdenados as $agenda) 
                     <div class="glass-card rounded-2xl shadow-xl overflow-hidden hover-lift">
                         <div class="p-5 bg-white/70 backdrop-blur-sm border border-white/40 flex flex-col h-full">
                             <div class="flex justify-between items-start mb-3">

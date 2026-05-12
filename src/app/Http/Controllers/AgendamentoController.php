@@ -702,33 +702,84 @@ class AgendamentoController extends Controller
         }));
     }
 
-    public function clienteAgendar()
+    public function agendaCliente(Request $request)
     {
-        $profissionais = User::where('cargo', 'profissional')->get();
-        $servicos = Servico::all();
-        return view('cliente.agendar', compact('profissionais', 'servicos'));
+        $filtro = $request->get('filtro', '7');
+        $agora = Carbon::now();
+
+        $query = Agendamento::where('cliente_id', auth()->id())
+            ->with(['profissional', 'servico', 'servicos']);
+
+        if ($filtro !== 'todos') {
+            $dias = (int) $filtro;
+            $dataLimite = Carbon::now()->addDays($dias);
+
+            $query->whereBetween('data_hora_inicio', [
+                Carbon::now(),
+                $dataLimite->endOfDay()
+            ]);
+        }
+
+        $query->orderByRaw(
+            "CASE WHEN data_hora_inicio >= ? THEN 0 ELSE 1 END ASC",
+            [$agora->toDateTimeString()]
+        );
+
+        $query->orderByRaw(
+            "CASE WHEN data_hora_inicio >= ? THEN data_hora_inicio END ASC",
+            [$agora->toDateTimeString()]
+        );
+
+        $query->orderByRaw(
+            "CASE WHEN data_hora_inicio < ? THEN data_hora_inicio END DESC",
+            [$agora->toDateTimeString()]
+        );
+
+        $agendamentos = $query->get();
+
+        return view('cliente.agenda', compact('agendamentos'));
     }
 
     public function agendaProfissional(Request $request)
     {
         $filtro = $request->get('filtro', '7');
-        
+        $agora = Carbon::now(   );
+
         $query = Agendamento::where('profissional_id', auth()->id())
-                            ->with(['cliente.pacotesAtivos.pacote.servicos', 'servico', 'servicos'])
-                            ->orderBy('data_hora_inicio', 'asc');
-        
+            ->with(['cliente.pacotesAtivos.pacote.servicos', 'servico', 'servicos']);
+
         // Aplicar filtro de período
         if ($filtro !== 'todos') {
             $dias = (int) $filtro;
             $dataLimite = Carbon::now()->addDays($dias);
+
             $query->whereBetween('data_hora_inicio', [
                 Carbon::now()->startOfDay(),
                 $dataLimite->endOfDay()
             ]);
         }
-        
+
+        // Ordenação:
+        // 1. Agendamentos que ainda não passaram ficam primeiro
+        // 2. Os futuros ficam do mais próximo para o mais distante
+        // 3. Os passados descem para o final, do mais recente para o mais antigo
+        $query->orderByRaw(
+            "CASE WHEN data_hora_inicio >= ? THEN 0 ELSE 1 END ASC",
+            [$agora->toDateTimeString()]
+        );
+
+        $query->orderByRaw(
+            "CASE WHEN data_hora_inicio >= ? THEN data_hora_inicio END ASC",
+            [$agora->toDateTimeString()]
+        );
+
+        $query->orderByRaw(
+            "CASE WHEN data_hora_inicio < ? THEN data_hora_inicio END DESC",
+            [$agora->toDateTimeString()]
+        );
+
         $agendamentos = $query->get()
-                            ->groupBy(fn($data) => \Carbon\Carbon::parse($data->data_hora_inicio)->format('d/m/Y'));
+            ->groupBy(fn($data) => Carbon::parse($data->data_hora_inicio)->format('d/m/Y'));
 
         $produtos = Produto::where('quantidade_estoque', '>', 0)->get();
 
