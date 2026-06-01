@@ -895,6 +895,7 @@ class AgendamentoController extends Controller
     {
         $agendamento = Agendamento::findOrFail($id_agendamento);
         $cliente = User::findOrFail($agendamento->cliente_id);
+        $formasPagamento = ['dinheiro', 'pix', 'cartao_debito', 'cartao_credito'];
 
         if (!$this->usuarioPodeGerenciarAgendamento($agendamento)) {
             abort(403, 'Você não tem permissão para finalizar este agendamento.');
@@ -905,6 +906,12 @@ class AgendamentoController extends Controller
         }
 
         // Iniciamos uma transação para garantir que ou faz TUDO ou não faz NADA
+        $request->validate([
+            'forma_pagamento' => ['required_without:usar_pacote', 'nullable', 'in:' . implode(',', $formasPagamento)],
+        ], [
+            'forma_pagamento.required_without' => 'Selecione a forma de pagamento antes de finalizar o atendimento.',
+        ]);
+
         return DB::transaction(function () use ($request, $agendamento, $cliente) { 
             $vendaProdutoService = app(VendaProdutoService::class);
             
@@ -975,6 +982,11 @@ class AgendamentoController extends Controller
             $agendamento->obs = $request->input('observacao');
             $agendamento->valor_comissao = $valorComissao; // Armazena o valor da comissão
             $agendamento->comissao_paga_percentual = $porcentagemComissao; // Armazena a porcentagem da comissão
+            $agendamento->status_pagamento = 'pago';
+            $agendamento->forma_pagamento = $request->has('usar_pacote') && $request->usar_pacote != null
+                ? 'pacote'
+                : $request->input('forma_pagamento');
+            $agendamento->pago_em = now();
             $agendamento->save();
 
             // 4. Registrar as Vendas e Baixar Estoque
@@ -1094,4 +1106,3 @@ class AgendamentoController extends Controller
         return $usuario->cargo === 'profissional' && $agendamento->profissional_id === $usuario->id;
     }
 }
-

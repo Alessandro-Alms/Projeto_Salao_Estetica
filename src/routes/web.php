@@ -181,15 +181,36 @@ Route::middleware('auth')->group(function () {
     Route::get('/meus-produtos', [VendaProdutoController::class, 'indexCliente'])
         ->middleware('cliente_redirect:produtos')
         ->name('cliente.produtos.index');
+    Route::get('/minhas-compras', [VendaProdutoController::class, 'historicoCliente'])
+        ->middleware('cliente_redirect:produtos')
+        ->name('cliente.compras.index');
     Route::post('/meus-produtos/comprar', [VendaProdutoController::class, 'comprarCliente'])
         ->middleware('cliente_redirect:produtos')
         ->name('cliente.produtos.comprar');
+    Route::patch('/meus-produtos/comanda/cancelar-tudo', [VendaProdutoController::class, 'cancelarComandaCliente'])
+        ->middleware('cliente_redirect:produtos')
+        ->name('cliente.produtos.comanda.cancelar-tudo');
+    Route::patch('/meus-produtos/pedido/produto/{produto:id_produto}', [VendaProdutoController::class, 'atualizarProdutoCliente'])
+        ->middleware('cliente_redirect:produtos')
+        ->name('cliente.produtos.pedido.produto.atualizar');
+    Route::patch('/meus-produtos/pedido/produto/{produto:id_produto}/cancelar', [VendaProdutoController::class, 'cancelarProdutoCliente'])
+        ->middleware('cliente_redirect:produtos')
+        ->name('cliente.produtos.pedido.produto.cancelar');
+    Route::patch('/meus-produtos/comanda/{venda}', [VendaProdutoController::class, 'atualizarCliente'])
+        ->middleware('cliente_redirect:produtos')
+        ->name('cliente.produtos.comanda.atualizar');
+    Route::patch('/meus-produtos/comanda/{venda}/cancelar', [VendaProdutoController::class, 'cancelarCliente'])
+        ->middleware('cliente_redirect:produtos')
+        ->name('cliente.produtos.comanda.cancelar');
     Route::get('/meus-pacotes', [ClientePacoteController::class, 'indexCliente'])
         ->middleware('cliente_redirect:pacotes')
         ->name('cliente.pacotes.index');
     Route::post('/meus-pacotes/comprar', [ClientePacoteController::class, 'comprarCliente'])
         ->middleware('cliente_redirect:pacotes')
         ->name('cliente.pacotes.comprar');
+    Route::patch('/meus-pacotes/{clientePacote}/informar-pagamento', [ClientePacoteController::class, 'informarPagamento'])
+        ->middleware('cliente_redirect:pacotes')
+        ->name('cliente.pacotes.informar-pagamento');
     Route::post('/agendamento/{id}/cancelar', [AgendamentoController::class, 'cancelarCliente'])
         ->middleware('cliente_redirect:agendamentos')
         ->name('cliente.agendamento.cancelar');
@@ -227,6 +248,11 @@ Route::middleware(['auth', 'role:gerente,recepcionista'])->prefix('admin')->name
     // Vendas de produtos (recepcao)
     Route::get('/vendas/produtos', [VendaProdutoController::class, 'create'])->name('vendas.produtos.create');
     Route::post('/vendas/produtos', [VendaProdutoController::class, 'store'])->name('vendas.produtos.store');
+    Route::get('/vendas/pendentes', [VendaProdutoController::class, 'pendentes'])->name('vendas.pendentes');
+    Route::patch('/vendas/{venda}/confirmar-pagamento', [VendaProdutoController::class, 'confirmarVenda'])->name('vendas.confirmar-pagamento');
+    Route::patch('/vendas/{venda}/cancelar-pendente', [VendaProdutoController::class, 'cancelarVenda'])->name('vendas.cancelar-pendente');
+    Route::patch('/cliente-pacotes/{clientePacote}/confirmar-pagamento', [ClientePacoteController::class, 'confirmarPagamento'])->name('cliente-pacotes.confirmar-pagamento');
+    Route::patch('/cliente-pacotes/{clientePacote}/cancelar-pendente', [ClientePacoteController::class, 'cancelarPagamento'])->name('cliente-pacotes.cancelar-pendente');
     
     // Rotas de Financeiro (Gerente ou Recepcionista)
     Route::get('/financeiro/fechamento', [FinanceiroController::class, 'fechamento'])->name('financeiro.fechamento');

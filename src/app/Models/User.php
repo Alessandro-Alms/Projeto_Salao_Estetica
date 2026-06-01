@@ -10,6 +10,7 @@ use App\Models\Atendimento;
 use App\Models\HorarioTrabalho;
 use App\Models\Venda;
 use App\Models\Servico;
+use Illuminate\Support\Facades\Schema;
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;
@@ -126,9 +127,15 @@ class User extends Authenticatable
     // Busca os pacotes ativos que o cliente comprou e ainda tem sessão
     public function pacotesAtivos()
     {
-        return $this->hasMany(ClientePacote::class, 'cliente_id')
-                    ->where('status', 'ativo')
-                    ->where('sessoes_restantes', '>', 0)
-                    ->whereDate('data_validade', '>=', now());
+        $query = $this->hasMany(ClientePacote::class, 'cliente_id')
+            ->where('status', 'ativo')
+            ->where('sessoes_restantes', '>', 0)
+            ->whereDate('data_validade', '>=', now());
+
+        if (Schema::hasColumn('cliente_pacotes', 'status_pagamento')) {
+            $query->where('status_pagamento', 'pago');
+        }
+
+        return $query;
     }
 }   

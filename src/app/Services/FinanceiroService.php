@@ -48,35 +48,76 @@ class FinanceiroService
         return "CASE WHEN users.cargo = 'cliente' THEN 0 ELSE ROUND(vendas.valor_venda * {$percentual}, 2) END";
     }
 
+    private function colunaDataVendaPaga(): string
+    {
+        return Schema::hasColumn('vendas', 'pago_em') ? 'pago_em' : 'created_at';
+    }
+
+    private function aplicarVendasPagas($query)
+    {
+        if (Schema::hasColumn('vendas', 'status_pagamento')) {
+            $query->where('vendas.status_pagamento', 'pago');
+        }
+
+        return $query;
+    }
+
+    private function aplicarPacotesPagos($query)
+    {
+        if (Schema::hasColumn('cliente_pacotes', 'status_pagamento')) {
+            $query->where('cliente_pacotes.status_pagamento', 'pago');
+        }
+
+        return $query;
+    }
+
+    private function colunaDataPacotePago(): string
+    {
+        return Schema::hasColumn('cliente_pacotes', 'pago_em') ? 'pago_em' : 'data_compra';
+    }
+
+    private function aplicarAgendamentosPagos($query)
+    {
+        if (Schema::hasColumn('agendamentos', 'status_pagamento')) {
+            $query->where('agendamentos.status_pagamento', 'pago');
+        }
+
+        return $query;
+    }
+
     public function fechamentoDiario(string $dataSelecionada): array
     {
-        $agendamentos = Agendamento::where('status', 'executado')
+        $agendamentos = $this->aplicarAgendamentosPagos(Agendamento::where('status', 'executado'))
             ->whereDate('updated_at', $dataSelecionada)
             ->with(['profissional', 'servico'])
             ->get();
 
         $totalServicos = $agendamentos->sum('valor_total');
-        $totalComissoesPacotes = DB::table('cliente_pacotes')
-            ->whereDate('cliente_pacotes.created_at', $dataSelecionada)
+        $totalComissoesPacotes = $this->aplicarPacotesPagos(DB::table('cliente_pacotes'))
+            ->whereDate('cliente_pacotes.' . $this->colunaDataPacotePago(), $dataSelecionada)
             ->sum('valor_comissao');
         $totalComissoesServicos = $agendamentos->sum('valor_comissao') + $totalComissoesPacotes;
-        $totalProdutos = DB::table('vendas')->whereDate('created_at', $dataSelecionada)->sum('valor_venda');
-        $totalComissoesProdutos = $this->somaComissaoProdutosQuery()
-            ->whereDate('vendas.created_at', $dataSelecionada)
+        $totalProdutos = $this->aplicarVendasPagas(DB::table('vendas'))
+            ->whereDate('vendas.' . $this->colunaDataVendaPaga(), $dataSelecionada)
+            ->sum('valor_venda');
+        $totalComissoesProdutos = $this->aplicarVendasPagas($this->somaComissaoProdutosQuery())
+            ->whereDate('vendas.' . $this->colunaDataVendaPaga(), $dataSelecionada)
             ->sum(DB::raw($this->expressaoComissaoProdutos()));
 
         $totalMultas = Agendamento::where('status', 'cancelado')
             ->whereDate('updated_at', $dataSelecionada)
             ->sum('multa_valor');
 
-        $totalPacotes = DB::table('cliente_pacotes')
+        $totalPacotes = $this->aplicarPacotesPagos(DB::table('cliente_pacotes'))
             ->join('pacotes', 'cliente_pacotes.pacote_id', '=', 'pacotes.id_pacote')
-            ->whereDate('cliente_pacotes.created_at', $dataSelecionada)
+            ->whereDate('cliente_pacotes.' . $this->colunaDataPacotePago(), $dataSelecionada)
             ->sum('pacotes.valor_total');
 
         $totalComissoes = $totalComissoesServicos + $totalComissoesProdutos;
         $lucroLiquido = ($totalServicos + $totalProdutos + $totalPacotes + $totalMultas) - $totalComissoes;
-        $vendas = DB::table('vendas')->whereDate('created_at', $dataSelecionada)->get();
+        $vendas = $this->aplicarVendasPagas(DB::table('vendas'))
+            ->whereDate('vendas.' . $this->colunaDataVendaPaga(), $dataSelecionada)
+            ->get();
 
         return compact(
             'agendamentos',
@@ -97,19 +138,19 @@ class FinanceiroService
         $inicioQuery = $dataInicio . ' 00:00:00';
         $fimQuery = $dataFim . ' 23:59:59';
 
-        $receitaServicos = DB::table('agendamentos')
+        $receitaServicos = $this->aplicarAgendamentosPagos(DB::table('agendamentos'))
             ->where('status', 'executado')
             ->whereBetween('data_hora_inicio', [$inicioQuery, $fimQuery])
             ->sum('valor_total') ?? 0;
 
-        $receitaProdutos = DB::table('vendas')
+        $receitaProdutos = $this->aplicarVendasPagas(DB::table('vendas'))
             ->whereNotNull('vendas.produto_id')
-            ->whereBetween('vendas.created_at', [$inicioQuery, $fimQuery])
+            ->whereBetween('vendas.' . $this->colunaDataVendaPaga(), [$inicioQuery, $fimQuery])
             ->sum('valor_venda') ?? 0;
 
-        $receitaPacotes = DB::table('cliente_pacotes')
+        $receitaPacotes = $this->aplicarPacotesPagos(DB::table('cliente_pacotes'))
             ->join('pacotes', 'cliente_pacotes.pacote_id', '=', 'pacotes.id_pacote')
-            ->whereBetween('cliente_pacotes.data_compra', [$inicioQuery, $fimQuery])
+            ->whereBetween('cliente_pacotes.' . $this->colunaDataPacotePago(), [$inicioQuery, $fimQuery])
             ->sum('pacotes.valor_total') ?? 0;
 
         $receitaMultas = DB::table('agendamentos')
@@ -120,20 +161,20 @@ class FinanceiroService
 
         $totalEntradas = $receitaServicos + $receitaProdutos + $receitaPacotes + $receitaMultas;
 
-        $despesaComissoesServicos = DB::table('agendamentos')
+        $despesaComissoesServicos = $this->aplicarAgendamentosPagos(DB::table('agendamentos'))
             ->where('status', 'executado')
             ->whereBetween('data_hora_inicio', [$inicioQuery, $fimQuery])
             ->sum('valor_comissao') ?? 0;
 
-        $despesaComissoesPacotes = DB::table('cliente_pacotes')
+        $despesaComissoesPacotes = $this->aplicarPacotesPagos(DB::table('cliente_pacotes'))
             ->whereNotNull('vendedor_id')
-            ->whereBetween('data_compra', [$inicioQuery, $fimQuery])
+            ->whereBetween('cliente_pacotes.' . $this->colunaDataPacotePago(), [$inicioQuery, $fimQuery])
             ->sum('valor_comissao') ?? 0;
 
         $despesaComissoesServicos += $despesaComissoesPacotes;
-        $despesaComissoesProdutos = $this->somaComissaoProdutosQuery()
+        $despesaComissoesProdutos = $this->aplicarVendasPagas($this->somaComissaoProdutosQuery())
             ->whereNotNull('vendas.produto_id')
-            ->whereBetween('vendas.created_at', [$inicioQuery, $fimQuery])
+            ->whereBetween('vendas.' . $this->colunaDataVendaPaga(), [$inicioQuery, $fimQuery])
             ->sum(DB::raw($this->expressaoComissaoProdutos())) ?? 0;
         $despesaComissoes = $despesaComissoesServicos + $despesaComissoesProdutos;
         $totalSaidas = $despesaComissoes;
@@ -156,14 +197,14 @@ class FinanceiroService
         $inicioQuery = $dataInicio . ' 00:00:00';
         $fimQuery = $dataFim . ' 23:59:59';
 
-        $agendamentos = DB::table('agendamentos')
+        $agendamentos = $this->aplicarAgendamentosPagos(DB::table('agendamentos'))
             ->where('status', 'executado')
             ->whereBetween('data_hora_inicio', [$inicioQuery, $fimQuery])
             ->selectRaw('COUNT(id_agendamento) as qtd, SUM(valor_total) as total')
             ->first();
 
-        $vendas = DB::table('vendas')
-            ->whereBetween('created_at', [$inicioQuery, $fimQuery])
+        $vendas = $this->aplicarVendasPagas(DB::table('vendas'))
+            ->whereBetween('vendas.' . $this->colunaDataVendaPaga(), [$inicioQuery, $fimQuery])
             ->selectRaw('COUNT(id_venda) as qtd, SUM(valor_venda) as total')
             ->first();
 
@@ -186,13 +227,13 @@ class FinanceiroService
         $inicioAnterior = Carbon::parse($dataInicio)->subDays($diasPeriodo)->format('Y-m-d') . ' 00:00:00';
         $fimAnterior = Carbon::parse($dataFim)->subDays($diasPeriodo)->format('Y-m-d') . ' 23:59:59';
 
-        $receitaAnteriorAgendamentos = DB::table('agendamentos')
+        $receitaAnteriorAgendamentos = $this->aplicarAgendamentosPagos(DB::table('agendamentos'))
             ->where('status', 'executado')
             ->whereBetween('data_hora_inicio', [$inicioAnterior, $fimAnterior])
             ->sum('valor_total');
 
-        $receitaAnteriorVendas = DB::table('vendas')
-            ->whereBetween('created_at', [$inicioAnterior, $fimAnterior])
+        $receitaAnteriorVendas = $this->aplicarVendasPagas(DB::table('vendas'))
+            ->whereBetween('vendas.' . $this->colunaDataVendaPaga(), [$inicioAnterior, $fimAnterior])
             ->sum('valor_venda');
 
         $receitaAnteriorMultas = DB::table('agendamentos')
@@ -227,7 +268,7 @@ class FinanceiroService
         $inicioQuery = $dataInicio . ' 00:00:00';
         $fimQuery = $dataFim . ' 23:59:59';
 
-        $servicosPorProfissional = DB::table('agendamentos')
+        $servicosPorProfissional = $this->aplicarAgendamentosPagos(DB::table('agendamentos'))
             ->where('status', 'executado')
             ->whereBetween('data_hora_inicio', [$inicioQuery, $fimQuery])
             ->select(
@@ -240,10 +281,10 @@ class FinanceiroService
             ->get()
             ->keyBy('profissional_id');
 
-        $pacotesPorVendedor = DB::table('cliente_pacotes')
+        $pacotesPorVendedor = $this->aplicarPacotesPagos(DB::table('cliente_pacotes'))
             ->join('pacotes', 'cliente_pacotes.pacote_id', '=', 'pacotes.id_pacote')
             ->whereNotNull('cliente_pacotes.vendedor_id')
-            ->whereBetween('cliente_pacotes.data_compra', [$inicioQuery, $fimQuery])
+            ->whereBetween('cliente_pacotes.' . $this->colunaDataPacotePago(), [$inicioQuery, $fimQuery])
             ->select(
                 'cliente_pacotes.vendedor_id',
                 DB::raw('COUNT(cliente_pacotes.id) as total_pacotes'),
@@ -254,9 +295,9 @@ class FinanceiroService
             ->get()
             ->keyBy('vendedor_id');
 
-        $vendasPorProfissional = $this->somaComissaoProdutosQuery()
+        $vendasPorProfissional = $this->aplicarVendasPagas($this->somaComissaoProdutosQuery())
             ->whereNotNull('vendas.produto_id')
-            ->whereBetween('vendas.created_at', [$inicioQuery, $fimQuery])
+            ->whereBetween('vendas.' . $this->colunaDataVendaPaga(), [$inicioQuery, $fimQuery])
             ->select(
                 'vendas.profissional_id',
                 DB::raw('COUNT(vendas.id_venda) as total_vendas_produtos'),

@@ -39,6 +39,27 @@
     </div>
 @endif
 
+@if(($pagamentosPendentesProdutos ?? 0) + ($pagamentosPendentesPacotes ?? 0) > 0)
+    <div class="glass-card rounded-2xl shadow-xl overflow-hidden mb-6">
+        <div class="p-6 bg-amber-50/80 backdrop-blur-sm border border-amber-200">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-amber-600 text-xl">✧</span>
+                        <h3 class="text-lg font-title text-[#4A00B9]">Pagamentos para confirmar</h3>
+                    </div>
+                    <p class="text-sm text-gray-600">
+                        {{ $pagamentosPendentesPacotes ?? 0 }} pacote(s) via PIX e {{ $pagamentosPendentesProdutos ?? 0 }} produto(s) reservado(s) aguardando conferência.
+                    </p>
+                </div>
+                <a href="{{ route('admin.vendas.pendentes') }}" class="inline-flex items-center justify-center px-5 py-3 rounded-full bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white font-bold">
+                    Conferir agora
+                </a>
+            </div>
+        </div>
+    </div>
+@endif
+
 <div class="glass-card rounded-2xl shadow-xl overflow-hidden mb-6">
     <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
         <div class="flex items-center gap-2 mb-5">
@@ -132,6 +153,16 @@
                 <div>
                     <h4 class="font-title text-[#4A00B9]">Vender Produto</h4>
                     <p class="text-xs text-gray-500">Registrar venda no balcão</p>
+                </div>
+            </a>
+
+            <a href="{{ route('admin.vendas.pendentes') }}" class="group flex items-center gap-4 p-4 rounded-xl bg-white/50 hover:bg-white/80 transition-all hover:shadow-lg hover:-translate-y-1 border border-[#FFD6F4]">
+                <div class="w-12 h-12 bg-gradient-to-br from-[#7B19E5] to-[#A855F7] rounded-xl flex items-center justify-center shadow-md">
+                    <span class="text-white text-xl">✧</span>
+                </div>
+                <div>
+                    <h4 class="font-title text-[#4A00B9]">Compras Pendentes</h4>
+                    <p class="text-xs text-gray-500">Confirmar pagamento</p>
                 </div>
             </a>
             

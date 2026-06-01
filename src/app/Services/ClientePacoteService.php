@@ -5,10 +5,18 @@ namespace App\Services;
 use App\Models\ClientePacote;
 use App\Models\Pacote;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Schema;
 
 class ClientePacoteService
 {
-    public function venderPacote(int $clienteId, int $pacoteId, ?int $vendedorId = null): ClientePacote
+    public function venderPacote(
+        int $clienteId,
+        int $pacoteId,
+        ?int $vendedorId = null,
+        string $statusPagamento = 'pago',
+        ?string $formaPagamento = null,
+        ?int $confirmadoPorId = null
+    ): ClientePacote
     {
         $pacote = Pacote::findOrFail($pacoteId);
         $financeiroService = app(FinanceiroService::class);
@@ -16,7 +24,7 @@ class ClientePacoteService
             ? $financeiroService->calcularComissaoServico((float) $pacote->valor_total)
             : 0;
 
-        return ClientePacote::create([
+        $dados = [
             'cliente_id' => $clienteId,
             'pacote_id' => $pacote->id_pacote,
             'vendedor_id' => $vendedorId,
@@ -26,7 +34,25 @@ class ClientePacoteService
             'valor_comissao' => $valorComissao,
             'comissao_paga_percentual' => $vendedorId ? FinanceiroService::COMISSAO_SERVICO_PERCENTUAL : 0,
             'status' => 'ativo',
-        ]);
+        ];
+
+        if (Schema::hasColumn('cliente_pacotes', 'status_pagamento')) {
+            $dados['status_pagamento'] = $statusPagamento;
+        }
+
+        if (Schema::hasColumn('cliente_pacotes', 'forma_pagamento')) {
+            $dados['forma_pagamento'] = $formaPagamento;
+        }
+
+        if (Schema::hasColumn('cliente_pacotes', 'pago_em')) {
+            $dados['pago_em'] = $statusPagamento === 'pago' ? now() : null;
+        }
+
+        if (Schema::hasColumn('cliente_pacotes', 'confirmado_por_id')) {
+            $dados['confirmado_por_id'] = $statusPagamento === 'pago' ? $confirmadoPorId : null;
+        }
+
+        return ClientePacote::create($dados);
     }
 
     public function consumirSessao(int $clientePacoteId, int $clienteId, int $servicoId): ClientePacote
@@ -37,6 +63,9 @@ class ClientePacoteService
             ->where('status', 'ativo')
             ->where('sessoes_restantes', '>', 0)
             ->whereDate('data_validade', '>=', Carbon::today())
+            ->when(Schema::hasColumn('cliente_pacotes', 'status_pagamento'), function ($query) {
+                $query->where('status_pagamento', 'pago');
+            })
             ->first();
 
         if (!$clientePacote) {

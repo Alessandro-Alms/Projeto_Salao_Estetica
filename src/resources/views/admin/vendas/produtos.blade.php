@@ -59,6 +59,19 @@
                                 <input type="number" name="quantidade" value="{{ old('quantidade', 1) }}" min="1" required
                                     class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
                             </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-[#4A00B9] mb-2">Forma de pagamento</label>
+                                <select name="forma_pagamento" required
+                                    class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
+                                    <option value="">Selecione...</option>
+                                    @foreach($formasPagamento as $formaPagamento)
+                                        <option value="{{ $formaPagamento }}" @selected(old('forma_pagamento') === $formaPagamento)>
+                                            {{ ucfirst(str_replace('_', ' ', $formaPagamento)) }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
                         </div>
 
                         <div class="mt-8 flex justify-end">

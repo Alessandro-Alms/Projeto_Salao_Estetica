@@ -15,7 +15,12 @@ class ClientePacote extends Model
         'data_validade', 
         'valor_comissao',
         'comissao_paga_percentual',
-        'status'];
+        'status',
+        'status_pagamento',
+        'forma_pagamento',
+        'pago_em',
+        'confirmado_por_id',
+    ];
 
     public function pacote()
     {
@@ -30,5 +35,10 @@ class ClientePacote extends Model
     public function vendedor()
     {
         return $this->belongsTo(User::class, 'vendedor_id');
+    }
+
+    public function confirmadoPor()
+    {
+        return $this->belongsTo(User::class, 'confirmado_por_id');
     }
 }

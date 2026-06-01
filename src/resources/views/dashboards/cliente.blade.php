@@ -67,7 +67,7 @@
     </div>
 @endif
 
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mt-6">
     {{-- Agendar horário (gradiente roxo/rosa - igual ao círculo) --}}
     <a href="{{ route('cliente.agendar.novo') }}" class="group min-h-28 rounded-2xl bg-gradient-to-br from-[#7B19E5] to-[#FF2EB6] p-5 text-white shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all">
         <span class="block text-3xl mb-3">✧</span>
@@ -93,5 +93,10 @@
         <span class="block text-3xl mb-3">✦</span>
         <span class="block font-title text-lg">Meus agendamentos</span>
         <span class="block text-xs text-white/80 mt-1">Acompanhe horários e avaliações.</span>
+    </a>
+    <a href="{{ route('cliente.compras.index') }}" class="group min-h-28 rounded-2xl bg-gradient-to-br from-[#7B19E5] to-[#FF2EB6] p-5 text-white shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all">
+        <span class="block text-3xl mb-3">✧</span>
+        <span class="block font-title text-lg">Minhas compras</span>
+        <span class="block text-xs text-white/80 mt-1">Pagamentos, reservas e historico.</span>
     </a>
 </div>

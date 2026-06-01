@@ -37,6 +37,8 @@ class UserController extends Controller
         $contatoMensagens = collect();
         $contatoMensagensNaoLidas = 0;
         $contatoMensagensLidasCliente = collect();
+        $pagamentosPendentesProdutos = 0;
+        $pagamentosPendentesPacotes = 0;
 
         if ($user && $user->isGerente() && DB::getSchemaBuilder()->hasTable('contato_mensagens')) {
             $contatoMensagens = DB::table('contato_mensagens')
@@ -47,6 +49,17 @@ class UserController extends Controller
 
             $contatoMensagensNaoLidas = DB::table('contato_mensagens')
                 ->whereNull('lida_at')
+                ->count();
+        }
+
+        if ($user && $user->isGerente()) {
+            $pagamentosPendentesProdutos = DB::table('vendas')
+                ->where('status_pagamento', 'pendente')
+                ->whereNotNull('produto_id')
+                ->count();
+
+            $pagamentosPendentesPacotes = DB::table('cliente_pacotes')
+                ->whereIn('status_pagamento', ['pendente', 'aguardando_confirmacao'])
                 ->count();
         }
 
@@ -119,6 +132,7 @@ class UserController extends Controller
 
             $pacotesVencendo = ClientePacote::where('cliente_id', $user->id)
                 ->where('status', 'ativo')
+                ->where('status_pagamento', 'pago')
                 ->whereDate('data_validade', '>=', now())
                 ->whereDate('data_validade', '<=', now()->addDays(7))
                 ->with('pacote')
@@ -156,7 +170,9 @@ class UserController extends Controller
             'mensagemProximaVisita',
             'contatoMensagens',
             'contatoMensagensNaoLidas',
-            'contatoMensagensLidasCliente'
+            'contatoMensagensLidasCliente',
+            'pagamentosPendentesProdutos',
+            'pagamentosPendentesPacotes'
         ));
     }
 
@@ -474,6 +490,7 @@ class UserController extends Controller
         $agendamentos = Agendamento::with('servico')
             ->where('profissional_id', $profissionalId)
             ->where('status', 'executado')
+            ->when(DB::getSchemaBuilder()->hasColumn('agendamentos', 'status_pagamento'), fn ($query) => $query->where('status_pagamento', 'pago'))
             ->whereMonth('updated_at', $mes)
             ->whereYear('updated_at', $ano)
             ->get();

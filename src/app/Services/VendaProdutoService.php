@@ -26,7 +26,15 @@ class VendaProdutoService
         return null;
     }
 
-    public function registrarVenda(int $vendedorId, int $produtoId, int $quantidade, bool $geraComissao = true): Venda
+    public function registrarVenda(
+        int $vendedorId,
+        int $produtoId,
+        int $quantidade,
+        bool $geraComissao = true,
+        string $statusPagamento = 'pago',
+        ?string $formaPagamento = null,
+        ?int $confirmadoPorId = null
+    ): Venda
     {
         $produto = Produto::lockForUpdate()->findOrFail($produtoId);
 
@@ -52,6 +60,22 @@ class VendaProdutoService
 
         if (Schema::hasColumn('vendas', 'comissao_paga_percentual')) {
             $dadosVenda['comissao_paga_percentual'] = $geraComissao ? FinanceiroService::COMISSAO_PRODUTO_PERCENTUAL : 0;
+        }
+
+        if (Schema::hasColumn('vendas', 'status_pagamento')) {
+            $dadosVenda['status_pagamento'] = $statusPagamento;
+        }
+
+        if (Schema::hasColumn('vendas', 'forma_pagamento')) {
+            $dadosVenda['forma_pagamento'] = $formaPagamento;
+        }
+
+        if (Schema::hasColumn('vendas', 'pago_em')) {
+            $dadosVenda['pago_em'] = $statusPagamento === 'pago' ? now() : null;
+        }
+
+        if (Schema::hasColumn('vendas', 'confirmado_por_id')) {
+            $dadosVenda['confirmado_por_id'] = $statusPagamento === 'pago' ? $confirmadoPorId : null;
         }
 
         return Venda::create($dadosVenda);

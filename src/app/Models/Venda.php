@@ -15,7 +15,16 @@ class Venda extends Model
         'valor_venda',
         'valor_comissao',
         'comissao_paga_percentual',
+        'status_pagamento',
+        'forma_pagamento',
+        'pago_em',
+        'confirmado_por_id',
     ];
+
+    public function getRouteKeyName(): string
+    {
+        return 'id_venda';
+    }
 
     // Quem realizou a venda.
     public function vendedor() {
@@ -28,6 +37,10 @@ class Venda extends Model
 
     public function produto() {
         return $this->belongsTo(Produto::class, 'produto_id', 'id_produto');
+    }
+
+    public function confirmadoPor() {
+        return $this->belongsTo(User::class, 'confirmado_por_id');
     }
 
     public function servico() {

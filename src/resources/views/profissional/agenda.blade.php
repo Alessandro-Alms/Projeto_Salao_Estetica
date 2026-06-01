@@ -212,6 +212,18 @@
                                                     </div>
                                                 @endif
 
+                                                <div class="bg-white/50 rounded-xl p-4 border border-[#FFD6F4]">
+                                                    <label class="block text-xs font-medium text-[#4A00B9] uppercase mb-2">Forma de pagamento do serviço</label>
+                                                    <select name="forma_pagamento" data-forma-pagamento required class="w-full px-4 py-3 bg-white/70 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
+                                                        <option value="">Selecione como foi pago...</option>
+                                                        <option value="dinheiro">Dinheiro</option>
+                                                        <option value="pix">PIX</option>
+                                                        <option value="cartao_debito">Cartão de débito</option>
+                                                        <option value="cartao_credito">Cartão de crédito</option>
+                                                    </select>
+                                                    <p class="text-xs text-gray-500 mt-2">O valor do serviço só entra no financeiro depois desta seleção.</p>
+                                                </div>
+
                                                 <button type="submit" class="w-full bg-gradient-to-r from-green-500 to-green-600 text-white font-bold py-3 px-4 rounded-full shadow-lg hover:shadow-xl transition-all">
                                                     ✧ Finalizar e Baixar Estoque
                                                 </button>
@@ -265,6 +277,25 @@
         }
         window.location.href = url.toString();
     }
+
+    document.addEventListener('change', (event) => {
+        if (!event.target.matches('input[name="usar_pacote"]')) {
+            return;
+        }
+
+        const form = event.target.closest('form');
+        const select = form?.querySelector('[data-forma-pagamento]');
+
+        if (!select) {
+            return;
+        }
+
+        select.required = !event.target.checked;
+        select.disabled = event.target.checked;
+        if (event.target.checked) {
+            select.value = '';
+        }
+    });
 </script>
 
 <style>

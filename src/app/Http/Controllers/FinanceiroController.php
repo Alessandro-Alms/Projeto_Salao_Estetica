@@ -9,6 +9,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class FinanceiroController extends Controller
 {
@@ -54,6 +55,7 @@ class FinanceiroController extends Controller
         if ($profissionalId) {
             $agendamentos = Agendamento::where('profissional_id', $profissionalId)
                 ->where('status', 'executado')
+                ->when(DB::getSchemaBuilder()->hasColumn('agendamentos', 'status_pagamento'), fn ($query) => $query->where('status_pagamento', 'pago'))
                 ->whereMonth('updated_at', $mes)
                 ->whereYear('updated_at', $ano)
                 ->with('servico')
@@ -72,8 +74,9 @@ class FinanceiroController extends Controller
 
             $vendas = DB::table('vendas')
                 ->where('profissional_id', $profissionalId)
-                ->whereMonth('created_at', $mes)
-                ->whereYear('created_at', $ano)
+                ->when(Schema::hasColumn('vendas', 'status_pagamento'), fn ($query) => $query->where('status_pagamento', 'pago'))
+                ->whereMonth(Schema::hasColumn('vendas', 'pago_em') ? 'pago_em' : 'created_at', $mes)
+                ->whereYear(Schema::hasColumn('vendas', 'pago_em') ? 'pago_em' : 'created_at', $ano)
                 ->get();
 
             foreach ($vendas as $venda) {
@@ -90,8 +93,9 @@ class FinanceiroController extends Controller
             $pacotesVendidos = DB::table('cliente_pacotes')
                 ->join('pacotes', 'cliente_pacotes.pacote_id', '=', 'pacotes.id_pacote')
                 ->where('cliente_pacotes.vendedor_id', $profissionalId)
-                ->whereMonth('cliente_pacotes.data_compra', $mes)
-                ->whereYear('cliente_pacotes.data_compra', $ano)
+                ->when(Schema::hasColumn('cliente_pacotes', 'status_pagamento'), fn ($query) => $query->where('cliente_pacotes.status_pagamento', 'pago'))
+                ->whereMonth('cliente_pacotes.' . (Schema::hasColumn('cliente_pacotes', 'pago_em') ? 'pago_em' : 'data_compra'), $mes)
+                ->whereYear('cliente_pacotes.' . (Schema::hasColumn('cliente_pacotes', 'pago_em') ? 'pago_em' : 'data_compra'), $ano)
                 ->select(
                     'cliente_pacotes.*',
                     'pacotes.nome as pacote_nome',
