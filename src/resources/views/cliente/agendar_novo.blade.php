@@ -265,19 +265,8 @@
         line-height: 1;
     }
 
-    html.dark-mode .servico-card input[type="checkbox"] {
-        border-color: #D8B4FE !important;
-        background: rgba(255, 255, 255, 0.04);
-    }
 
-    html.dark-mode .servico-card input[type="checkbox"]:checked {
-        background: linear-gradient(135deg, #D8B4FE, #FF2EB6) !important;
-        border-color: #FFFFFF !important;
-    }
 
-    html.dark-mode .servico-card input[type="checkbox"]:checked::after {
-        color: #1A002B;
-    }
     /* Serviço selecionado */
     .servico-card.selecionado {
         background: rgba(123, 25, 229, 0.10) !important;
@@ -285,25 +274,12 @@
         box-shadow: 0 0 0 2px rgba(123, 25, 229, 0.20);
     }
 
-    html.dark-mode .servico-card.selecionado {
-        background: rgba(123, 25, 229, 0.45) !important;
-        border-color: #D8B4FE !important;
-        box-shadow:
-            0 0 0 2px rgba(216, 180, 254, 0.45),
-            0 14px 30px rgba(123, 25, 229, 0.30) !important;
-    }
 
-    html.dark-mode .servico-card.selecionado p {
-        color: #FFFFFF !important;
-    }
 
     .servico-card input[type="checkbox"] {
         accent-color: #7B19E5;
     }
 
-    html.dark-mode .servico-card input[type="checkbox"] {
-        accent-color: #D8B4FE;
-    }
     /* Calendário */
     .calendar-container { max-width: 100%; }
     .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }

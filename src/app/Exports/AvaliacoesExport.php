@@ -25,7 +25,7 @@ class AvaliacoesExport implements FromArray, WithHeadings, WithStyles
         $dados = [];
         
         foreach ($this->avaliacoes as $avaliacao) {
-            $estrelas = str_repeat('★', $avaliacao->nota) . str_repeat('â˜†', 5 - $avaliacao->nota);
+            $estrelas = str_repeat('★', $avaliacao->nota) . str_repeat('☆', 5 - $avaliacao->nota);
             $dados[] = [
                 $avaliacao->cliente_nome,
                 $avaliacao->profissional_nome,

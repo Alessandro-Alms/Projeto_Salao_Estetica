@@ -26,325 +26,77 @@
             .font-title { font-family: 'Playfair Display', serif; font-weight: 700; letter-spacing: -0.02em; }
             .font-body { font-family: 'Space Grotesk', sans-serif; }
             html { color-scheme: light; }
-            html.dark-mode { color-scheme: dark; }
             
             ::-webkit-scrollbar { width: 8px; background: #f8f0ff; }
             ::-webkit-scrollbar-thumb { background: linear-gradient(135deg, #7B19E5, #FF2EB6); border-radius: 10px; }
-            html.dark-mode ::-webkit-scrollbar { background: #12091f; }
 
 
             /* =========================
             DARK MODE GLOBAL
             ========================= */
 
-            html.dark-mode {
-                color-scheme: dark;
 
-                --salao-bg: #0B0712;
-                --salao-bg-soft: #150B22;
-                --salao-card: rgba(24, 13, 38, 0.94);
-                --salao-card-soft: rgba(34, 18, 54, 0.92);
-                --salao-border: rgba(255, 214, 244, 0.20);
-                --salao-border-strong: rgba(255, 214, 244, 0.32);
-
-                --salao-text: #F8ECFF;
-                --salao-muted: #D8C6E8;
-                --salao-soft: #BFAED0;
-
-                --salao-purple: #D8B4FE;
-                --salao-pink: #FDA4D9;
-            }
-
-            html.dark-mode body {
-                background:
-                    radial-gradient(circle at top left, rgba(123, 25, 229, 0.24), transparent 32%),
-                    radial-gradient(circle at bottom right, rgba(255, 46, 182, 0.18), transparent 35%),
-                    linear-gradient(135deg, var(--salao-bg), var(--salao-bg-soft)) !important;
-                color: var(--salao-text) !important;
-            }
 
             /* Header e navegação */
-            html.dark-mode nav,
-            html.dark-mode header {
-                background: rgba(13, 7, 22, 0.92) !important;
-                border-color: var(--salao-border) !important;
-                box-shadow: 0 14px 36px rgba(0, 0, 0, 0.35) !important;
-            }
 
             /* Cards, blocos e fundos claros */
-            html.dark-mode .glass-card,
-            html.dark-mode .bg-white,
-            html.dark-mode [class*="bg-white"],
-            html.dark-mode [class*="bg-gray-50"],
-            html.dark-mode [class*="bg-gray-100"],
-            html.dark-mode [class*="bg-gray-200"],
-            html.dark-mode [class*="bg-gray-300"] {
-                background: var(--salao-card) !important;
-                color: var(--salao-text) !important;
-                border-color: var(--salao-border) !important;
-                box-shadow: 0 18px 42px rgba(0, 0, 0, 0.35) !important;
-            }
 
             /* Corrige gradientes que usam via-white */
-            html.dark-mode [class*="via-white"] {
-                --tw-gradient-via: rgba(24, 13, 38, 0.50) !important;
-            }
 
             /* Textos escuros */
-            html.dark-mode .text-black,
-            html.dark-mode .text-gray-700,
-            html.dark-mode .text-gray-800,
-            html.dark-mode .text-gray-900,
-            html.dark-mode [class*="text-[#1A002B]"],
-            html.dark-mode [class*="text-[#4A00B9]"] {
-                color: var(--salao-text) !important;
-            }
 
             /* Textos secundários */
-            html.dark-mode .text-gray-400,
-            html.dark-mode .text-gray-500,
-            html.dark-mode .text-gray-600,
-            html.dark-mode [class*="text-gray-400"],
-            html.dark-mode [class*="text-gray-500"],
-            html.dark-mode [class*="text-gray-600"] {
-                color: var(--salao-muted) !important;
-            }
 
             /* Roxo e rosa no dark */
-            html.dark-mode [class*="text-[#7B19E5]"] {
-                color: var(--salao-purple) !important;
-            }
 
-            html.dark-mode [class*="text-[#FF2EB6]"] {
-                color: var(--salao-pink) !important;
-            }
 
             /* Títulos */
-            html.dark-mode h1,
-            html.dark-mode h2,
-            html.dark-mode h3,
-            html.dark-mode h4,
-            html.dark-mode .font-title {
-                color: var(--salao-text) !important;
-            }
 
             /* Bordas */
-            html.dark-mode .border,
-            html.dark-mode [class*="border-[#FFD6F4]"],
-            html.dark-mode [class*="border-white"],
-            html.dark-mode [class*="divide-[#FFD6F4]"] > :not([hidden]) ~ :not([hidden]) {
-                border-color: var(--salao-border) !important;
-            }
 
             /* Inputs, selects e textarea */
-            html.dark-mode input,
-            html.dark-mode select,
-            html.dark-mode textarea,
-            html.dark-mode [data-searchable-dropdown] {
-                background: rgba(13, 7, 22, 0.96) !important;
-                color: var(--salao-text) !important;
-                border-color: var(--salao-border-strong) !important;
-            }
 
-            html.dark-mode input::placeholder,
-            html.dark-mode textarea::placeholder {
-                color: var(--salao-soft) !important;
-            }
 
-            html.dark-mode input[type="date"] {
-                color-scheme: dark;
-            }
 
             /* Dropdown pesquisável */
-            html.dark-mode [data-searchable-dropdown] button {
-                color: var(--salao-text) !important;
-            }
 
-            html.dark-mode [data-searchable-dropdown] button:hover {
-                background: rgba(123, 25, 229, 0.22) !important;
-            }
 
             /* Tabelas */
-            html.dark-mode table,
-            html.dark-mode th,
-            html.dark-mode td {
-                color: var(--salao-text) !important;
-                border-color: var(--salao-border) !important;
-            }
 
-            html.dark-mode thead,
-            html.dark-mode th {
-                background: rgba(123, 25, 229, 0.20) !important;
-            }
 
-            html.dark-mode tbody tr:hover {
-                background: rgba(255, 255, 255, 0.06) !important;
-            }
 
             /* Alertas verdes */
-            html.dark-mode .bg-green-50,
-            html.dark-mode .bg-green-100,
-            html.dark-mode [class*="bg-green-50/"] {
-                background: rgba(34, 197, 94, 0.16) !important;
-                color: #BBF7D0 !important;
-                border-color: rgba(34, 197, 94, 0.35) !important;
-            }
 
-            html.dark-mode .text-green-500,
-            html.dark-mode .text-green-600,
-            html.dark-mode .text-green-700 {
-                color: #BBF7D0 !important;
-            }
 
             /* Alertas amarelos */
-            html.dark-mode .bg-yellow-50,
-            html.dark-mode .bg-yellow-100,
-            html.dark-mode .bg-amber-50,
-            html.dark-mode .bg-amber-100,
-            html.dark-mode [class*="bg-yellow-50/"],
-            html.dark-mode [class*="bg-amber-50/"] {
-                background: rgba(245, 158, 11, 0.18) !important;
-                color: #FDE68A !important;
-                border-color: rgba(245, 158, 11, 0.35) !important;
-            }
 
-            html.dark-mode .text-yellow-600,
-            html.dark-mode .text-yellow-700,
-            html.dark-mode .text-amber-600,
-            html.dark-mode .text-amber-700 {
-                color: #FDE68A !important;
-            }
 
             /* Alertas vermelhos */
-            html.dark-mode .bg-red-50,
-            html.dark-mode .bg-red-100,
-            html.dark-mode [class*="bg-red-50/"] {
-                background: rgba(239, 68, 68, 0.17) !important;
-                color: #FECACA !important;
-                border-color: rgba(239, 68, 68, 0.35) !important;
-            }
 
-            html.dark-mode .text-red-500,
-            html.dark-mode .text-red-600,
-            html.dark-mode .text-red-700 {
-                color: #FECACA !important;
-            }
 
             /* Fundos personalizados do projeto */
-            html.dark-mode [class*="bg-[#F3E8FF]"],
-            html.dark-mode [class*="bg-[#7B19E5]/5"],
-            html.dark-mode [class*="bg-[#7B19E5]/10"] {
-                background: rgba(123, 25, 229, 0.18) !important;
-            }
 
-            html.dark-mode [class*="bg-[#FFD6F4]"],
-            html.dark-mode [class*="bg-[#FF2EB6]/5"],
-            html.dark-mode [class*="bg-[#FF2EB6]/10"] {
-                background: rgba(255, 46, 182, 0.14) !important;
-            }
 
             /* Calendário, horários, serviços e profissionais */
-            html.dark-mode .calendar-day-name {
-                background: rgba(123, 25, 229, 0.22) !important;
-                color: var(--salao-text) !important;
-            }
 
-            html.dark-mode .calendar-date,
-            html.dark-mode .horario-option,
-            html.dark-mode .profissional-card,
-            html.dark-mode .servico-card {
-                background: rgba(24, 13, 38, 0.94) !important;
-                color: var(--salao-text) !important;
-                border-color: var(--salao-border) !important;
-            }
 
-            html.dark-mode .calendar-date:hover:not(.outro-mes):not(.indisponivel),
-            html.dark-mode .horario-option:hover:not(.ocupado),
-            html.dark-mode .profissional-card:hover,
-            html.dark-mode .servico-card:hover {
-                background: rgba(123, 25, 229, 0.22) !important;
-                border-color: var(--salao-purple) !important;
-            }
 
-            html.dark-mode .calendar-date.outro-mes,
-            html.dark-mode .calendar-date.indisponivel,
-            html.dark-mode .horario-option.ocupado {
-                background: rgba(255, 255, 255, 0.06) !important;
-                color: #8B7A9C !important;
-                border-color: rgba(255, 255, 255, 0.10) !important;
-            }
 
-            html.dark-mode .calendar-date.selecionado,
-            html.dark-mode .horario-option.selecionado,
-            html.dark-mode .profissional-card.selecionado {
-                background: linear-gradient(135deg, #7B19E5, #FF2EB6) !important;
-                color: #FFFFFF !important;
-                border-color: var(--salao-purple) !important;
-            }
 
-            html.dark-mode .profissional-card h4,
-            html.dark-mode .profissional-card p,
-            html.dark-mode .servico-card p {
-                color: var(--salao-text) !important;
-            }
 
-            html.dark-mode .horario-option .badge {
-                background: rgba(245, 158, 11, 0.22) !important;
-                color: #FDE68A !important;
-            }
 
             /* Estado vazio dos gráficos */
-            html.dark-mode [data-chart-empty] {
-                background: rgba(24, 13, 38, 0.94) !important;
-                border-color: var(--salao-border) !important;
-            }
 
-            html.dark-mode [data-chart-empty] p {
-                color: var(--salao-text) !important;
-            }
 
             /* Botão modo escuro */
-            html.dark-mode .dark-mode-toggle {
-                background: var(--salao-card-soft) !important;
-                color: var(--salao-text) !important;
-                border-color: var(--salao-border-strong) !important;
-            }
 
             /* Hover claro */
-            html.dark-mode [class*="hover:bg-white/"]:hover,
-            html.dark-mode [class*="hover:bg-[#FFD6F4]"]:hover,
-            html.dark-mode [class*="hover:bg-[#FFD6F4]/70"]:hover {
-                background-color: rgba(123, 25, 229, 0.22) !important;
-            }
 
             /* Scrollbar */
-            html.dark-mode ::-webkit-scrollbar {
-                background: #12091E;
-            }
 
-            html.dark-mode ::-webkit-scrollbar-thumb {
-                background: linear-gradient(135deg, #7B19E5, #FF2EB6);
-                border-radius: 10px;
-            }
             /* Destaque de serviço selecionado no dark mode */
-            html.dark-mode .servico-card[class*="bg-[#7B19E5]/5"],
-            html.dark-mode .servico-card:has(input[type="checkbox"]:checked) {
-                background: rgba(123, 25, 229, 0.34) !important;
-                border-color: #D8B4FE !important;
-                box-shadow:
-                    0 0 0 2px rgba(216, 180, 254, 0.35),
-                    0 14px 28px rgba(123, 25, 229, 0.28) !important;
-            }
 
-            html.dark-mode .servico-card[class*="bg-[#7B19E5]/5"] p,
-            html.dark-mode .servico-card:has(input[type="checkbox"]:checked) p {
-                color: #FFFFFF !important;
-            }
 
-            html.dark-mode .servico-card[class*="bg-[#7B19E5]/5"] input[type="checkbox"],
-            html.dark-mode .servico-card:has(input[type="checkbox"]:checked) input[type="checkbox"] {
-                accent-color: #D8B4FE;
-            }
 
             /* Efeito do botão */
             .btn-primary {
@@ -389,13 +141,6 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
-        <script>
-            (() => {
-                if (localStorage.getItem('salao-tema') === 'escuro') {
-                    document.documentElement.classList.add('dark-mode');
-                }
-            })();
-        </script>
         <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     </head>
     <body class="font-body antialiased bg-gradient-to-br from-[#7B19E5]/5 via-white to-[#FF2EB6]/5">
@@ -427,29 +172,7 @@
         </div>
 
         <script>
-            (() => {
-                const updateThemeButtons = () => {
-                    const isDark = document.documentElement.classList.contains('dark-mode');
-                    document.querySelectorAll('[data-theme-toggle]').forEach((button) => {
-                        button.textContent = isDark ? 'Claro' : 'Escuro';
-                        button.setAttribute('aria-label', isDark ? 'Ativar modo claro' : 'Ativar modo escuro');
-                    });
-                };
-
-                document.addEventListener('DOMContentLoaded', () => {
-                    updateThemeButtons();
-
-                    document.querySelectorAll('[data-theme-toggle]').forEach((button) => {
-                        button.addEventListener('click', () => {
-                            const isDark = document.documentElement.classList.toggle('dark-mode');
-                            localStorage.setItem('salao-tema', isDark ? 'escuro' : 'claro');
-                            updateThemeButtons();
-                        });
-                    });
-                });
-            })();
-
-            (() => {
+(() => {
                 const baseInputClasses = 'w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all';
                 const compactInputClasses = 'w-full px-4 py-2.5 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all text-sm';
 
@@ -759,7 +482,7 @@
                                 plugins: {
                                     legend: {
                                         labels: {
-                                            color: document.documentElement.classList.contains('dark-mode') ? '#F8ECFF' : '#4A00B9',
+                                            color: '#4A00B9',
                                             font: {
                                                 family: 'Syne',
                                                 weight: '700',

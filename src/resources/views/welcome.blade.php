@@ -81,54 +81,7 @@
         
         nav a { font-weight: 600; text-shadow: 0 1px 2px rgba(255,255,255,0.5); }
 
-        html.dark-mode { color-scheme: dark; }
-        html.dark-mode body {
-            background: radial-gradient(circle at top left, rgba(123, 25, 229, 0.22), transparent 34%),
-                radial-gradient(circle at bottom right, rgba(255, 46, 182, 0.18), transparent 38%),
-                linear-gradient(135deg, #0B0712 0%, #150B22 48%, #1D0F2A 100%) !important;
-            color: #F7ECFF;
-        }
-        html.dark-mode header,
-        html.dark-mode .glass-card,
-        html.dark-mode [class*="bg-white/"],
-        html.dark-mode [class*="bg-white "] {
-            background: rgba(20, 10, 32, 0.84) !important;
-            border-color: rgba(255, 214, 244, 0.16) !important;
-            box-shadow: 0 18px 42px rgba(0, 0, 0, 0.32) !important;
-        }
-        html.dark-mode [class*="text-[#1A002B]"],
-        html.dark-mode [class*="text-[#4A00B9]"],
-        html.dark-mode [class*="text-gray-"],
-        html.dark-mode .font-title {
-            color: #F7ECFF !important;
-        }
-        html.dark-mode [class*="text-[#7B19E5]"] {
-            color: #C99BFF !important;
-        }
-        html.dark-mode input,
-        html.dark-mode textarea,
-        html.dark-mode select {
-            background: rgba(13, 7, 22, 0.88) !important;
-            border-color: rgba(255, 214, 244, 0.28) !important;
-            color: #F7ECFF !important;
-        }
-        html.dark-mode input::placeholder,
-        html.dark-mode textarea::placeholder {
-            color: #BFAED0 !important;
-        }
-        html.dark-mode .dark-mode-toggle {
-            background: rgba(31, 16, 48, 0.86) !important;
-            border-color: rgba(255, 214, 244, 0.25) !important;
-            color: #F7ECFF !important;
-        }
     </style>
-    <script>
-        (() => {
-            if (localStorage.getItem('salao-tema') === 'escuro') {
-                document.documentElement.classList.add('dark-mode');
-            }
-        })();
-    </script>
 </head>
 <body class="font-body antialiased relative">
 
@@ -183,9 +136,6 @@
                 </nav>
                 
                 <div class="flex items-center gap-2">
-                    <button type="button" data-theme-toggle class="dark-mode-toggle border border-[#FFD6F4] bg-white text-[#7B19E5] px-5 py-2.5 text-sm rounded-full font-semibold shadow-lg transition-all">
-                        Escuro
-                    </button>
                     @auth
                         <a href="{{ route('dashboard') }}" class="bg-[#7B19E5] text-white px-6 py-2.5 text-sm rounded-full btn-primary shadow-lg">
                             IR PARA O PAINEL
@@ -500,7 +450,7 @@
                         </div>
                         <div class="p-6">
                             <h3 class="text-xl font-title text-[#4A00B9] mb-2">{{ $produto->nome }}</h3>
-                            <p class="text-sm text-[#1A002B] mb-4 font-body leading-relaxed min-h-[72px]">{{ $produto->descricao ?? 'Produto profissional disponivel no salao.' }}</p>
+                            <p class="text-sm text-[#1A002B] mb-4 font-body leading-relaxed min-h-[72px]">{{ $produto->descricao ?? 'Produto profissional disponível no salão.' }}</p>
                             <div class="flex items-center justify-between gap-3">
                                 <span class="text-[#FF2EB6] font-medium">R$ {{ number_format($produto->valor_unitario, 2, ',', '.') }}</span>
                                 <span class="text-xs text-[#7B19E5] font-semibold">{{ ucfirst($produto->tipo) }}</span>
@@ -746,27 +696,7 @@
     </footer>
 
     <script>
-        (() => {
-            const updateThemeButtons = () => {
-                const isDark = document.documentElement.classList.contains('dark-mode');
-                document.querySelectorAll('[data-theme-toggle]').forEach((button) => {
-                    button.textContent = isDark ? 'Claro' : 'Escuro';
-                    button.setAttribute('aria-label', isDark ? 'Ativar modo claro' : 'Ativar modo escuro');
-                });
-            };
-
-            updateThemeButtons();
-
-            document.querySelectorAll('[data-theme-toggle]').forEach((button) => {
-                button.addEventListener('click', () => {
-                    const isDark = document.documentElement.classList.toggle('dark-mode');
-                    localStorage.setItem('salao-tema', isDark ? 'escuro' : 'claro');
-                    updateThemeButtons();
-                });
-            });
-        })();
-
-        document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('img').forEach(img => {
                 if (img.complete) img.classList.add('loaded');
                 else img.addEventListener('load', function() { this.classList.add('loaded'); });

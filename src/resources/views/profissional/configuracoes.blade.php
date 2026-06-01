@@ -407,19 +407,7 @@
         box-shadow: 0 0 0 2px rgba(123, 25, 229, 0.22);
     }
 
-    html.dark-mode .especialidade-card.selecionado {
-        background: rgba(123, 25, 229, 0.45) !important;
-        border-color: #D8B4FE !important;
-        box-shadow:
-            0 0 0 2px rgba(216, 180, 254, 0.45),
-            0 14px 30px rgba(123, 25, 229, 0.30) !important;
-    }
 
-    html.dark-mode .especialidade-card.selecionado span,
-    html.dark-mode .especialidade-card.selecionado label,
-    html.dark-mode .especialidade-card.selecionado p {
-        color: #FFFFFF !important;
-    }
 
     .especialidade-card input[type="checkbox"] {
         appearance: none;
@@ -450,19 +438,8 @@
         line-height: 1;
     }
 
-    html.dark-mode .especialidade-card input[type="checkbox"] {
-        border-color: #D8B4FE !important;
-        background: rgba(255, 255, 255, 0.04);
-    }
 
-    html.dark-mode .especialidade-card input[type="checkbox"]:checked {
-        background: linear-gradient(135deg, #D8B4FE, #FF2EB6) !important;
-        border-color: #FFFFFF !important;
-    }
 
-    html.dark-mode .especialidade-card input[type="checkbox"]:checked::after {
-        color: #1A002B;
-    }
     /* Grade de horários ativa */
     .horario-card.trabalha {
         background: rgba(123, 25, 229, 0.10) !important;
@@ -470,18 +447,7 @@
         box-shadow: 0 0 0 1px rgba(123, 25, 229, 0.20);
     }
 
-    html.dark-mode .horario-card.trabalha {
-        background: rgba(123, 25, 229, 0.28) !important;
-        border-color: #D8B4FE !important;
-        box-shadow: 0 0 0 1px rgba(216, 180, 254, 0.35) !important;
-    }
 
-    html.dark-mode .horario-card.trabalha,
-    html.dark-mode .horario-card.trabalha div,
-    html.dark-mode .horario-card.trabalha span,
-    html.dark-mode .horario-card.trabalha label {
-        color: #FFFFFF !important;
-    }
 
     .horario-card input[type="checkbox"] {
         appearance: none;
@@ -512,19 +478,8 @@
         line-height: 1;
     }
 
-    html.dark-mode .horario-card input[type="checkbox"] {
-        border-color: #D8B4FE !important;
-        background: rgba(255, 255, 255, 0.04);
-    }
 
-    html.dark-mode .horario-card input[type="checkbox"]:checked {
-        background: linear-gradient(135deg, #D8B4FE, #FF2EB6) !important;
-        border-color: #FFFFFF !important;
-    }
 
-    html.dark-mode .horario-card input[type="checkbox"]:checked::after {
-        color: #1A002B;
-    }
     .btn-primary {
         position: relative;
         overflow: hidden;
