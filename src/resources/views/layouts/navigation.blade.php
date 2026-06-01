@@ -14,7 +14,7 @@
                         Painel
                     </a>
                     <a href="{{ route('public.home') }}" class="px-4 py-1.5 rounded-full text-sm font-semibold {{ request()->routeIs('public.home') ? 'bg-[#7B19E5] text-white shadow-md' : 'text-[#1A002B] hover:bg-[#FFD6F4]/70 hover:text-[#7B19E5]' }} transition-all">
-                        P.incipal
+                        P.inicial
                     </a>
 
                     @if(auth()->user()->isCliente())
@@ -88,7 +88,7 @@
                 Painel
             </a>
             <a href="{{ route('public.home') }}" class="block px-3 py-2 text-base text-[#1A002B] hover:text-[#FF2EB6] hover:bg-[#FFD6F4] rounded-md">
-                Site
+                P.inicial
             </a>
 
             @if(auth()->user()->isCliente())

@@ -118,7 +118,7 @@
                             <p class="text-[#1A002B]"> Selecione a data desejada para seu atendimento</p>
                         </div>
                         
-                        <div class="bg-white/40 rounded-xl p-6 border border-[#FFD6F4]">
+                        <div class="bg-white/40 rounded-xl p-4 sm:p-6 border border-[#FFD6F4]">
                             <div id="calendario" class="calendar-container"></div>
                         </div>
 
@@ -281,17 +281,26 @@
     }
 
     /* Calendário */
-    .calendar-container { max-width: 100%; }
+    .calendar-container { width: 100%; max-width: 100%; }
     .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     .calendar-header button { background: linear-gradient(135deg, #7B19E5, #FF2EB6); color: white; border: none; padding: 6px 14px; border-radius: 10px; cursor: pointer; font-size: 14px; transition: opacity 0.3s; }
     .calendar-header button:hover { opacity: 0.9; }
-    .calendar-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 15px; }
-    .calendar-day-name { text-align: center; font-weight: bold; color: #4A00B9; padding: 10px; font-size: 12px; background: rgba(123, 25, 229, 0.1); border-radius: 10px; }
-    .calendar-date { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border: 2px solid #FFD6F4; border-radius: 12px; cursor: pointer; font-weight: 500; transition: all 0.3s; background: white; font-size: 14px; }
+    .calendar-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; margin-bottom: 15px; }
+    .calendar-day-name { text-align: center; font-weight: bold; color: #4A00B9; padding: 10px; font-size: 12px; background: rgba(123, 25, 229, 0.1); border-radius: 10px; min-width: 0; }
+    .calendar-date { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border: 2px solid #FFD6F4; border-radius: 12px; cursor: pointer; font-weight: 500; transition: all 0.3s; background: white; font-size: 14px; min-width: 0; }
     .calendar-date:hover:not(.outro-mes):not(.indisponivel) { border-color: #7B19E5; background: rgba(123, 25, 229, 0.1); transform: scale(1.05); }
     .calendar-date.outro-mes { color: #d1d5db; cursor: not-allowed; background: #f9fafb; }
     .calendar-date.selecionado { background: linear-gradient(135deg, #7B19E5, #FF2EB6); color: white; border-color: #7B19E5; box-shadow: 0 4px 12px rgba(123, 25, 229, 0.3); }
     .calendar-date.indisponivel { color: #9ca3af; background: #f3f4f6; cursor: not-allowed; border-color: #e5e7eb; }
+
+    @media (max-width: 640px) {
+        .calendar-header { margin-bottom: 12px; }
+        .calendar-header button { padding: 4px 10px; font-size: 12px; border-radius: 8px; }
+        .calendar-days { gap: 4px; margin-bottom: 10px; }
+        .calendar-day-name { padding: 6px; font-size: 10px; border-radius: 8px; }
+        .calendar-date { font-size: 12px; border-width: 1px; border-radius: 10px; }
+        .calendar-date:hover:not(.outro-mes):not(.indisponivel) { transform: none; }
+    }
     
     /* Horários */
     .horario-option { padding: 10px; border: 2px solid #FFD6F4; border-radius: 10px; cursor: pointer; text-align: center; font-weight: 500; transition: all 0.3s; background: white; font-size: 14px; }
