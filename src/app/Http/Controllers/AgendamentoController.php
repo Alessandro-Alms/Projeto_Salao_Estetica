@@ -472,7 +472,9 @@ class AgendamentoController extends Controller
     {
         $this->autorizarConsultaDisponibilidade($request);
 
-        return view('agendamentos.disponibilidade_profissionais');
+        $limiteAgendamento = now()->addMonths(3)->endOfDay();
+
+        return view('agendamentos.disponibilidade_profissionais', compact('limiteAgendamento'));
     }
 
     public function getProfissionaisDisponiveisAjax(Request $request)
@@ -585,6 +587,153 @@ class AgendamentoController extends Controller
             'profissionais' => $disponiveis,
             'total' => $disponiveis->count(),
         ]);
+    }
+
+    public function getHorariosDisponibilidadeAjax(Request $request)
+    {
+        $this->autorizarConsultaDisponibilidade($request);
+
+        $dados = $request->validate([
+            'data' => ['required', 'date', 'after_or_equal:today'],
+            'duracao' => ['nullable', 'integer', 'min:15', 'max:480'],
+        ], [
+            'data.after_or_equal' => 'Escolha hoje ou uma data futura.',
+        ]);
+
+        $duracao = (int) ($dados['duracao'] ?? 30);
+        $inicioDia = Carbon::parse($dados['data'])->startOfDay();
+
+        if ($inicioDia->greaterThan(now()->addMonths(3)->endOfDay())) {
+            return response()->json([]);
+        }
+
+        $diaSemana = $inicioDia->dayOfWeek;
+        $agendaService = app(AgendaService::class);
+
+        $profissionais = User::where('cargo', 'profissional')
+            ->where('status', 'ativo')
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        if ($profissionais->isEmpty()) {
+            return response()->json([]);
+        }
+
+        $profissionaisIds = $profissionais->pluck('id');
+        $escalaPorProfissional = HorarioTrabalho::whereIn('profissional_id', $profissionaisIds)
+            ->where('dia_semana', $diaSemana)
+            ->get()
+            ->keyBy('profissional_id');
+
+        $escalasValidas = $escalaPorProfissional->filter(fn ($escala) => $escala && $escala->trabalha);
+        if ($escalasValidas->isEmpty()) {
+            return response()->json([]);
+        }
+
+        $fimDia = $inicioDia->copy()->endOfDay();
+        $agendamentosConflitantes = Agendamento::whereIn('profissional_id', $profissionaisIds)
+            ->where('status', '!=', 'cancelado')
+            ->where('data_hora_inicio', '<', $fimDia)
+            ->where('data_hora_fim', '>', $inicioDia)
+            ->get(['profissional_id', 'data_hora_inicio', 'data_hora_fim'])
+            ->groupBy('profissional_id');
+
+        $bloqueiosConflitantes = BloqueioHorario::whereIn('profissional_id', $profissionaisIds)
+            ->where('data_hora_inicio', '<', $fimDia)
+            ->where('data_hora_fim', '>', $inicioDia)
+            ->get(['profissional_id', 'data_hora_inicio', 'data_hora_fim'])
+            ->groupBy('profissional_id');
+
+        $bloqueiosGerais = BloqueioHorario::whereNull('profissional_id')
+            ->where('data_hora_inicio', '<=', $fimDia)
+            ->where('data_hora_fim', '>=', $inicioDia)
+            ->get();
+
+        $inicioRange = $escalasValidas->map(function ($escala) use ($dados) {
+            return Carbon::parse($dados['data'] . ' ' . $escala->hora_inicio);
+        })->sort()->first();
+
+        $fimRange = $escalasValidas->map(function ($escala) use ($dados) {
+            return Carbon::parse($dados['data'] . ' ' . $escala->hora_fim);
+        })->sort()->last();
+
+        if (!$inicioRange || !$fimRange) {
+            return response()->json([]);
+        }
+
+        $resultado = [];
+        $horaAtual = $inicioRange->copy();
+
+        while ($horaAtual->copy()->addMinutes($duracao)->lte($fimRange)) {
+            $horaFim = $horaAtual->copy()->addMinutes($duracao);
+            $profissionaisLivres = collect();
+
+            foreach ($profissionais as $profissional) {
+                $escala = $escalaPorProfissional->get($profissional->id);
+
+                if (!$escala || !$escala->trabalha) {
+                    continue;
+                }
+
+                $limiteInicio = $agendaService->inicioExpediente($escala, $horaAtual);
+                $limiteFim = $agendaService->limiteSaidaExpediente($escala, $horaAtual);
+
+                if (
+                    $horaAtual->lt($limiteInicio)
+                    || $horaAtual->gt($agendaService->fimExpediente($escala, $horaAtual))
+                    || $horaFim->gt($limiteFim)
+                    || $horaAtual->lt(now())
+                ) {
+                    continue;
+                }
+
+                if ($agendamentosConflitantes->get($profissional->id)?->contains(function ($agendamento) use ($horaAtual, $horaFim) {
+                    $agInicio = Carbon::parse($agendamento->data_hora_inicio);
+                    $agFim = Carbon::parse($agendamento->data_hora_fim);
+                    return $horaAtual->lt($agFim) && $horaFim->gt($agInicio);
+                })) {
+                    continue;
+                }
+
+                if ($bloqueiosConflitantes->get($profissional->id)?->contains(function ($bloqueio) use ($horaAtual, $horaFim) {
+                    $blInicio = Carbon::parse($bloqueio->data_hora_inicio);
+                    $blFim = Carbon::parse($bloqueio->data_hora_fim);
+                    return $horaAtual->lt($blFim) && $horaFim->gt($blInicio);
+                })) {
+                    continue;
+                }
+
+                $bloqueioGeral = null;
+                foreach ($bloqueiosGerais as $bloqueio) {
+                    if ($bloqueio->data_hora_inicio < $horaFim && $bloqueio->data_hora_fim > $horaAtual) {
+                        $bloqueioGeral = $bloqueio;
+                        break;
+                    }
+                }
+
+                $invadeAlmoco = $agendaService->invadeAlmoco($escala, $horaAtual, $horaFim);
+                $excedeSaidaExpediente = $agendaService->excedeSaidaExpediente($escala, $horaAtual, $horaFim);
+                $percentualAcrescimo = $agendaService->percentualAtendimentoEspecial($invadeAlmoco, $bloqueioGeral, $excedeSaidaExpediente, $horaAtual);
+
+                $profissionaisLivres->push([
+                    'id' => $profissional->id,
+                    'percentual_acrescimo' => $percentualAcrescimo,
+                ]);
+            }
+
+            if ($profissionaisLivres->isNotEmpty()) {
+                $resultado[] = [
+                    'hora' => $horaAtual->format('H:i'),
+                    'ocupado' => false,
+                    'percentual_acrescimo' => $profissionaisLivres->max('percentual_acrescimo') ?? 0,
+                    'atendimento_especial' => $profissionaisLivres->max('percentual_acrescimo') > 0,
+                ];
+            }
+
+            $horaAtual->addMinutes(30);
+        }
+
+        return response()->json($resultado);
     }
 
     private function autorizarConsultaDisponibilidade(Request $request): void

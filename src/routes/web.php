@@ -173,6 +173,7 @@ Route::middleware('auth')->group(function () {
     // ✅ CORREÇÃO 1: Nomes adicionados às rotas AJAX
     Route::get('/api/profissionais-por-servico', [AgendamentoController::class, 'getProfissionaisAjax'])->name('api.profissionais');
     Route::get('/api/horarios-disponiveis', [AgendamentoController::class, 'getHorariosAjax'])->name('api.horarios');
+    Route::get('/api/horarios-disponibilidade-profissionais', [AgendamentoController::class, 'getHorariosDisponibilidadeAjax'])->name('api.horarios.disponibilidade');
     Route::get('/disponibilidade-profissionais', [AgendamentoController::class, 'disponibilidadeProfissionais'])->name('disponibilidade.profissionais');
     Route::get('/api/profissionais-disponiveis', [AgendamentoController::class, 'getProfissionaisDisponiveisAjax'])->name('api.profissionais-disponiveis');
     // =======================================
