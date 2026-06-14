@@ -24,7 +24,7 @@
                         <!-- Nome do Serviço -->
                         <div class="mb-4">
                             <label for="nome" class="block text-sm font-medium text-[#4A00B9] mb-2">
-                                {{ __('Nome do Serviço') }}
+{{ __('Nome do Serviço') }} <span class="text-[#FF2EB6]">*</span>
                             </label>
                             @if(auth()->user()->cargo === 'gerente')
                                 <input id="nome" name="nome" type="text" 
@@ -41,7 +41,7 @@
                         <!-- Preço -->
                         <div class="mb-4">
                             <label for="preco" class="block text-sm font-medium text-[#4A00B9] mb-2">
-                                {{ __('Preço (R$)') }}
+{{ __('Preço (R$)') }} <span class="text-[#FF2EB6]">*</span>
                             </label>
                             @if(auth()->user()->cargo === 'gerente')
                                 <input id="preco" name="preco" type="number" step="0.01" 
@@ -58,7 +58,7 @@
                         <!-- Duração -->
                         <div class="mb-6">
                             <label for="duracao" class="block text-sm font-medium text-[#4A00B9] mb-2">
-                                {{ __('Duração (minutos)') }}
+{{ __('Duração (minutos)') }} <span class="text-[#FF2EB6]">*</span>
                             </label>
                             @if(auth()->user()->cargo === 'gerente')
                                 <input id="duracao" name="duracao" type="number" 

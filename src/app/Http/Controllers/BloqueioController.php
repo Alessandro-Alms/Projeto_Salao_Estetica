@@ -28,7 +28,7 @@ class BloqueioController extends Controller
     public function store(Request $request, AgendaService $agendaService)
     {
         $validado = $request->validate([
-            'profissional_id' => ['nullable', Rule::exists('users', 'id')->where('cargo', 'profissional')],
+'profissional_id' => ['required', Rule::exists('users', 'id')->where('cargo', 'profissional')],
             'data_hora_inicio' => ['required', 'date'],
             'data_hora_fim' => ['required', 'date', 'after:data_hora_inicio'],
             'motivo' => ['nullable', 'string', 'max:255'],

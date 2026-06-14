@@ -23,7 +23,7 @@
                         <!-- Nome do Serviço -->
                         <div class="mb-4">
                             <label for="nome" class="block text-sm font-medium text-[#4A00B9] mb-2">
-                                {{ __('Nome do Serviço') }}
+{{ __('Nome do Serviço') }} <span class="text-[#FF2EB6]">*</span>
                             </label>
                             <input
                                 id="nome"
@@ -39,7 +39,7 @@
                         <!-- Preço -->
                         <div class="mb-4">
                             <label for="preco" class="block text-sm font-medium text-[#4A00B9] mb-2">
-                                {{ __('Preço (R$)') }}
+{{ __('Preço (R$)') }} <span class="text-[#FF2EB6]">*</span>
                             </label>
                             <input
                                 id="preco"
@@ -56,7 +56,7 @@
                         <!-- Duração -->
                         <div class="mb-6">
                             <label for="duracao" class="block text-sm font-medium text-[#4A00B9] mb-2">
-                                {{ __('Duração (minutos)') }}
+{{ __('Duração (minutos)') }} <span class="text-[#FF2EB6]">*</span>
                             </label>
                             <input
                                 id="duracao"

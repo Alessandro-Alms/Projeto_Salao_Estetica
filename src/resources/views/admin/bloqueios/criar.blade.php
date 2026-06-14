@@ -27,17 +27,19 @@
 
                         <!-- Profissional -->
                         <div class="mb-5">
-                            <label class="block text-sm font-medium text-[#4A00B9] mb-2">Profissional (Opcional)</label>
-                            <select name="profissional_id"
+                            <label class="block text-sm font-medium text-[#4A00B9] mb-2">Profissional <span class="text-[#FF2EB6]">*</span></label>
+                            <select name="profissional_id" required
                                 data-searchable-select
-                                data-searchable-placeholder="Digite o nome do profissional..."
+                                data-searchable-placeholder="Digite o nome do profissional...">
+                                
+                                <option value="">Selecione...</option>
                                 class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
-                                <option value="">-- TODO O SALÃO (Feriado/Geral) --</option>
+
                                 @foreach($profissionais as $p)
                                     <option value="{{ $p->id }}">{{ $p->name }}</option>
                                 @endforeach
                             </select>
-                            <p class="text-xs text-gray-500 mt-1">✧ Deixe vazio para bloquear a agenda de todos os profissionais.</p>
+
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">

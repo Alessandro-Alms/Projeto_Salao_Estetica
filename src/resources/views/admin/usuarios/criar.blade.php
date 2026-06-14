@@ -24,7 +24,7 @@
                             <!-- Nome Completo -->
                             <div>
                                 <label for="name" class="block text-sm font-medium text-[#4A00B9] mb-2">
-                                    {{ __('Nome Completo') }}
+{{ __('Nome Completo') }} <span class="text-[#FF2EB6]">*</span>
                                 </label>
                                 <input id="name" type="text" name="name" value="{{ old('name') }}" required autofocus
                                     class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all" />
@@ -34,7 +34,7 @@
                             <!-- E-mail -->
                             <div>
                                 <label for="email" class="block text-sm font-medium text-[#4A00B9] mb-2">
-                                    {{ __('E-mail') }}
+{{ __('E-mail') }} <span class="text-[#FF2EB6]">*</span>
                                 </label>
                                 <input id="email" type="email" name="email" value="{{ old('email') }}" required
                                     class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all" />
@@ -44,9 +44,9 @@
                             <!-- CPF -->
                             <div>
                                 <label for="cpf" class="block text-sm font-medium text-[#4A00B9] mb-2">
-                                    {{ __('CPF') }}
+{{ __('CPF') }} <span class="text-[#FF2EB6]">*</span>
                                 </label>
-                                <input id="cpf" type="text" name="cpf" value="{{ old('cpf') }}" required data-mask="cpf"
+<input id="cpf" type="text" name="cpf" value="{{ old('cpf') }}" required data-mask="cpf"
                                     class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all" />
                                 <x-input-error :messages="$errors->get('cpf')" class="mt-2 text-red-500 text-xs" />
                             </div>
@@ -54,7 +54,7 @@
                             <!-- Telefone -->
                             <div>
                                 <label for="telefone" class="block text-sm font-medium text-[#4A00B9] mb-2">
-                                    {{ __('Telefone') }}
+{{ __('Telefone') }} <span class="text-[#FF2EB6]">*</span>
                                 </label>
                                 <input id="telefone" type="text" name="telefone" value="{{ old('telefone') }}" required data-mask="telefone"
                                     class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all" />
@@ -90,7 +90,7 @@
                             <!-- Senha -->
                             <div>
                                 <label for="password" class="block text-sm font-medium text-[#4A00B9] mb-2">
-                                    {{ __('Senha') }}
+{{ __('Senha') }} <span class="text-[#FF2EB6]">*</span>
                                 </label>
                                 <input id="password" type="password" name="password" required autocomplete="new-password"
                                     class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all" />

@@ -80,7 +80,7 @@
                                 <th class="px-6 py-4 text-xs font-medium text-[#4A00B9] uppercase tracking-wider">Data</th>
                                 <th class="px-6 py-4 text-xs font-medium text-[#4A00B9] uppercase tracking-wider">Serviço</th>
                                 <th class="px-6 py-4 text-xs font-medium text-[#4A00B9] uppercase tracking-wider text-center">% Comis.</th>
-                                <th class="px-6 py-4 text-xs font-medium text-[#4A00B9] uppercase tracking-wider text-right">Ganho Neto</th>
+                                <th class="px-6 py-4 text-xs font-medium text-[#4A00B9] uppercase tracking-wider text-right">Ganho</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-[#FFD6F4]">

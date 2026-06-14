@@ -23,7 +23,7 @@
                             <!-- Nome do Produto -->
                             <div class="md:col-span-2">
                                 <label for="nome" class="block text-sm font-medium text-[#4A00B9] mb-2">
-                                    {{ __('Nome do Produto') }}
+{{ __('Nome do Produto') }} <span class="text-[#FF2EB6]">*</span>
                                 </label>
                                 <input id="nome" type="text" name="nome" required autofocus
                                     class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all" />
@@ -32,7 +32,7 @@
                             <!-- Categoria -->
                             <div>
                                 <label for="tipo" class="block text-sm font-medium text-[#4A00B9] mb-2">
-                                    {{ __('Categoria') }}
+{{ __('Categoria') }} <span class="text-[#FF2EB6]">*</span>
                                 </label>
                                 <select name="tipo" id="tipo" 
                                     class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
@@ -46,7 +46,7 @@
                             <!-- Preço -->
                             <div>
                                 <label for="valor_unitario" class="block text-sm font-medium text-[#4A00B9] mb-2">
-                                    {{ __('Preço de Venda (R$)') }}
+{{ __('Preço de Venda (R$)') }} <span class="text-[#FF2EB6]">*</span>
                                 </label>
                                 <input id="valor_unitario" type="number" step="0.01" name="valor_unitario" required
                                     class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all" />
@@ -55,7 +55,7 @@
                             <!-- Estoque -->
                             <div>
                                 <label for="quantidade_estoque" class="block text-sm font-medium text-[#4A00B9] mb-2">
-                                    {{ __('Estoque Inicial') }}
+{{ __('Estoque Inicial') }} <span class="text-[#FF2EB6]">*</span>
                                 </label>
                                 <input id="quantidade_estoque" type="number" name="quantidade_estoque" required
                                     class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all" />

@@ -86,7 +86,7 @@
 
                 <!-- Nome -->
                 <div class="mb-4">
-                    <label for="name" class="block text-sm font-medium text-[#4A00B9] mb-2">Nome completo</label>
+<label for="name" class="block text-sm font-medium text-[#4A00B9] mb-2">Nome completo <span class="text-[#FF2EB6]">*</span></label>
                     <input id="name" type="text" name="name" value="{{ old('name') }}" required autofocus autocomplete="name"
                            class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
                     @error('name')
@@ -96,7 +96,7 @@
 
                 <!-- Email -->
                 <div class="mb-4">
-                    <label for="email" class="block text-sm font-medium text-[#4A00B9] mb-2">E-mail</label>
+                    <label for="email" class="block text-sm font-medium text-[#4A00B9] mb-2">E-mail <span class="text-[#FF2EB6]">*</span></label>
                     <input id="email" type="email" name="email" value="{{ old('email') }}" required autocomplete="username"
                            class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
                     @error('email')
@@ -104,10 +104,10 @@
                     @enderror
                 </div>
 
-                <!-- CPF -->
+<!-- CPF -->
                 <div class="mb-4">
-                    <label for="cpf" class="block text-sm font-medium text-[#4A00B9] mb-2">CPF</label>
-                          <input id="cpf" type="text" name="cpf" value="{{ old('cpf') }}" required data-mask="cpf"
+CPF <span class="text-[#FF2EB6]">*</span>
+<input id="cpf" type="text" name="cpf" value="{{ old('cpf') }}" required data-mask="cpf"
                            class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
                     @error('cpf')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -116,7 +116,7 @@
 
                 <!-- Telefone -->
                 <div class="mb-4">
-                    <label for="telefone" class="block text-sm font-medium text-[#4A00B9] mb-2">Telefone</label>
+                    <label for="telefone" class="block text-sm font-medium text-[#4A00B9] mb-2">Telefone <span class="text-[#FF2EB6]">*</span></label>
                           <input id="telefone" type="text" name="telefone" value="{{ old('telefone') }}" required data-mask="telefone"
                            class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
                     @error('telefone')
@@ -126,7 +126,7 @@
 
                 <!-- Senha -->
                 <div class="mb-4">
-                    <label for="password" class="block text-sm font-medium text-[#4A00B9] mb-2">Senha</label>
+                    <label for="password" class="block text-sm font-medium text-[#4A00B9] mb-2">Senha <span class="text-[#FF2EB6]">*</span></label>
                     <input id="password" type="password" name="password" required autocomplete="new-password"
                            class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
                     @error('password')
@@ -136,7 +136,7 @@
 
                 <!-- Confirmar senha -->
                 <div class="mb-6">
-                    <label for="password_confirmation" class="block text-sm font-medium text-[#4A00B9] mb-2">Confirmar senha</label>
+                    <label for="password_confirmation" class="block text-sm font-medium text-[#4A00B9] mb-2">Confirmar senha <span class="text-[#FF2EB6]">*</span></label>
                     <input id="password_confirmation" type="password" name="password_confirmation" required autocomplete="new-password"
                            class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
                 </div>

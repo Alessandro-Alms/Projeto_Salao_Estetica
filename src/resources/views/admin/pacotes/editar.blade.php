@@ -31,14 +31,14 @@
                         
                         <!-- Nome do Pacote -->
                         <div class="col-span-1 md:col-span-2">
-                            <label class="block text-sm font-medium text-[#4A00B9] mb-2">Nome do Pacote</label>
+<label class="block text-sm font-medium text-[#4A00B9] mb-2">Nome do Pacote <span class="text-[#FF2EB6]">*</span></label>
                             <input type="text" name="nome" value="{{ $pacote->nome }}" required 
                                 class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
                         </div>
 
                         <!-- Servicos inclusos -->
                         <div>
-                            <label class="block text-sm font-medium text-[#4A00B9] mb-2">Servicos inclusos</label>
+<label class="block text-sm font-medium text-[#4A00B9] mb-2">Servicos inclusos <span class="text-[#FF2EB6]">*</span></label>
                             @php
                                 $servicosSelecionados = $pacote->servicos->pluck('id_servico')->push($pacote->servico_id)->filter()->unique();
                             @endphp
@@ -54,21 +54,21 @@
 
                         <!-- Qtd. de Sessões -->
                         <div>
-                            <label class="block text-sm font-medium text-[#4A00B9] mb-2">Qtd. de Sessões</label>
+<label class="block text-sm font-medium text-[#4A00B9] mb-2">Qtd. de Sessões <span class="text-[#FF2EB6]">*</span></label>
                             <input type="number" name="quantidade_sessoes" value="{{ $pacote->quantidade_sessoes }}" min="2" required 
                                 class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
                         </div>
 
                         <!-- Valor Total -->
                         <div>
-                            <label class="block text-sm font-medium text-[#4A00B9] mb-2">Valor Total (R$)</label>
+<label class="block text-sm font-medium text-[#4A00B9] mb-2">Valor Total (R$) <span class="text-[#FF2EB6]">*</span></label>
                             <input type="number" name="valor_total" value="{{ $pacote->valor_total }}" step="0.01" required 
                                 class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
                         </div>
 
                         <!-- Validade em dias -->
                         <div>
-                            <label class="block text-sm font-medium text-[#4A00B9] mb-2">Validade (em dias)</label>
+<label class="block text-sm font-medium text-[#4A00B9] mb-2">Validade (em dias) <span class="text-[#FF2EB6]">*</span></label>
                             <input type="number" name="validade_dias" value="{{ $pacote->validade_dias }}" required 
                                 class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
                         </div>

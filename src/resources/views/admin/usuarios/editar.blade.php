@@ -30,7 +30,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label for="name" class="block text-sm font-medium text-[#4A00B9] mb-2">
-                                    {{ __('Nome Completo') }}
+{{ __('Nome Completo') }} <span class="text-[#FF2EB6]">*</span>
                                 </label>
                                 <input id="name" type="text" name="name" value="{{ old('name', $usuario->name) }}" required autofocus
                                     class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all" />
@@ -39,7 +39,7 @@
 
                             <div>
                                 <label for="email" class="block text-sm font-medium text-[#4A00B9] mb-2">
-                                    {{ __('E-mail') }}
+{{ __('E-mail') }} <span class="text-[#FF2EB6]">*</span>
                                 </label>
                                 <input id="email" type="email" name="email" value="{{ old('email', $usuario->email) }}" required
                                     class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all" />
@@ -48,16 +48,16 @@
 
                             <div>
                                 <label for="cpf" class="block text-sm font-medium text-[#4A00B9] mb-2">
-                                    {{ __('CPF') }}
+{{ __('CPF') }} <span class="text-[#FF2EB6]">*</span>
                                 </label>
-                                <input id="cpf" type="text" name="cpf" value="{{ old('cpf', $usuario->cpf) }}" required data-mask="cpf"
+<input id="cpf" type="text" name="cpf" value="{{ old('cpf', $usuario->cpf) }}" required data-mask="cpf"
                                     class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all" />
                                 <x-input-error :messages="$errors->get('cpf')" class="mt-2 text-red-500 text-xs" />
                             </div>
 
                             <div>
                                 <label for="telefone" class="block text-sm font-medium text-[#4A00B9] mb-2">
-                                    {{ __('Telefone') }}
+{{ __('Telefone') }} <span class="text-[#FF2EB6]">*</span>
                                 </label>
                                 <input id="telefone" type="text" name="telefone" value="{{ old('telefone', $usuario->telefone) }}" required data-mask="telefone"
                                     class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all" />
@@ -66,7 +66,7 @@
 
                             <div>
                                 <label for="cargo" class="block text-sm font-medium text-[#4A00B9] mb-2">
-                                    {{ __('Cargo / Função') }}
+{{ __('Cargo / Função') }} <span class="text-[#FF2EB6]">*</span>
                                 </label>
                                 @if(auth()->user()->cargo === 'gerente')
                                     <select name="cargo" id="cargo" 
