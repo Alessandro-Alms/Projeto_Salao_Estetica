@@ -333,6 +333,29 @@
     let mesAtual = new Date().getMonth();
     let anoAtual = new Date().getFullYear();
 
+    function formatarDataLocal(data) {
+        const ano = data.getFullYear();
+        const mes = String(data.getMonth() + 1).padStart(2, '0');
+        const dia = String(data.getDate()).padStart(2, '0');
+
+        return `${ano}-${mes}-${dia}`;
+    }
+
+    function limparEscolhaHorarioEProfissional() {
+        estadoAgendamento.horaSelecionada = null;
+        estadoAgendamento.horarioEspecial = null;
+        estadoAgendamento.profissionalId = null;
+        estadoAgendamento.profissionalNome = null;
+        estadoAgendamento.resumoFinanceiro = null;
+
+        document.getElementById('hora_agendamento').value = '';
+        document.getElementById('profissional_id').value = '';
+        document.getElementById('info-hora-selecionada').classList.add('hidden');
+        document.getElementById('aviso-horario-especial').classList.add('hidden');
+        document.getElementById('info-profissional-selecionado').classList.add('hidden');
+        document.getElementById('grade_profissionais').innerHTML = '<p class="text-gray-500 col-span-full text-center py-8">Escolha uma data e um horario para ver os profissionais disponiveis.</p>';
+    }
+
     function toggleServico(id, nome, duracao, preco) {
         const checkbox = document.getElementById(`checkbox-servico-${id}`);
         const card = document.getElementById(`servico-card-${id}`);
@@ -357,6 +380,7 @@
             card.classList.add('border-[#7B19E5]', 'bg-[#7B19E5]/5', 'selecionado');
         }
         atualizarResumo();
+        limparEscolhaHorarioEProfissional();
     }
 
     function atualizarResumo() {
@@ -434,6 +458,7 @@
     function selecionarData(data) {
         if (data > limiteAgendamento) { alert('Agendamento permitido apenas para os próximos 3 meses.'); return; }
         estadoAgendamento.dataSelecionada = data;
+        limparEscolhaHorarioEProfissional();
         document.getElementById('data-selecionada-texto').innerText = data.toLocaleDateString('pt-BR');
         document.getElementById('info-data-selecionada').classList.remove('hidden');
         atualizarCalendario(mesAtual, anoAtual);
@@ -441,12 +466,12 @@
 
     function carregarHorarios() {
         if (!estadoAgendamento.dataSelecionada) return;
-        const data = estadoAgendamento.dataSelecionada.toISOString().split('T')[0];
+        const data = formatarDataLocal(estadoAgendamento.dataSelecionada);
         document.getElementById('data_agendamento').value = data;
         const grade = document.getElementById('grade_horarios');
         grade.innerHTML = '<p class="text-gray-500 col-span-full text-center py-8">Carregando horários...</p>';
-        const servicoId = estadoAgendamento.servicosIds[0];
-        fetch(`${urlHorarios}?data=${data}&servico_id=${servicoId}&duracao=${estadoAgendamento.duraoTotal}`)
+        const servicosIds = estadoAgendamento.servicosIds.join(',');
+        fetch(`${urlHorarios}?data=${data}&servicos_ids=${servicosIds}&duracao=${estadoAgendamento.duraoTotal}`)
             .then(r => r.json())
             .then(h => {
                 grade.innerHTML = '';
@@ -465,7 +490,13 @@
     function selecionarHora(horario) {
         estadoAgendamento.horaSelecionada = horario.hora;
         estadoAgendamento.horarioEspecial = horario;
+        estadoAgendamento.profissionalId = null;
+        estadoAgendamento.profissionalNome = null;
+        estadoAgendamento.resumoFinanceiro = null;
         document.getElementById('hora_agendamento').value = horario.hora;
+        document.getElementById('profissional_id').value = '';
+        document.getElementById('info-profissional-selecionado').classList.add('hidden');
+        document.getElementById('grade_profissionais').innerHTML = '<p class="text-gray-500 col-span-full text-center py-8">Continue para ver os profissionais disponiveis neste horario.</p>';
         document.getElementById('hora-selecionada-texto').innerText = horario.hora;
         document.getElementById('info-hora-selecionada').classList.remove('hidden');
         const aviso = document.getElementById('aviso-horario-especial');
@@ -477,7 +508,7 @@
         if (!estadoAgendamento.dataSelecionada || !estadoAgendamento.horaSelecionada) return;
         const grade = document.getElementById('grade_profissionais');
         grade.innerHTML = '<p class="text-gray-500 col-span-full text-center py-8">Carregando profissionais...</p>';
-        const data = estadoAgendamento.dataSelecionada.toISOString().split('T')[0];
+        const data = formatarDataLocal(estadoAgendamento.dataSelecionada);
         const dataHora = `${data} ${estadoAgendamento.horaSelecionada}`;
         fetch(`${urlProfissionais}?servicos_ids=${estadoAgendamento.servicosIds.join(',')}&data_hora=${encodeURIComponent(dataHora)}&duracao=${estadoAgendamento.duraoTotal}`)
             .then(r => r.json())

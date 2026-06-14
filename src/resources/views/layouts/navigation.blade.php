@@ -17,6 +17,12 @@
                         P.inicial
                     </a>
 
+                    @if(in_array(auth()->user()->cargo, ['cliente', 'gerente', 'recepcionista'], true))
+                        <a href="{{ route('disponibilidade.profissionais') }}" class="px-4 py-1.5 rounded-full text-sm font-semibold {{ request()->routeIs('disponibilidade.*') ? 'bg-[#7B19E5] text-white shadow-md' : 'text-[#1A002B] hover:bg-[#FFD6F4]/70 hover:text-[#7B19E5]' }} transition-all">
+                            Disponibilidade
+                        </a>
+                    @endif
+
                     @if(auth()->user()->isCliente())
                         <a href="{{ route('cliente.produtos.index') }}" class="px-4 py-1.5 rounded-full text-sm font-semibold {{ request()->routeIs('cliente.produtos.*') ? 'bg-[#7B19E5] text-white shadow-md' : 'text-[#1A002B] hover:bg-[#FFD6F4]/70 hover:text-[#7B19E5]' }} transition-all">
                             Produtos
@@ -90,6 +96,10 @@
             <a href="{{ route('public.home') }}" class="block px-3 py-2 text-base text-[#1A002B] hover:text-[#FF2EB6] hover:bg-[#FFD6F4] rounded-md">
                 P.inicial
             </a>
+
+            @if(in_array(auth()->user()->cargo, ['cliente', 'gerente', 'recepcionista'], true))
+                <a href="{{ route('disponibilidade.profissionais') }}" class="block px-3 py-2 text-base text-[#1A002B] hover:text-[#FF2EB6] hover:bg-[#FFD6F4] rounded-md">Disponibilidade</a>
+            @endif
 
             @if(auth()->user()->isCliente())
                 <a href="{{ route('cliente.produtos.index') }}" class="block px-3 py-2 text-base text-[#1A002B] hover:text-[#FF2EB6] hover:bg-[#FFD6F4] rounded-md">Produtos</a>

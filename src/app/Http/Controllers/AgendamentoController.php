@@ -243,12 +243,26 @@ class AgendamentoController extends Controller
     public function getHorariosAjax(Request $request)
     {
         $data = $request->data; // ex: '2026-05-02'
+        $servicosIdsString = $request->servicos_ids;
         $servicoId = $request->servico_id;
-        $profissionalId = $request->profissional_id; // Opcional - se não tiver, busca de todos
-        $duracao = (int) $request->duracao; // Converter para int - opcional - duração customizada (para múltiplos serviços)
+        $profissionalId = $request->profissional_id; // Opcional - se nao tiver, busca de todos
+        $duracao = (int) $request->duracao; // Opcional - duracao customizada ou total enviada pelo wizard
 
-        $servico = Servico::find($servicoId);
-        if (!$servico) {
+        if ($servicosIdsString) {
+            $servicosIds = array_values(array_unique(array_filter(array_map('intval', explode(',', $servicosIdsString)))));
+        } elseif ($servicoId) {
+            $servicosIds = [(int) $servicoId];
+        } else {
+            return response()->json([]);
+        }
+
+        if (count($servicosIds) > AgendaService::MAX_SERVICOS_POR_AGENDAMENTO) {
+            return response()->json([
+                'message' => 'Escolha no maximo ' . AgendaService::MAX_SERVICOS_POR_AGENDAMENTO . ' servicos por agendamento.',
+            ], 422);
+        }
+
+        if (Servico::whereIn('id_servico', $servicosIds)->count() !== count($servicosIds)) {
             return response()->json([]);
         }
 
@@ -259,30 +273,39 @@ class AgendamentoController extends Controller
 
         $diaSemana = $inicioDia->dayOfWeek;
 
-        // Se profissional foi especificado, usa aquele
         if ($profissionalId) {
-            $profissional = User::where('id', $profissionalId)
+            $profissionalQuery = User::where('id', $profissionalId)
                 ->where('cargo', 'profissional')
-                ->with(['servicos' => function($q) use ($servicoId) {
-                    $q->where('servicos.id_servico', $servicoId);
-                }])
-                ->first();
+                ->with(['servicos' => function($q) use ($servicosIds) {
+                    $q->whereIn('servicos.id_servico', $servicosIds);
+                }]);
 
-            if (!$profissional || $profissional->servicos->isEmpty()) {
+            foreach ($servicosIds as $idServicoSelecionado) {
+                $profissionalQuery->whereHas('servicos', function($q) use ($idServicoSelecionado) {
+                    $q->where('servicos.id_servico', $idServicoSelecionado);
+                });
+            }
+
+            $profissional = $profissionalQuery->first();
+
+            if (!$profissional || $profissional->servicos->count() !== count($servicosIds)) {
                 return response()->json([]);
             }
 
             $profissionais = collect([$profissional]);
         } else {
-            // Senão, busca TODOS os profissionais que fazem este serviço
-            $profissionais = User::where('cargo', 'profissional')
-                ->whereHas('servicos', function($q) use ($servicoId) {
-                    $q->where('servicos.id_servico', $servicoId);
-                })
-                ->with(['servicos' => function($q) use ($servicoId) {
-                    $q->where('servicos.id_servico', $servicoId);
-                }])
-                ->get();
+            $profissionaisQuery = User::where('cargo', 'profissional')
+                ->with(['servicos' => function($q) use ($servicosIds) {
+                    $q->whereIn('servicos.id_servico', $servicosIds);
+                }]);
+
+            foreach ($servicosIds as $idServicoSelecionado) {
+                $profissionaisQuery->whereHas('servicos', function($q) use ($idServicoSelecionado) {
+                    $q->where('servicos.id_servico', $idServicoSelecionado);
+                });
+            }
+
+            $profissionais = $profissionaisQuery->get();
         }
 
         if ($profissionais->isEmpty()) {
@@ -326,32 +349,24 @@ class AgendamentoController extends Controller
             return null;
         };
 
-        // Array para armazenar status de cada horário por profissional
-        $horariosStatus = []; // hora => [prof1 => ocupado?, prof2 => ocupado?, ...]
+        $horariosStatus = [];
 
-        // Para cada profissional, verificar seus horários
         foreach ($profissionais as $prof) {
-            $vinculo = $prof->servicos->find($servicoId);
-            
-            if (!$vinculo) continue;
-
-            // Usar duração passada como parâmetro (múltiplos serviços) ou duração customizada/padrão
-            if ($duracao) {
-                $duracaoUsada = $duracao;
-            } else {
-                $duracaoUsada = $vinculo->pivot->duracao_customizada ?? $vinculo->duracao;
+            if ($prof->servicos->count() !== count($servicosIds)) {
+                continue;
             }
 
-            // 2. Busca a Escala de Trabalho do dia deste profissional
+            $duracaoUsada = $duracao ?: $prof->servicos->sum(function ($servico) {
+                return $servico->pivot->duracao_customizada ?? $servico->duracao;
+            });
+
             $escala = $escalaPorProfissional->get($prof->id);
 
             if (!$escala || !$escala->trabalha) continue;
 
-            // 3. Busca Agendamentos e Bloqueios para este dia
             $agendamentos = $agendamentosPorProfissional->get($prof->id, collect());
             $bloqueios = $bloqueiosPorProfissional->get($prof->id, collect());
 
-            // 4. Montar horários para este profissional
             $horaAtual = Carbon::parse($data . ' ' . $escala->hora_inicio);
             $horaFimExpediente = Carbon::parse($data . ' ' . $escala->hora_fim);
             $horaLimiteSaida = $agendaService->limiteSaidaExpediente($escala, $inicioDia);
@@ -360,14 +375,10 @@ class AgendamentoController extends Controller
                 $horaFimEstimado = $horaAtual->copy()->addMinutes($duracaoUsada);
                 $ocupado = false;
 
-                // Regra A: O serviço pode terminar ate 30 minutos depois do expediente, com acrescimo.
                 if ($horaFimEstimado > $horaLimiteSaida) {
                     $ocupado = true;
                 }
 
-                // Regra B: almoço não ocupa mais; será atendimento especial com acréscimo.
-
-                // Regra C: Conflita com agendamentos existentes?
                 if (!$ocupado) {
                     foreach ($agendamentos as $ag) {
                         $agInicio = Carbon::parse($ag->data_hora_inicio);
@@ -378,7 +389,6 @@ class AgendamentoController extends Controller
                     }
                 }
 
-                // Regra D: Conflita com Bloqueios/Feriados?
                 if (!$ocupado) {
                     foreach ($bloqueios as $bq) {
                         $bqInicio = Carbon::parse($bq->data_hora_inicio);
@@ -389,7 +399,6 @@ class AgendamentoController extends Controller
                     }
                 }
 
-                // Regra E: Ignorar horários no passado
                 if ($horaAtual < $agora) {
                     $ocupado = true;
                 }
@@ -401,7 +410,7 @@ class AgendamentoController extends Controller
                 $motivosAcrescimo = [];
 
                 if (!$ocupado && $invadeAlmoco) {
-                    $motivosAcrescimo[] = 'horário de almoço';
+                    $motivosAcrescimo[] = 'horario de almoco';
                 }
 
                 if (!$ocupado && $bloqueioGeral) {
@@ -418,12 +427,10 @@ class AgendamentoController extends Controller
 
                 $hora_str = $horaAtual->format('H:i');
 
-                // Inicializar array de status para este horário se não existir
                 if (!isset($horariosStatus[$hora_str])) {
                     $horariosStatus[$hora_str] = [];
                 }
 
-                // Armazenar status deste profissional para este horário
                 $horariosStatus[$hora_str][$prof->id] = [
                     'ocupado' => $ocupado,
                     'percentual_acrescimo' => $percentualAcrescimo,
@@ -434,10 +441,8 @@ class AgendamentoController extends Controller
             }
         }
 
-        // Formatar resposta: um horário é DISPONÍVEL se AT LEAST ONE profissional está livre
         $resultado = [];
         foreach ($horariosStatus as $hora => $statusPorProf) {
-            // Se pelo menos um profissional está livre neste horário
             $profissionaisLivresNoHorario = collect($statusPorProf)->filter(fn ($status) => !$status['ocupado']);
             $temProfissionalLivre = $profissionaisLivresNoHorario->isNotEmpty();
             $percentualAcrescimo = $profissionaisLivresNoHorario->max('percentual_acrescimo') ?? 0;
@@ -456,12 +461,137 @@ class AgendamentoController extends Controller
             ];
         }
 
-        // Ordenar por hora
         usort($resultado, function($a, $b) {
             return strcmp($a['hora'], $b['hora']);
         });
 
         return response()->json($resultado);
+    }
+
+    public function disponibilidadeProfissionais(Request $request)
+    {
+        $this->autorizarConsultaDisponibilidade($request);
+
+        return view('agendamentos.disponibilidade_profissionais');
+    }
+
+    public function getProfissionaisDisponiveisAjax(Request $request)
+    {
+        $this->autorizarConsultaDisponibilidade($request);
+
+        $dados = $request->validate([
+            'data' => ['required', 'date', 'after_or_equal:today'],
+            'hora' => ['required', 'date_format:H:i'],
+            'duracao' => ['nullable', 'integer', 'min:15', 'max:480'],
+        ], [
+            'data.after_or_equal' => 'Escolha hoje ou uma data futura.',
+        ]);
+
+        $duracao = (int) ($dados['duracao'] ?? 30);
+        $inicio = Carbon::parse($dados['data'] . ' ' . $dados['hora']);
+
+        if ($inicio->lessThan(now()) || $inicio->greaterThan(now()->addMonths(3)->endOfDay())) {
+            return response()->json([
+                'profissionais' => [],
+                'total' => 0,
+                'message' => 'Escolha um horario futuro dentro dos proximos 3 meses.',
+            ]);
+        }
+
+        $fim = $inicio->copy()->addMinutes($duracao);
+        $diaSemana = $inicio->dayOfWeek;
+        $agendaService = app(AgendaService::class);
+
+        $profissionais = User::where('cargo', 'profissional')
+            ->where('status', 'ativo')
+            ->with('servicos:id_servico,nome')
+            ->orderBy('name')
+            ->get(['id', 'name', 'email', 'telefone']);
+
+        if ($profissionais->isEmpty()) {
+            return response()->json([
+                'profissionais' => [],
+                'total' => 0,
+            ]);
+        }
+
+        $profissionaisIds = $profissionais->pluck('id');
+
+        $escalaPorProfissional = HorarioTrabalho::whereIn('profissional_id', $profissionaisIds)
+            ->where('dia_semana', $diaSemana)
+            ->get()
+            ->keyBy('profissional_id');
+
+        $agendamentosConflitantes = Agendamento::whereIn('profissional_id', $profissionaisIds)
+            ->where('status', '!=', 'cancelado')
+            ->where('data_hora_inicio', '<', $fim)
+            ->where('data_hora_fim', '>', $inicio)
+            ->get(['profissional_id'])
+            ->groupBy('profissional_id');
+
+        $bloqueiosConflitantes = BloqueioHorario::whereIn('profissional_id', $profissionaisIds)
+            ->where('data_hora_inicio', '<', $fim)
+            ->where('data_hora_fim', '>', $inicio)
+            ->get(['profissional_id'])
+            ->groupBy('profissional_id');
+
+        $bloqueioGeral = $agendaService->buscarBloqueioGeralConflitante($inicio, $fim);
+
+        $disponiveis = $profissionais
+            ->filter(function ($profissional) use ($inicio, $fim, $agendaService, $escalaPorProfissional, $agendamentosConflitantes, $bloqueiosConflitantes) {
+                $escala = $escalaPorProfissional->get($profissional->id);
+
+                if (!$escala || !$escala->trabalha) {
+                    return false;
+                }
+
+                if (
+                    $inicio->lt($agendaService->inicioExpediente($escala, $inicio))
+                    || $inicio->gt($agendaService->fimExpediente($escala, $inicio))
+                    || $fim->gt($agendaService->limiteSaidaExpediente($escala, $inicio))
+                ) {
+                    return false;
+                }
+
+                if ($agendamentosConflitantes->get($profissional->id)?->isNotEmpty()) {
+                    return false;
+                }
+
+                if ($bloqueiosConflitantes->get($profissional->id)?->isNotEmpty()) {
+                    return false;
+                }
+
+                return true;
+            })
+            ->map(function ($profissional) use ($inicio, $fim, $agendaService, $escalaPorProfissional, $bloqueioGeral) {
+                $escala = $escalaPorProfissional->get($profissional->id);
+                $invadeAlmoco = $agendaService->invadeAlmoco($escala, $inicio, $fim);
+                $excedeSaidaExpediente = $agendaService->excedeSaidaExpediente($escala, $inicio, $fim);
+                $percentualAcrescimo = $agendaService->percentualAtendimentoEspecial($invadeAlmoco, $bloqueioGeral, $excedeSaidaExpediente, $inicio);
+
+                return [
+                    'id' => $profissional->id,
+                    'name' => $profissional->name,
+                    'email' => $profissional->email,
+                    'telefone' => $profissional->telefone,
+                    'servicos' => $profissional->servicos->pluck('nome')->values(),
+                    'atendimento_especial' => $percentualAcrescimo > 0,
+                    'percentual_acrescimo' => $percentualAcrescimo,
+                ];
+            })
+            ->values();
+
+        return response()->json([
+            'profissionais' => $disponiveis,
+            'total' => $disponiveis->count(),
+        ]);
+    }
+
+    private function autorizarConsultaDisponibilidade(Request $request): void
+    {
+        if (!in_array($request->user()?->cargo, ['cliente', 'gerente', 'recepcionista'], true)) {
+            abort(403, 'Voce nao tem permissao para consultar a disponibilidade dos profissionais.');
+        }
     }
 
     // =========================================================
