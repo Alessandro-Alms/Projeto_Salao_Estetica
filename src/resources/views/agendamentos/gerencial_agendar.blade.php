@@ -1,262 +1,718 @@
 <x-app-layout>
-    <div class="py-12 relative">
-        <!-- Fundo -->
-        <div class="fixed inset-0 -z-10 overflow-hidden">
-            <div class="absolute top-0 -left-20 w-[600px] h-[600px] bg-[#7B19E5]/20 rounded-full blur-3xl"></div>
-            <div class="absolute bottom-0 -right-20 w-[700px] h-[700px] bg-[#FF2EB6]/20 rounded-full blur-3xl"></div>
-            <div class="absolute top-1/3 left-1/3 w-[400px] h-[400px] bg-[#A955D3]/15 rounded-full blur-3xl"></div>
-            <div class="absolute inset-0 bg-gradient-to-br from-[#7B19E5]/5 via-white/30 to-[#FF2EB6]/5"></div>
-        </div>
+<div class="py-12 relative">
+    <div class="fixed inset-0 -z-10 overflow-hidden">
+        <div class="absolute top-0 -left-20 w-[600px] h-[600px] bg-[#7B19E5]/20 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-0 -right-20 w-[700px] h-[700px] bg-[#FF2EB6]/20 rounded-full blur-3xl"></div>
+        <div class="absolute top-1/3 left-1/3 w-[400px] h-[400px] bg-[#A955D3]/15 rounded-full blur-3xl"></div>
+        <div class="absolute inset-0 bg-gradient-to-br from-[#7B19E5]/5 via-white/30 to-[#FF2EB6]/5"></div>
+    </div>
 
-        <div class="max-w-2xl mx-auto px-4">
-            <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
-                <div class="p-8 bg-white/70 backdrop-blur-sm border border-white/40">
-                    <div class="flex items-center gap-3 mb-6">
-                        <div class="w-10 h-10 bg-gradient-to-br from-[#7B19E5] to-[#FF2EB6] rounded-xl flex items-center justify-center shadow-md">
-                            <span class="text-white text-lg">✧</span>
+    <div class="max-w-6xl mx-auto px-4">
+        <div class="glass-card rounded-3xl shadow-xl overflow-hidden">
+            <div class="p-8 bg-white/70 backdrop-blur-sm">
+                <div class="flex items-center gap-3 mb-8 pb-4 border-b border-[#FFD6F4]">
+                    <div class="w-12 h-12 bg-gradient-to-br from-[#7B19E5] to-[#FF2EB6] rounded-2xl flex items-center justify-center shadow-md">
+                        <span class="text-white text-xl">✧</span>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-title text-[#4A00B9]">Agendar para Cliente</h2>
+                        <p class="text-sm text-gray-500 mt-0.5">Preencha os dados abaixo para marcar o horário do cliente</p>
+                    </div>
+                </div>
+
+                @if ($errors->any())
+                    <div class="mb-6 p-4 rounded-xl bg-red-50/80 border border-red-200 text-red-700">
+                        <p class="font-medium mb-1">✧ Não foi possível agendar:</p>
+                        <ul class="list-disc list-inside text-sm">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
+                <div class="flex justify-between mb-10 flex-wrap gap-3">
+                    <div id="indicador-1" class="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-[#7B19E5] to-[#A855F7] text-white shadow-md">
+                        <span class="text-sm">✧</span>
+                        <span class="text-sm font-medium">Cliente e Serviço</span>
+                    </div>
+                    <div id="indicador-2" class="flex items-center gap-2 px-4 py-2 rounded-full bg-white/50 border border-[#FFD6F4] text-[#4A00B9]">
+                        <span class="text-sm">✦</span>
+                        <span class="text-sm font-medium">Calendário</span>
+                    </div>
+                    <div id="indicador-3" class="flex items-center gap-2 px-4 py-2 rounded-full bg-white/50 border border-[#FFD6F4] text-[#4A00B9]">
+                        <span class="text-sm">✧</span>
+                        <span class="text-sm font-medium">Horário</span>
+                    </div>
+                    <div id="indicador-4" class="flex items-center gap-2 px-4 py-2 rounded-full bg-white/50 border border-[#FFD6F4] text-[#4A00B9]">
+                        <span class="text-sm">✦</span>
+                        <span class="text-sm font-medium">Profissional</span>
+                    </div>
+                    <div id="indicador-5" class="flex items-center gap-2 px-4 py-2 rounded-full bg-white/50 border border-[#FFD6F4] text-[#4A00B9]">
+                        <span class="text-sm">✧</span>
+                        <span class="text-sm font-medium">Confirmar</span>
+                    </div>
+                </div>
+
+                <form id="formAgendamento" action="{{ route('admin.agendar.cliente.salvar') }}" method="POST">
+                    @csrf
+                    
+                    <input type="hidden" id="cliente_id" name="cliente_id">
+                    <input type="hidden" id="servicos_ids" name="servicos_ids">
+                    <input type="hidden" id="profissional_id" name="profissional_id">
+                    <input type="hidden" id="data_agendamento" name="data">
+                    <input type="hidden" id="hora_agendamento" name="hora">
+
+                    {{-- PASSO 1: ESCOLHER CLIENTE E SERVIÇO(S) --}}
+                    <div id="passo-1" class="passo">
+                        
+                        <div class="mb-8 p-6 bg-white/60 border border-[#FFD6F4] rounded-2xl shadow-sm">
+                            <label class="block text-base font-bold text-[#4A00B9] mb-3">✧ Selecione o Cliente</label>
+                            <div class="relative">
+                                <input type="text" id="cliente-search" placeholder="Digite o nome do cliente..." 
+                                    class="w-full px-4 py-3 bg-white border border-[#FFD6F4] rounded-xl focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
+                                <div id="cliente-dropdown" class="hidden absolute top-full left-0 right-0 mt-2 bg-white border border-[#FFD6F4] rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto">
+                                    @foreach($clientes as $cliente)
+                                        <div class="px-4 py-3 hover:bg-[#7B19E5]/10 cursor-pointer cliente-option transition-colors" data-id="{{ $cliente->id }}" data-name="{{ $cliente->name }}">
+                                            <p class="font-bold text-[#1A002B]">{{ $cliente->name }}</p>
+                                            <p class="text-sm text-gray-500">{{ $cliente->email }}</p>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                            <div id="cliente-selecionado" class="mt-3 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl hidden flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-green-800">✓ Cliente selecionado:</p>
+                                    <p id="cliente-nome" class="font-bold text-green-900 text-lg"></p>
+                                </div>
+                                <button type="button" onclick="limparCliente()" class="text-sm text-green-700 hover:text-green-900 underline">Alterar</button>
+                            </div>
                         </div>
-                        <h1 class="text-2xl font-title text-[#4A00B9]">Agendar para Cliente</h1>
+
+                        <div class="bg-gradient-to-r from-[#7B19E5]/5 to-[#FF2EB6]/5 rounded-2xl p-5 mb-6 border border-[#FFD6F4]">
+                            <div class="flex items-start gap-3">
+                                <span class="text-2xl">✧</span>
+                                <div>
+                                    <p class="text-[#1A002B] font-medium">Escolha até <strong class="text-[#7B19E5]">5 serviços</strong> para este agendamento</p>
+                                    <p class="text-sm text-gray-500 mt-1">Ao selecionar 5 serviços, aplica-se <strong class="text-[#FF2EB6]">10% de desconto</strong> no total</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="relative mb-4">
+                            <input type="text" id="servico-search" placeholder="Buscar serviço..."
+                                class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            @foreach($servicos as $servico)
+                                <div class="servico-card border-2 border-[#FFD6F4] rounded-xl p-4 cursor-pointer transition-all hover:border-[#7B19E5] hover:shadow-md" 
+                                     id="servico-card-{{ $servico->id_servico }}"
+                                     data-id="{{ $servico->id_servico }}"
+                                     data-nome="{{ e($servico->nome) }}"
+                                     data-duracao="{{ $servico->duracao }}"
+                                     data-preco="{{ $servico->preco }}">
+                                    <div class="flex items-start gap-3">
+                                        <input type="checkbox" id="checkbox-servico-{{ $servico->id_servico }}" class="mt-1 w-5 h-5 rounded border-[#FFD6F4] text-[#7B19E5] focus:ring-[#7B19E5]">
+                                        <div class="flex-1">
+                                            <p class="font-bold text-[#1A002B]">{{ $servico->nome }}</p>
+                                            <p class="text-sm text-[#7B19E5] font-semibold mt-1">R$ {{ number_format($servico->preco, 2, ',', '.') }}</p>
+                                            <p class="text-xs text-gray-400 mt-1"> {{ $servico->duracao }} min</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        <div id="resumo-servicos-selecionados" class="mt-6 p-4 bg-[#7B19E5]/5 rounded-xl border border-[#FFD6F4] hidden">
+                            <h4 class="font-semibold text-[#4A00B9] mb-2">✧ Serviços Selecionados</h4>
+                            <ul id="lista-servicos-selecionados" class="space-y-1 text-sm text-gray-600"></ul>
+                            <div class="mt-3 pt-3 border-t border-[#FFD6F4] flex justify-between items-center">
+                                <span class="text-[#4A00B9] font-medium">Tempo total:</span>
+                                <span class="font-bold text-[#7B19E5]" id="tempo-total">0</span>
+                                <span class="text-gray-500">minutos</span>
+                            </div>
+                            <div class="mt-2 flex justify-between items-center">
+                                <span class="text-[#4A00B9] font-medium">Serviços:</span>
+                                <span class="font-bold text-[#FF2EB6]" id="qtd-servicos">0</span>
+                                <span class="text-gray-500">/5</span>
+                            </div>
+                            <p id="aviso-desconto-combo" class="hidden mt-2 text-sm text-green-600 font-semibold">✨ Combo completo! 10% de desconto aplicado</p>
+                        </div>
+                        
+                        <div class="mt-8 flex justify-end">
+                            <button type="button" onclick="irParaPasso(2)" class="bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white px-8 py-3 rounded-xl font-medium btn-primary shadow-md hover:shadow-lg transition-all">
+                                Continuar →
+                            </button>
+                        </div>
                     </div>
 
-                    @if ($errors->any())
-                        <div class="mb-6 p-4 rounded-lg bg-red-50/80 border border-red-200 text-red-700">
-                            <p class="font-medium mb-1">✧ Não foi possível agendar:</p>
-                            <ul class="list-disc list-inside text-sm">
-                                @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
+                    {{-- PASSO 2: CALENDÁRIO --}}
+                    <div id="passo-2" class="passo hidden">
+                        <div class="bg-gradient-to-r from-[#7B19E5]/5 to-[#FF2EB6]/5 rounded-2xl p-5 mb-6 border border-[#FFD6F4]">
+                            <p class="text-[#1A002B]"> Selecione a data desejada para o atendimento</p>
                         </div>
-                    @endif
-
-                    <form action="{{ route('admin.agendar.cliente.salvar') }}" method="POST" id="form-agendar">
-                        @csrf
                         
-                        <div class="space-y-5">
-                            <!-- Cliente - Busca por nome -->
-                            <div>
-                                <label class="block text-sm font-medium text-[#4A00B9] mb-2">✧ Selecione o Cliente</label>
-                                <div class="relative">
-                                    <input type="text" id="cliente-search" placeholder="Digite o nome do cliente..." 
-                                        class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
-                                    <div id="cliente-dropdown" class="hidden absolute top-full left-0 right-0 mt-1 bg-white/95 border border-[#FFD6F4] rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
-                                        @foreach($clientes as $cliente)
-                                            <div class="px-4 py-3 hover:bg-[#7B19E5]/10 cursor-pointer cliente-option" data-id="{{ $cliente->id }}" data-name="{{ $cliente->name }}">
-                                                <p class="font-medium text-[#4A00B9]">{{ $cliente->name }}</p>
-                                                <p class="text-xs text-gray-500">{{ $cliente->email }}</p>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                </div>
-                                <input type="hidden" name="cliente_id" id="cliente-id" value="{{ old('cliente_id') }}" required>
-                                <div id="cliente-selecionado" class="mt-2 p-3 bg-green-50/50 border border-green-200 rounded-lg hidden">
-                                    <p class="text-sm text-green-700"><strong>Cliente selecionado:</strong> <span id="cliente-nome"></span></p>
-                                </div>
-                            </div>
+                        <div class="bg-white/40 rounded-xl p-4 sm:p-6 border border-[#FFD6F4]">
+                            <div id="calendario" class="calendar-container"></div>
+                        </div>
 
-                            <!-- Profissional - Busca por nome -->
-                            <div>
-                                <label class="block text-sm font-medium text-[#4A00B9] mb-2">✦ Selecione o Profissional</label>
-                                <div class="relative">
-                                    <input type="text" id="profissional-search" placeholder="Digite o nome do profissional..." 
-                                        class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
-                                    <div id="profissional-dropdown" class="hidden absolute top-full left-0 right-0 mt-1 bg-white/95 border border-[#FFD6F4] rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
-                                        @foreach($profissionais as $prof)
-                                            <div class="px-4 py-3 hover:bg-[#7B19E5]/10 cursor-pointer profissional-option" data-id="{{ $prof->id }}" data-name="{{ $prof->name }}">
-                                                <p class="font-medium text-[#4A00B9]">{{ $prof->name }}</p>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                </div>
-                                <input type="hidden" name="profissional_id" id="profissional-id" value="{{ old('profissional_id') }}" required>
-                                <div id="profissional-selecionado" class="mt-2 p-3 bg-green-50/50 border border-green-200 rounded-lg hidden">
-                                    <p class="text-sm text-green-700"><strong>Profissional selecionado:</strong> <span id="profissional-nome"></span></p>
-                                </div>
-                            </div>
+                        <div id="info-data-selecionada" class="mt-4 p-3 bg-green-50/80 rounded-xl border border-green-200 hidden">
+                            <p class="text-green-700">✓ Data selecionada: <span id="data-selecionada-texto" class="font-semibold"></span></p>
+                        </div>
+                        
+                        <div class="mt-8 flex justify-between">
+                            <button type="button" onclick="irParaPasso(1)" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-2 rounded-xl font-medium transition-all">← Voltar</button>
+                            <button type="button" onclick="irParaPasso(3)" class="bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white px-8 py-2 rounded-xl font-medium btn-primary shadow-md hover:shadow-lg transition-all">Continuar →</button>
+                        </div>
+                    </div>
 
-                            <!-- Serviço - Single select -->
-                            <div>
-                                <label class="block text-sm font-medium text-[#4A00B9] mb-2">✧ Selecione o Serviço</label>
-                                <select name="servico_id"
-                                    data-searchable-select
-                                    data-searchable-placeholder="Digite o nome do serviço..."
-                                    class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all"
-                                    id="servico-select" required>
-                                    <option value="">Selecione o serviço</option>
-                                    @foreach($servicos as $servico)
-                                        <option value="{{ $servico->id_servico }}" data-preco="{{ $servico->preco }}" {{ old('servico_id') == $servico->id_servico ? 'selected' : '' }}>
-                                            {{ $servico->nome }} - R$ {{ number_format($servico->preco, 2, ',', '.') }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
+                    {{-- PASSO 3: HORÁRIO --}}
+                    <div id="passo-3" class="passo hidden">
+                        <div class="bg-gradient-to-r from-[#7B19E5]/5 to-[#FF2EB6]/5 rounded-2xl p-5 mb-6 border border-[#FFD6F4]">
+                            <p class="text-[#1A002B]"> Selecione o horário disponível</p>
+                        </div>
+                        
+                        <div id="grade_horarios" class="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
+                            <p class="text-gray-500 col-span-full text-center py-8">Carregando horários...</p>
+                        </div>
 
-                            <!-- Data e Hora -->
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-[#4A00B9] mb-2">✧ Data</label>
-                                    <input type="date" name="data" id="data-agendamento"
-                                        class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all"
-                                        min="{{ now()->format('Y-m-d') }}" value="{{ old('data') }}" required>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-[#4A00B9] mb-2">✦ Hora</label>
-                                    <input type="time" name="hora" 
-                                        class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all"
-                                        value="{{ old('hora') }}" required>
-                                </div>
-                            </div>
+                        <div id="aviso-horario-especial" class="mt-4 p-3 bg-yellow-50/80 rounded-xl border border-yellow-200 hidden">
+                            <p class="text-yellow-700 text-sm">⚠️ Este horário possui acréscimo especial (Fim de semana ou fora do expediente padrão)</p>
+                        </div>
+                        
+                        <div id="info-hora-selecionada" class="mt-4 p-3 bg-green-50/80 rounded-xl border border-green-200 hidden">
+                            <p class="text-green-700">✓ Horário selecionado: <span id="hora-selecionada-texto" class="font-semibold"></span></p>
+                        </div>
+                        
+                        <div class="mt-8 flex justify-between">
+                            <button type="button" onclick="irParaPasso(2)" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-2 rounded-xl font-medium transition-all">← Voltar</button>
+                            <button type="button" onclick="irParaPasso(4)" class="bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white px-8 py-2 rounded-xl font-medium btn-primary shadow-md hover:shadow-lg transition-all">Continuar →</button>
+                        </div>
+                    </div>
 
-                            <!-- Botões -->
-                            <div id="aviso-fim-semana" class="hidden rounded-xl border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-800">
-                                <strong>✧ Acréscimo de fim de semana:</strong> sábados e domingos funcionam em horário normal, mas o serviço recebe +25%. A comissão do profissional também considera esse valor maior.
-                                <p id="preview-fim-semana" class="mt-1 font-bold"></p>
-                            </div>
+                    {{-- PASSO 4: PROFISSIONAL --}}
+                    <div id="passo-4" class="passo hidden">
+                        <div class="bg-gradient-to-r from-[#7B19E5]/5 to-[#FF2EB6]/5 rounded-2xl p-5 mb-6 border border-[#FFD6F4]">
+                            <p class="text-[#1A002B]"> Escolha o profissional</p>
+                        </div>
+                        
+                        <div class="relative mb-4">
+                            <input type="text" id="profissional-search" placeholder="Digite o nome do profissional..."
+                                class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
+                        </div>
 
-                            <div class="flex gap-4 pt-4">
-                                <a href="{{ route('dashboard') }}" class="flex-1 px-4 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-full transition-all text-center">
-                                    ← Cancelar
-                                </a>
-                                <button type="submit" class="flex-1 px-4 py-3 bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] hover:shadow-lg text-white font-medium rounded-full transition-all">
-                                    Confirmar agendamento
-                                </button>
+                        <div id="grade_profissionais" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <p class="text-gray-500 col-span-full text-center py-8">Carregando profissionais...</p>
+                        </div>
+
+                        <div id="info-profissional-selecionado" class="mt-4 p-3 bg-green-50/80 rounded-xl border border-green-200 hidden">
+                            <p class="text-green-700">✓ Profissional selecionado: <span id="profissional-selecionado-texto" class="font-semibold"></span></p>
+                        </div>
+                        
+                        <div class="mt-8 flex justify-between">
+                            <button type="button" onclick="irParaPasso(3)" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-2 rounded-xl font-medium transition-all">← Voltar</button>
+                            <button type="button" onclick="irParaPasso(5)" class="bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white px-8 py-2 rounded-xl font-medium btn-primary shadow-md hover:shadow-lg transition-all">Continuar →</button>
+                        </div>
+                    </div>
+
+                    {{-- PASSO 5: CONFIRMAR --}}
+                    <div id="passo-5" class="passo hidden">
+                        <div class="bg-gradient-to-r from-[#7B19E5]/5 to-[#FF2EB6]/5 rounded-2xl p-5 mb-6 border border-[#FFD6F4]">
+                            <p class="text-[#1A002B]">✓ Confirme os dados do agendamento</p>
+                        </div>
+                        
+                        <div class="bg-white/50 rounded-xl p-6 space-y-3 border border-[#FFD6F4]">
+                            <div class="flex justify-between py-2 border-b border-[#FFD6F4]">
+                                <span class="text-gray-600">👤 Cliente:</span>
+                                <span id="resumo_cliente" class="font-semibold text-[#4A00B9]"></span>
+                            </div>
+                            <div class="flex justify-between py-2 border-b border-[#FFD6F4]">
+                                <span class="text-gray-600">✧ Serviço(s):</span>
+                                <span id="resumo_servico" class="font-semibold text-[#4A00B9]"></span>
+                            </div>
+                            <div class="flex justify-between py-2 border-b border-[#FFD6F4]">
+                                <span class="text-gray-600">✦ Profissional:</span>
+                                <span id="resumo_profissional" class="font-semibold text-[#4A00B9]"></span>
+                            </div>
+                            <div class="flex justify-between py-2 border-b border-[#FFD6F4]">
+                                <span class="text-gray-600">✧ Data:</span>
+                                <span id="resumo_data" class="font-semibold text-[#4A00B9]"></span>
+                            </div>
+                            <div class="flex justify-between py-2 border-b border-[#FFD6F4]">
+                                <span class="text-gray-600">✦ Hora:</span>
+                                <span id="resumo_hora" class="font-semibold text-[#4A00B9]"></span>
+                            </div>
+                            <div class="flex justify-between py-2 border-t border-[#FFD6F4] mt-2 pt-3">
+                                <span class="font-bold text-gray-800">Total a cobrar:</span>
+                                <span id="resumo_valor_total" class="font-bold text-2xl text-green-600"></span>
                             </div>
                         </div>
-                    </form>
-                </div>
+
+                        <div class="mt-8 flex justify-between">
+                            <button type="button" onclick="irParaPasso(4)" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-2 rounded-xl font-medium transition-all">← Voltar</button>
+                            <button type="submit" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-10 py-3 rounded-xl font-bold shadow-md hover:shadow-lg transition-all">✓ Confirmar Agendamento</button>
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
+</div>
 
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Playfair+Display:wght@700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
-        
-        .font-title {
-            font-family: 'Playfair Display', serif;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-        }
-        
-        .glass-card {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 8px 32px rgba(123, 25, 229, 0.1);
-        }
-    </style>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Playfair+Display:wght@700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+    
+    .font-title { font-family: 'Playfair Display', serif; font-weight: 700; letter-spacing: -0.02em; }
+    .glass-card { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 8px 32px rgba(123, 25, 229, 0.1); }
+    .btn-primary { position: relative; overflow: hidden; transition: all 0.3s ease; z-index: 1; }
+    .btn-primary::before { content: ''; position: absolute; top: 50%; left: 50%; width: 0; height: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.3); transform: translate(-50%, -50%); transition: width 0.6s ease, height 0.6s ease; z-index: -1; }
+    .btn-primary:hover::before { width: 300px; height: 300px; }
+    .btn-primary:hover { transform: translateY(-2px); }
+    
+    .hidden { display: none; }
+    
+    /* Checkbox dos serviços */
+    .servico-card input[type="checkbox"] {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 20px;
+        height: 20px;
+        min-width: 20px;
+        border: 2px solid #FFD6F4;
+        border-radius: 5px;
+        background: transparent;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
 
-    <script>
-        // ===== BUSCA DE CLIENTE =====
-        const clienteSearch = document.getElementById('cliente-search');
-        const clienteDropdown = document.getElementById('cliente-dropdown');
-        const clienteId = document.getElementById('cliente-id');
-        const clienteSelecionado = document.getElementById('cliente-selecionado');
-        const clienteNome = document.getElementById('cliente-nome');
+    .servico-card input[type="checkbox"]:checked {
+        background: linear-gradient(135deg, #7B19E5, #FF2EB6);
+        border-color: #D8B4FE;
+    }
 
-        clienteSearch.addEventListener('focus', () => clienteDropdown.classList.remove('hidden'));
-        clienteSearch.addEventListener('input', (e) => {
-            const valor = e.target.value.toLowerCase();
-            const opcoes = clienteDropdown.querySelectorAll('.cliente-option');
-            
-            opcoes.forEach(opcao => {
-                const nome = opcao.dataset.name.toLowerCase();
-                opcao.style.display = nome.includes(valor) ? 'block' : 'none';
-            });
-        });
+    .servico-card input[type="checkbox"]:checked::after {
+        content: "✓";
+        color: #FFFFFF;
+        font-size: 14px;
+        font-weight: 900;
+        line-height: 1;
+    }
 
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('#cliente-search') && !e.target.closest('#cliente-dropdown')) {
-                clienteDropdown.classList.add('hidden');
-            }
-        });
+    /* Serviço selecionado */
+    .servico-card.selecionado {
+        background: rgba(123, 25, 229, 0.10) !important;
+        border-color: #7B19E5 !important;
+        box-shadow: 0 0 0 2px rgba(123, 25, 229, 0.20);
+    }
 
+    /* Calendário */
+    .calendar-container { width: 100%; max-width: 100%; }
+    .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .calendar-header button { background: linear-gradient(135deg, #7B19E5, #FF2EB6); color: white; border: none; padding: 6px 14px; border-radius: 10px; cursor: pointer; font-size: 14px; transition: opacity 0.3s; }
+    .calendar-header button:hover { opacity: 0.9; }
+    .calendar-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; margin-bottom: 15px; }
+    .calendar-day-name { text-align: center; font-weight: bold; color: #4A00B9; padding: 10px; font-size: 12px; background: rgba(123, 25, 229, 0.1); border-radius: 10px; min-width: 0; }
+    .calendar-date { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border: 2px solid #FFD6F4; border-radius: 12px; cursor: pointer; font-weight: 500; transition: all 0.3s; background: white; font-size: 14px; min-width: 0; }
+    .calendar-date:hover:not(.outro-mes):not(.indisponivel) { border-color: #7B19E5; background: rgba(123, 25, 229, 0.1); transform: scale(1.05); }
+    .calendar-date.outro-mes { color: #d1d5db; cursor: not-allowed; background: #f9fafb; }
+    .calendar-date.selecionado { background: linear-gradient(135deg, #7B19E5, #FF2EB6); color: white; border-color: #7B19E5; box-shadow: 0 4px 12px rgba(123, 25, 229, 0.3); }
+    .calendar-date.indisponivel { color: #9ca3af; background: #f3f4f6; cursor: not-allowed; border-color: #e5e7eb; }
+
+    @media (max-width: 640px) {
+        .calendar-header { margin-bottom: 12px; }
+        .calendar-header button { padding: 4px 10px; font-size: 12px; border-radius: 8px; }
+        .calendar-days { gap: 4px; margin-bottom: 10px; }
+        .calendar-day-name { padding: 6px; font-size: 10px; border-radius: 8px; }
+        .calendar-date { font-size: 12px; border-width: 1px; border-radius: 10px; }
+        .calendar-date:hover:not(.outro-mes):not(.indisponivel) { transform: none; }
+    }
+    
+    /* Horários */
+    .horario-option { padding: 10px; border: 2px solid #FFD6F4; border-radius: 10px; cursor: pointer; text-align: center; font-weight: 500; transition: all 0.3s; background: white; font-size: 14px; }
+    .horario-option:hover:not(.ocupado) { border-color: #7B19E5; background: rgba(123, 25, 229, 0.1); transform: scale(1.05); }
+    .horario-option.selecionado { background: linear-gradient(135deg, #7B19E5, #FF2EB6); color: white; border-color: #7B19E5; }
+    .horario-option.ocupado { color: #9ca3af; background: #f3f4f6; cursor: not-allowed; border-color: #e5e7eb; }
+    .horario-option .badge { display: inline-block; background: #fef3c7; color: #92400e; font-size: 9px; padding: 2px 6px; border-radius: 20px; margin-top: 4px; }
+    
+    /* Profissionais */
+    .profissional-card { border: 2px solid #FFD6F4; border-radius: 14px; padding: 16px; cursor: pointer; transition: all 0.3s; background: white; }
+    .profissional-card:hover { border-color: #7B19E5; background: rgba(123, 25, 229, 0.05); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(123, 25, 229, 0.1); }
+    .profissional-card.selecionado { background: rgba(123, 25, 229, 0.1); border-color: #7B19E5; box-shadow: 0 4px 12px rgba(123, 25, 229, 0.2); }
+    .profissional-card h4 { font-size: 16px; font-weight: 700; color: #1A002B; margin-bottom: 4px; }
+    .profissional-card p { font-size: 13px; color: #6b7280; }
+</style>
+
+<script>
+    const urlProfissionais = "{{ route('api.profissionais') }}";
+    const urlHorarios = "{{ route('api.horarios') }}";
+    
+    // Tratativa segura para caso não exista limiteAgendamento na view de Admin
+    const limiteAgendamentoData = "{{ isset($limiteAgendamento) ? $limiteAgendamento->toDateString() : now()->addMonths(3)->toDateString() }}";
+    const limiteAgendamento = new Date(`${limiteAgendamentoData}T23:59:59`);
+    
+    const maxServicosPorAgendamento = {{ defined('\App\Services\AgendaService::MAX_SERVICOS_POR_AGENDAMENTO') ? \App\Services\AgendaService::MAX_SERVICOS_POR_AGENDAMENTO : 5 }};
+    const descontoComboPercentual = {{ defined('\App\Services\AgendaService::DESCONTO_COMBO_SERVICOS_PERCENTUAL') ? \App\Services\AgendaService::DESCONTO_COMBO_SERVICOS_PERCENTUAL : 10 }};
+
+    let estadoAgendamento = {
+        clienteId: null, clienteNome: null,
+        servicosIds: [], servicosNomes: [], servicosDuracao: {}, servicosPrecos: {},
+        duraoTotal: 0, valorBase: 0, dataSelecionada: null, horaSelecionada: null,
+        horarioEspecial: null, profissionalId: null, profissionalNome: null, resumoFinanceiro: null
+    };
+
+    let mesAtual = new Date().getMonth();
+    let anoAtual = new Date().getFullYear();
+
+    // LÓGICA DO CLIENTE 
+    const clienteSearch = document.getElementById('cliente-search');
+    const clienteDropdown = document.getElementById('cliente-dropdown');
+
+    clienteSearch.addEventListener('focus', () => clienteDropdown.classList.remove('hidden'));
+    clienteSearch.addEventListener('input', (e) => {
+        const valor = e.target.value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
         document.querySelectorAll('.cliente-option').forEach(opcao => {
-            opcao.addEventListener('click', () => {
-                const id = opcao.dataset.id;
-                const nome = opcao.dataset.name;
-                clienteId.value = id;
-                clienteSearch.value = nome;
-                clienteDropdown.classList.add('hidden');
-                clienteSelecionado.classList.remove('hidden');
-                clienteNome.textContent = nome;
-            });
+            const nome = opcao.dataset.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+            opcao.style.display = nome.includes(valor) ? 'block' : 'none';
         });
+    });
 
-        // ===== BUSCA DE PROFISSIONAL =====
-        const profissionalSearch = document.getElementById('profissional-search');
-        const profissionalDropdown = document.getElementById('profissional-dropdown');
-        const profissionalId = document.getElementById('profissional-id');
-        const profissionalSelecionado = document.getElementById('profissional-selecionado');
-        const profissionalNome = document.getElementById('profissional-nome');
-        const dataAgendamento = document.getElementById('data-agendamento');
-        const servicoSelect = document.getElementById('servico-select');
-        const avisoFimSemana = document.getElementById('aviso-fim-semana');
-        const previewFimSemana = document.getElementById('preview-fim-semana');
-
-        profissionalSearch.addEventListener('focus', () => profissionalDropdown.classList.remove('hidden'));
-        profissionalSearch.addEventListener('input', (e) => {
-            const valor = e.target.value.toLowerCase();
-            const opcoes = profissionalDropdown.querySelectorAll('.profissional-option');
-            
-            opcoes.forEach(opcao => {
-                const nome = opcao.dataset.name.toLowerCase();
-                opcao.style.display = nome.includes(valor) ? 'block' : 'none';
-            });
-        });
-
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('#profissional-search') && !e.target.closest('#profissional-dropdown')) {
-                profissionalDropdown.classList.add('hidden');
-            }
-        });
-
-        document.querySelectorAll('.profissional-option').forEach(opcao => {
-            opcao.addEventListener('click', () => {
-                const id = opcao.dataset.id;
-                const nome = opcao.dataset.name;
-                profissionalId.value = id;
-                profissionalSearch.value = nome;
-                profissionalDropdown.classList.add('hidden');
-                profissionalSelecionado.classList.remove('hidden');
-                profissionalNome.textContent = nome;
-            });
-        });
-
-        function formatarMoeda(valor) {
-            return Number(valor || 0).toLocaleString('pt-BR', {
-                style: 'currency',
-                currency: 'BRL'
-            });
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('#cliente-search') && !e.target.closest('#cliente-dropdown')) {
+            clienteDropdown.classList.add('hidden');
         }
+    });
 
-        function atualizarAvisoFimSemana() {
-            const data = dataAgendamento.value;
-            const opcaoServico = servicoSelect.selectedOptions[0];
-            const preco = Number(opcaoServico?.dataset.preco || 0);
+    document.querySelectorAll('.cliente-option').forEach(opcao => {
+        opcao.addEventListener('click', () => {
+            selecionarCliente(opcao.dataset.id, opcao.dataset.name);
+        });
+    });
 
-            if (!data) {
-                avisoFimSemana.classList.add('hidden');
+    function selecionarCliente(id, nome) {
+        estadoAgendamento.clienteId = id;
+        estadoAgendamento.clienteNome = nome;
+        document.getElementById('cliente_id').value = id;
+        document.getElementById('cliente-nome').textContent = nome;
+        
+        clienteDropdown.classList.add('hidden');
+        clienteSearch.value = '';
+        clienteSearch.parentElement.classList.add('hidden');
+        document.getElementById('cliente-selecionado').classList.remove('hidden');
+    }
+
+    function limparCliente() {
+        estadoAgendamento.clienteId = null;
+        estadoAgendamento.clienteNome = null;
+        document.getElementById('cliente_id').value = '';
+        
+        clienteSearch.parentElement.classList.remove('hidden');
+        document.getElementById('cliente-selecionado').classList.add('hidden');
+        clienteSearch.focus();
+    }
+
+
+    // LÓGICA PADRÃO DE AGENDAMENTO
+    function formatarDataLocal(data) {
+        const ano = data.getFullYear();
+        const mes = String(data.getMonth() + 1).padStart(2, '0');
+        const dia = String(data.getDate()).padStart(2, '0');
+        return `${ano}-${mes}-${dia}`;
+    }
+
+    function limparEscolhaHorarioEProfissional() {
+        estadoAgendamento.horaSelecionada = null;
+        estadoAgendamento.horarioEspecial = null;
+        estadoAgendamento.profissionalId = null;
+        estadoAgendamento.profissionalNome = null;
+        estadoAgendamento.resumoFinanceiro = null;
+
+        document.getElementById('hora_agendamento').value = '';
+        document.getElementById('profissional_id').value = '';
+        document.getElementById('info-hora-selecionada').classList.add('hidden');
+        document.getElementById('aviso-horario-especial').classList.add('hidden');
+        document.getElementById('info-profissional-selecionado').classList.add('hidden');
+        document.getElementById('grade_profissionais').innerHTML = '<p class="text-gray-500 col-span-full text-center py-8">Escolha uma data e um horário para ver os profissionais disponíveis.</p>';
+    }
+
+    function toggleServico(id, nome, duracao, preco) {
+        const checkbox = document.getElementById(`checkbox-servico-${id}`);
+        const card = document.getElementById(`servico-card-${id}`);
+        
+        if (estadoAgendamento.servicosIds.includes(id)) {
+            estadoAgendamento.servicosIds = estadoAgendamento.servicosIds.filter(i => i !== id);
+            estadoAgendamento.servicosNomes = estadoAgendamento.servicosNomes.filter(n => n !== nome);
+            delete estadoAgendamento.servicosDuracao[id];
+            delete estadoAgendamento.servicosPrecos[id];
+            checkbox.checked = false;
+            card.classList.remove('border-[#7B19E5]', 'bg-[#7B19E5]/5', 'selecionado');
+        } else {
+            if (estadoAgendamento.servicosIds.length >= maxServicosPorAgendamento) {
+                alert(`Máximo de ${maxServicosPorAgendamento} serviços por agendamento`);
+                return;
+            }
+            estadoAgendamento.servicosIds.push(id);
+            estadoAgendamento.servicosNomes.push(nome);
+            estadoAgendamento.servicosDuracao[id] = duracao;
+            estadoAgendamento.servicosPrecos[id] = preco;
+            checkbox.checked = true;
+            card.classList.add('border-[#7B19E5]', 'bg-[#7B19E5]/5', 'selecionado');
+        }
+        atualizarResumo();
+        limparEscolhaHorarioEProfissional();
+    }
+
+    function atualizarResumo() {
+        const resumoDiv = document.getElementById('resumo-servicos-selecionados');
+        const listaUl = document.getElementById('lista-servicos-selecionados');
+        
+        if (estadoAgendamento.servicosIds.length === 0) {
+            resumoDiv.classList.add('hidden');
+            document.getElementById('servicos_ids').value = '';
+            return;
+        }
+        
+        resumoDiv.classList.remove('hidden');
+        listaUl.innerHTML = '';
+        let tempoTotal = 0, valorBase = 0;
+        
+        estadoAgendamento.servicosIds.forEach((id, idx) => {
+            tempoTotal += estadoAgendamento.servicosDuracao[id];
+            valorBase += estadoAgendamento.servicosPrecos[id];
+            const li = document.createElement('li');
+            li.innerHTML = `✧ ${estadoAgendamento.servicosNomes[idx]} (${estadoAgendamento.servicosDuracao[id]} min)`;
+            listaUl.appendChild(li);
+        });
+        
+        document.getElementById('tempo-total').innerText = tempoTotal;
+        document.getElementById('qtd-servicos').innerText = estadoAgendamento.servicosIds.length;
+        document.getElementById('aviso-desconto-combo').classList.toggle('hidden', estadoAgendamento.servicosIds.length !== maxServicosPorAgendamento);
+        estadoAgendamento.duraoTotal = tempoTotal;
+        estadoAgendamento.valorBase = valorBase;
+        document.getElementById('servicos_ids').value = estadoAgendamento.servicosIds.join(',');
+    }
+
+    function construirCalendario() {
+        const container = document.getElementById('calendario');
+        container.innerHTML = '';
+        const header = document.createElement('div');
+        header.className = 'calendar-header';
+        header.innerHTML = `<button onclick="mesAnterior()">←</button><span id="mes-ano-actual"></span><button onclick="proxMes()">→</button>`;
+        container.appendChild(header);
+        atualizarCalendario(mesAtual, anoAtual);
+    }
+
+    function mesAnterior() { mesAtual--; if (mesAtual < 0) { mesAtual = 11; anoAtual--; } atualizarCalendario(mesAtual, anoAtual); }
+    function proxMes() { const prox = mesAtual === 11 ? 0 : mesAtual + 1; const proxAno = mesAtual === 11 ? anoAtual + 1 : anoAtual; const primeiroDia = new Date(proxAno, prox, 1); if (primeiroDia <= new Date(limiteAgendamento.getFullYear(), limiteAgendamento.getMonth(), 1)) { mesAtual++; if (mesAtual > 11) { mesAtual = 0; anoAtual++; } atualizarCalendario(mesAtual, anoAtual); } }
+
+    function atualizarCalendario(mes, ano) {
+        const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+        document.getElementById('mes-ano-actual').innerText = `${meses[mes]} ${ano}`;
+        const container = document.getElementById('calendario');
+        let grid = container.querySelector('.calendar-days');
+        if (grid) grid.remove();
+        grid = document.createElement('div');
+        grid.className = 'calendar-days';
+        ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'].forEach(d => { const day = document.createElement('div'); day.className = 'calendar-day-name'; day.innerText = d; grid.appendChild(day); });
+        const primeiroDia = new Date(ano, mes, 1);
+        const ultimoDia = new Date(ano, mes + 1, 0);
+        const diaInicio = primeiroDia.getDay();
+        const ultimoMesAnterior = new Date(ano, mes, 0).getDate();
+        for (let i = diaInicio - 1; i >= 0; i--) { const d = document.createElement('div'); d.className = 'calendar-date outro-mes'; d.innerText = ultimoMesAnterior - i; grid.appendChild(d); }
+        const hoje = new Date();
+        const hojeDate = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
+        for (let dia = 1; dia <= ultimoDia.getDate(); dia++) {
+            const dataObj = new Date(ano, mes, dia);
+            const dateDiv = document.createElement('div');
+            dateDiv.className = 'calendar-date';
+            dateDiv.innerText = dia;
+            if (dataObj < hojeDate || dataObj > limiteAgendamento) dateDiv.classList.add('indisponivel');
+            else dateDiv.onclick = () => selecionarData(dataObj);
+            if (estadoAgendamento.dataSelecionada && dataObj.toDateString() === estadoAgendamento.dataSelecionada.toDateString()) dateDiv.classList.add('selecionado');
+            grid.appendChild(dateDiv);
+        }
+        container.appendChild(grid);
+    }
+
+    function selecionarData(data) {
+        if (data > limiteAgendamento) { alert('Agendamento permitido apenas para o período limite.'); return; }
+        estadoAgendamento.dataSelecionada = data;
+        limparEscolhaHorarioEProfissional();
+        document.getElementById('data-selecionada-texto').innerText = data.toLocaleDateString('pt-BR');
+        document.getElementById('info-data-selecionada').classList.remove('hidden');
+        atualizarCalendario(mesAtual, anoAtual);
+    }
+
+    function carregarHorarios() {
+        if (!estadoAgendamento.dataSelecionada) return;
+        const data = formatarDataLocal(estadoAgendamento.dataSelecionada);
+        document.getElementById('data_agendamento').value = data;
+        const grade = document.getElementById('grade_horarios');
+        grade.innerHTML = '<p class="text-gray-500 col-span-full text-center py-8">Carregando horários...</p>';
+        const servicosIds = estadoAgendamento.servicosIds.join(',');
+        fetch(`${urlHorarios}?data=${data}&servicos_ids=${servicosIds}&duracao=${estadoAgendamento.duraoTotal}`)
+            .then(r => r.json())
+            .then(h => {
+                grade.innerHTML = '';
+                if (!h.length) { grade.innerHTML = '<p class="text-red-500 col-span-full text-center">Nenhum horário disponível</p>'; return; }
+                h.forEach(hor => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = `horario-option ${hor.ocupado ? 'ocupado' : ''}`;
+                    btn.innerHTML = hor.atendimento_especial ? `<div>${hor.hora}</div><div class="badge">+${hor.percentual_acrescimo}%</div>` : `<div>${hor.hora}</div>`;
+                    if (!hor.ocupado) btn.onclick = () => selecionarHora(hor);
+                    grade.appendChild(btn);
+                });
+            });
+    }
+
+    function selecionarHora(horario) {
+        estadoAgendamento.horaSelecionada = horario.hora;
+        estadoAgendamento.horarioEspecial = horario;
+        estadoAgendamento.profissionalId = null;
+        estadoAgendamento.profissionalNome = null;
+        estadoAgendamento.resumoFinanceiro = null;
+        document.getElementById('hora_agendamento').value = horario.hora;
+        document.getElementById('profissional_id').value = '';
+        document.getElementById('info-profissional-selecionado').classList.add('hidden');
+        document.getElementById('grade_profissionais').innerHTML = '<p class="text-gray-500 col-span-full text-center py-8">Continue para ver os profissionais disponíveis neste horário.</p>';
+        document.getElementById('hora-selecionada-texto').innerText = horario.hora;
+        document.getElementById('info-hora-selecionada').classList.remove('hidden');
+        const aviso = document.getElementById('aviso-horario-especial');
+        if (horario.atendimento_especial) aviso.classList.remove('hidden');
+        else aviso.classList.add('hidden');
+    }
+
+    function carregarProfissionais() {
+        if (!estadoAgendamento.dataSelecionada || !estadoAgendamento.horaSelecionada) return;
+        const grade = document.getElementById('grade_profissionais');
+        grade.innerHTML = '<p class="text-gray-500 col-span-full text-center py-8">Carregando profissionais...</p>';
+        const data = formatarDataLocal(estadoAgendamento.dataSelecionada);
+        const dataHora = `${data} ${estadoAgendamento.horaSelecionada}`;
+        fetch(`${urlProfissionais}?servicos_ids=${estadoAgendamento.servicosIds.join(',')}&data_hora=${encodeURIComponent(dataHora)}&duracao=${estadoAgendamento.duraoTotal}`)
+            .then(r => r.json())
+            .then(profs => {
+                grade.innerHTML = '';
+                if (!profs.length) { grade.innerHTML = '<p class="text-red-500 col-span-full text-center">Nenhum profissional disponível</p>'; return; }
+                profs.forEach(prof => {
+                    const card = document.createElement('div');
+                    card.className = 'profissional-card';
+                    card.dataset.nome = prof.name;
+                    card.innerHTML = `<h4>✧ ${prof.name}</h4><p>✓ Disponível</p><p class="text-[#7B19E5] font-bold mt-2">Total: ${formatarMoeda(prof.valor_total)}</p>`;
+                    card.onclick = () => selecionarProfissional(prof, card);
+                    grade.appendChild(card);
+                });
+                filtrarProfissionais();
+            });
+    }
+
+    function filtrarProfissionais() {
+        const busca = document.getElementById('profissional-search');
+        const termo = (busca?.value || '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase();
+
+        document.querySelectorAll('.profissional-card').forEach(card => {
+            const nome = (card.dataset.nome || '')
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase();
+
+            card.classList.toggle('hidden', termo && !nome.includes(termo));
+        });
+    }
+
+    function selecionarProfissional(prof, card) {
+        estadoAgendamento.profissionalId = prof.id;
+        estadoAgendamento.profissionalNome = prof.name;
+        estadoAgendamento.resumoFinanceiro = prof;
+        document.getElementById('profissional_id').value = prof.id;
+        document.querySelectorAll('.profissional-card').forEach(c => c.classList.remove('selecionado'));
+        card.classList.add('selecionado');
+        document.getElementById('profissional-selecionado-texto').innerText = prof.name;
+        document.getElementById('info-profissional-selecionado').classList.remove('hidden');
+    }
+
+    function formatarMoeda(v) { return Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+
+    function preencherResumo() {
+        document.getElementById('resumo_cliente').innerText = estadoAgendamento.clienteNome;
+        document.getElementById('resumo_servico').innerText = estadoAgendamento.servicosNomes.join(', ');
+        document.getElementById('resumo_profissional').innerText = estadoAgendamento.profissionalNome;
+        document.getElementById('resumo_data').innerText = estadoAgendamento.dataSelecionada.toLocaleDateString('pt-BR');
+        document.getElementById('resumo_hora').innerText = estadoAgendamento.horaSelecionada;
+        const financeiro = estadoAgendamento.resumoFinanceiro || { valor_total: estadoAgendamento.valorBase };
+        document.getElementById('resumo_valor_total').innerText = formatarMoeda(financeiro.valor_total);
+    }
+
+    function irParaPasso(passo) {
+        if (passo === 2 && !estadoAgendamento.clienteId) { alert('Selecione um cliente antes de continuar'); return; }
+        if (passo === 2 && !estadoAgendamento.servicosIds.length) { alert('Selecione pelo menos um serviço'); return; }
+        if (passo === 3 && !estadoAgendamento.dataSelecionada) { alert('Selecione uma data'); return; }
+        if (passo === 4 && !estadoAgendamento.horaSelecionada) { alert('Selecione um horário'); return; }
+        if (passo === 5 && !estadoAgendamento.profissionalId) { alert('Selecione um profissional'); return; }
+        
+        document.querySelectorAll('.passo').forEach(el => el.classList.add('hidden'));
+        document.getElementById(`passo-${passo}`).classList.remove('hidden');
+        
+        for (let i = 1; i <= 5; i++) {
+            const ind = document.getElementById(`indicador-${i}`);
+            if (i === passo) {
+                ind.className = 'flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-[#7B19E5] to-[#A855F7] text-white shadow-md';
+            } else {
+                ind.className = 'flex items-center gap-2 px-4 py-2 rounded-full bg-white/50 border border-[#FFD6F4] text-[#4A00B9]';
+            }
+        }
+        
+        if (passo === 2 && !document.querySelector('.calendar-days')) construirCalendario();
+        if (passo === 3) carregarHorarios();
+        if (passo === 4) carregarProfissionais();
+        if (passo === 5) preencherResumo();
+    }
+
+    document.querySelectorAll('.servico-card').forEach(card => {
+        const id = parseInt(card.dataset.id);
+        const nome = card.dataset.nome;
+        const duracao = parseInt(card.dataset.duracao);
+        const preco = parseFloat(card.dataset.preco);
+        const checkbox = card.querySelector('input[type="checkbox"]');
+
+        card.addEventListener('click', function(e) {
+            if (e.target.matches('input[type="checkbox"]')) {
                 return;
             }
 
-            const diaSemana = new Date(`${data}T12:00:00`).getDay();
-            const fimDeSemana = diaSemana === 0 || diaSemana === 6;
+            toggleServico(id, nome, duracao, preco);
+        });
 
-            if (!fimDeSemana) {
-                avisoFimSemana.classList.add('hidden');
-                return;
-            }
+        checkbox?.addEventListener('change', function(e) {
+            e.stopPropagation();
+            toggleServico(id, nome, duracao, preco);
+        });
+    });
 
-            const acrescimo = preco * 0.25;
-            const total = preco + acrescimo;
-            previewFimSemana.textContent = preco > 0
-                ? `Prévia: ${formatarMoeda(preco)} + ${formatarMoeda(acrescimo)} = ${formatarMoeda(total)}.`
-                : 'Selecione o serviço para ver a prévia do valor.';
-            avisoFimSemana.classList.remove('hidden');
-        }
+    document.getElementById('servico-search')?.addEventListener('input', function() {
+        const termo = this.value
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase();
 
-        dataAgendamento.addEventListener('change', atualizarAvisoFimSemana);
-        servicoSelect.addEventListener('change', atualizarAvisoFimSemana);
-        atualizarAvisoFimSemana();
-    </script>
+        document.querySelectorAll('.servico-card').forEach(card => {
+            const nome = card.dataset.nome
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase();
+
+            card.classList.toggle('hidden', termo && !nome.includes(termo));
+        });
+    });
+
+    document.getElementById('profissional-search')?.addEventListener('input', filtrarProfissionais);
+    
+    irParaPasso(1);
+</script>
 </x-app-layout>
