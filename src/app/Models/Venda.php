@@ -11,6 +11,7 @@ class Venda extends Model
         'profissional_id',
         'produto_id',
         'servico_id',
+        'codigo_pedido',
         'quantidade',
         'valor_venda',
         'valor_comissao',
@@ -41,6 +42,10 @@ class Venda extends Model
 
     public function confirmadoPor() {
         return $this->belongsTo(User::class, 'confirmado_por_id');
+    }
+
+    public function pagamentos() {
+        return $this->morphMany(Pagamento::class, 'pagavel');
     }
 
     public function servico() {

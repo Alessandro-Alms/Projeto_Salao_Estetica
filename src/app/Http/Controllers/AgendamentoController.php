@@ -14,6 +14,7 @@ use App\Models\BloqueioHorario;
 use App\Services\AgendaService;
 use App\Services\ClientePacoteService;
 use App\Services\FinanceiroService;
+use App\Services\PagamentoService;
 use App\Services\VendaProdutoService;
 
 class AgendamentoController extends Controller
@@ -483,16 +484,27 @@ class AgendamentoController extends Controller
 
         $dados = $request->validate([
             'data' => ['required', 'date', 'after_or_equal:today'],
-            'hora' => ['required', 'date_format:H:i'],
+            'hora' => ['nullable', 'date_format:H:i'],
             'duracao' => ['nullable', 'integer', 'min:15', 'max:480'],
         ], [
             'data.after_or_equal' => 'Escolha hoje ou uma data futura.',
         ]);
 
         $duracao = (int) ($dados['duracao'] ?? 30);
-        $inicio = Carbon::parse($dados['data'] . ' ' . $dados['hora']);
+        $inicioDia = Carbon::parse($dados['data'])->startOfDay();
+        $fimDia = $inicioDia->copy()->endOfDay();
+        $horaSelecionada = $dados['hora'] ?? null;
+        $inicio = $horaSelecionada ? Carbon::parse($dados['data'] . ' ' . $horaSelecionada) : $inicioDia->copy();
 
-        if ($inicio->lessThan(now()) || $inicio->greaterThan(now()->addMonths(3)->endOfDay())) {
+        if ($inicioDia->greaterThan(now()->addMonths(3)->endOfDay())) {
+            return response()->json([
+                'profissionais' => [],
+                'total' => 0,
+                'message' => 'Escolha uma data dentro dos proximos 3 meses.',
+            ]);
+        }
+
+        if ($horaSelecionada && $inicio->lessThan(now())) {
             return response()->json([
                 'profissionais' => [],
                 'total' => 0,
@@ -500,8 +512,8 @@ class AgendamentoController extends Controller
             ]);
         }
 
-        $fim = $inicio->copy()->addMinutes($duracao);
-        $diaSemana = $inicio->dayOfWeek;
+        $fim = $horaSelecionada ? $inicio->copy()->addMinutes($duracao) : null;
+        $diaSemana = $inicioDia->dayOfWeek;
         $agendaService = app(AgendaService::class);
 
         $profissionais = User::where('cargo', 'profissional')
@@ -523,6 +535,108 @@ class AgendamentoController extends Controller
             ->where('dia_semana', $diaSemana)
             ->get()
             ->keyBy('profissional_id');
+
+        if (!$horaSelecionada) {
+            $agendamentosPorProfissional = Agendamento::whereIn('profissional_id', $profissionaisIds)
+                ->where('status', '!=', 'cancelado')
+                ->where('data_hora_inicio', '<', $fimDia)
+                ->where('data_hora_fim', '>', $inicioDia)
+                ->get(['profissional_id', 'data_hora_inicio', 'data_hora_fim'])
+                ->groupBy('profissional_id');
+
+            $bloqueiosPorProfissional = BloqueioHorario::whereIn('profissional_id', $profissionaisIds)
+                ->where('data_hora_inicio', '<', $fimDia)
+                ->where('data_hora_fim', '>', $inicioDia)
+                ->get(['profissional_id', 'data_hora_inicio', 'data_hora_fim'])
+                ->groupBy('profissional_id');
+
+            $bloqueiosGerais = BloqueioHorario::whereNull('profissional_id')
+                ->where('data_hora_inicio', '<', $fimDia)
+                ->where('data_hora_fim', '>', $inicioDia)
+                ->get();
+
+            $disponiveisDia = $profissionais
+                ->map(function ($profissional) use ($duracao, $agendaService, $escalaPorProfissional, $agendamentosPorProfissional, $bloqueiosPorProfissional, $bloqueiosGerais, $inicioDia) {
+                    $escala = $escalaPorProfissional->get($profissional->id);
+
+                    if (!$escala || !$escala->trabalha) {
+                        return null;
+                    }
+
+                    $horaAtual = $agendaService->inicioExpediente($escala, $inicioDia);
+                    $fimExpediente = $agendaService->fimExpediente($escala, $inicioDia);
+                    $limiteSaida = $agendaService->limiteSaidaExpediente($escala, $inicioDia);
+                    $horarios = [];
+                    $maiorAcrescimo = 0;
+
+                    while ($horaAtual->copy()->addMinutes($duracao)->lte($limiteSaida) && $horaAtual->lte($fimExpediente)) {
+                        $horaFim = $horaAtual->copy()->addMinutes($duracao);
+                        $livre = !$horaAtual->lt(now());
+
+                        if ($livre && $agendamentosPorProfissional->get($profissional->id)?->contains(function ($agendamento) use ($horaAtual, $horaFim) {
+                            $agInicio = Carbon::parse($agendamento->data_hora_inicio);
+                            $agFim = Carbon::parse($agendamento->data_hora_fim);
+                            return $horaAtual->lt($agFim) && $horaFim->gt($agInicio);
+                        })) {
+                            $livre = false;
+                        }
+
+                        if ($livre && $bloqueiosPorProfissional->get($profissional->id)?->contains(function ($bloqueio) use ($horaAtual, $horaFim) {
+                            $blInicio = Carbon::parse($bloqueio->data_hora_inicio);
+                            $blFim = Carbon::parse($bloqueio->data_hora_fim);
+                            return $horaAtual->lt($blFim) && $horaFim->gt($blInicio);
+                        })) {
+                            $livre = false;
+                        }
+
+                        $bloqueioGeral = null;
+                        foreach ($bloqueiosGerais as $bloqueio) {
+                            if ($bloqueio->data_hora_inicio < $horaFim && $bloqueio->data_hora_fim > $horaAtual) {
+                                $bloqueioGeral = $bloqueio;
+                                break;
+                            }
+                        }
+
+                        if ($livre) {
+                            $invadeAlmoco = $agendaService->invadeAlmoco($escala, $horaAtual, $horaFim);
+                            $excedeSaidaExpediente = $agendaService->excedeSaidaExpediente($escala, $horaAtual, $horaFim);
+                            $percentualAcrescimo = $agendaService->percentualAtendimentoEspecial($invadeAlmoco, $bloqueioGeral, $excedeSaidaExpediente, $horaAtual);
+                            $maiorAcrescimo = max($maiorAcrescimo, $percentualAcrescimo);
+
+                            $horarios[] = [
+                                'hora' => $horaAtual->format('H:i'),
+                                'atendimento_especial' => $percentualAcrescimo > 0,
+                                'percentual_acrescimo' => $percentualAcrescimo,
+                            ];
+                        }
+
+                        $horaAtual->addMinutes(30);
+                    }
+
+                    if (empty($horarios)) {
+                        return null;
+                    }
+
+                    return [
+                        'id' => $profissional->id,
+                        'name' => $profissional->name,
+                        'email' => $profissional->email,
+                        'telefone' => $profissional->telefone,
+                        'servicos' => $profissional->servicos->pluck('nome')->values(),
+                        'horarios_disponiveis' => $horarios,
+                        'atendimento_especial' => $maiorAcrescimo > 0,
+                        'percentual_acrescimo' => $maiorAcrescimo,
+                    ];
+                })
+                ->filter()
+                ->values();
+
+            return response()->json([
+                'profissionais' => $disponiveisDia,
+                'total' => $disponiveisDia->count(),
+                'modo' => 'dia',
+            ]);
+        }
 
         $agendamentosConflitantes = Agendamento::whereIn('profissional_id', $profissionaisIds)
             ->where('status', '!=', 'cancelado')
@@ -667,6 +781,7 @@ class AgendamentoController extends Controller
         while ($horaAtual->copy()->addMinutes($duracao)->lte($fimRange)) {
             $horaFim = $horaAtual->copy()->addMinutes($duracao);
             $profissionaisLivres = collect();
+            $temProfissionalNoHorario = false;
 
             foreach ($profissionais as $profissional) {
                 $escala = $escalaPorProfissional->get($profissional->id);
@@ -682,8 +797,13 @@ class AgendamentoController extends Controller
                     $horaAtual->lt($limiteInicio)
                     || $horaAtual->gt($agendaService->fimExpediente($escala, $horaAtual))
                     || $horaFim->gt($limiteFim)
-                    || $horaAtual->lt(now())
                 ) {
+                    continue;
+                }
+
+                $temProfissionalNoHorario = true;
+
+                if ($horaAtual->lt(now())) {
                     continue;
                 }
 
@@ -721,12 +841,19 @@ class AgendamentoController extends Controller
                 ]);
             }
 
-            if ($profissionaisLivres->isNotEmpty()) {
+            if ($temProfissionalNoHorario) {
+                $percentualAcrescimo = $profissionaisLivres->max('percentual_acrescimo') ?? 0;
+
+                if ($profissionaisLivres->isEmpty()) {
+                    $horaAtual->addMinutes(30);
+                    continue;
+                }
+
                 $resultado[] = [
                     'hora' => $horaAtual->format('H:i'),
                     'ocupado' => false,
-                    'percentual_acrescimo' => $profissionaisLivres->max('percentual_acrescimo') ?? 0,
-                    'atendimento_especial' => $profissionaisLivres->max('percentual_acrescimo') > 0,
+                    'percentual_acrescimo' => $percentualAcrescimo,
+                    'atendimento_especial' => $percentualAcrescimo > 0,
                 ];
             }
 
@@ -918,15 +1045,37 @@ class AgendamentoController extends Controller
 
     public function salvarAgendamentoGerencial(Request $request)
     {
+        $servicosIds = [];
+        if ($request->has('servicos_ids') && is_array($request->servicos_ids)) {
+            $servicosIds = array_values(array_unique(array_filter(array_map('intval', $request->servicos_ids))));
+        } elseif ($request->has('servicos_ids') && is_string($request->servicos_ids)) {
+            $servicosIds = array_values(array_unique(array_filter(array_map('intval', explode(',', $request->servicos_ids)))));
+        } elseif ($request->has('servico_id')) {
+            $servicosIds = [(int) $request->servico_id];
+        }
+
         $request->validate([
             'cliente_id' => ['required', 'exists:users,id'],
             'profissional_id' => ['required', 'exists:users,id'],
-            'servico_id' => ['required', 'exists:servicos,id_servico'],
             'data' => ['required', 'date', 'after_or_equal:today'],
             'hora' => ['required', 'date_format:H:i'],
         ], [
             'data.after_or_equal' => 'A data deve ser hoje ou uma data futura.',
         ]);
+
+        if (empty($servicosIds)) {
+            return back()->withErrors(['servicos' => 'Por favor, escolha pelo menos um servico.'])->withInput();
+        }
+
+        if (count($servicosIds) > AgendaService::MAX_SERVICOS_POR_AGENDAMENTO) {
+            return back()->withErrors([
+                'servicos' => 'Escolha no maximo ' . AgendaService::MAX_SERVICOS_POR_AGENDAMENTO . ' servicos por agendamento.',
+            ])->withInput();
+        }
+
+        if (Servico::whereIn('id_servico', $servicosIds)->count() !== count($servicosIds)) {
+            return back()->withErrors(['servicos' => 'Um ou mais servicos selecionados nao foram encontrados.'])->withInput();
+        }
 
         // Combinar data e hora
         $data_hora = Carbon::parse($request->data . ' ' . $request->hora);
@@ -935,8 +1084,30 @@ class AgendamentoController extends Controller
         }
 
         // Buscar serviço
-        $servico = Servico::findOrFail($request->servico_id);
-        $profissional = User::findOrFail($request->profissional_id);
+        $profissional = User::with('servicos')->findOrFail($request->profissional_id);
+        $servicosSelecionados = Servico::whereIn('id_servico', $servicosIds)->get()->keyBy('id_servico');
+        $duracaoTotal = 0;
+        $valorBase = 0.0;
+        $servicosParaAnexar = [];
+        $request->merge(['servico_id' => $servicosIds[0]]);
+        $servico = $servicosSelecionados->get($servicosIds[0]);
+
+        foreach ($servicosIds as $servicoId) {
+            $servicoAtual = $servicosSelecionados->get($servicoId);
+            $vinculoAtual = $profissional->servicos->find($servicoId);
+
+            if (!$vinculoAtual) {
+                return back()->withErrors(['servicos' => "Este profissional nao realiza o servico: {$servicoAtual->nome}"])->withInput();
+            }
+
+            $duracao = (int) ($vinculoAtual->pivot->duracao_customizada ?? $servicoAtual->duracao);
+            $duracaoTotal += $duracao;
+            $valorBase += (float) $servicoAtual->preco;
+            $servicosParaAnexar[$servicoId] = [
+                'duracao' => $duracao,
+                'preco' => $servicoAtual->preco,
+            ];
+        }
 
         // Verificar se o profissional faz esse serviço
         $vinculo = $profissional->servicos->find($request->servico_id);
@@ -954,8 +1125,7 @@ class AgendamentoController extends Controller
             return back()->withErrors(['data' => 'O profissional não trabalha neste dia da semana.'])->withInput();
         }
 
-        $duracaoServico = $vinculo->pivot->duracao_customizada ?? $servico->duracao;
-        $data_hora_fim = $data_hora->copy()->addMinutes($duracaoServico);
+        $data_hora_fim = $data_hora->copy()->addMinutes($duracaoTotal);
 
         $agendaService = app(AgendaService::class);
         if (
@@ -974,11 +1144,12 @@ class AgendamentoController extends Controller
         }
 
         $dadosValor = $agendaService->calcularAtendimentoEspecial(
-            (float) $servico->preco,
+            (float) $valorBase,
             $invadeAlmoco,
             $agendaService->buscarBloqueioGeralConflitante($data_hora, $data_hora_fim),
             $excedeSaidaExpediente,
-            $data_hora
+            $data_hora,
+            count($servicosIds)
         );
 
         // Verificar conflito com agendamentos existentes
@@ -987,7 +1158,7 @@ class AgendamentoController extends Controller
             return back()->withErrors(['hora' => 'Este horário já está ocupado.'])->withInput();
         }
 
-        $resultadoAgendamento = DB::transaction(function () use ($request, $data_hora, $data_hora_fim, $servico, $agendaService, $dadosValor) {
+        $resultadoAgendamento = DB::transaction(function () use ($request, $data_hora, $data_hora_fim, $servicosIds, $servicosParaAnexar, $agendaService, $dadosValor) {
             User::where('id', $request->profissional_id)->lockForUpdate()->first();
 
             if ($agendaService->existeConflitoAgendamento($request->profissional_id, $data_hora, $data_hora_fim)) {
@@ -997,7 +1168,7 @@ class AgendamentoController extends Controller
             $agendamento = Agendamento::create([
                 'cliente_id' => $request->cliente_id,
                 'profissional_id' => $request->profissional_id,
-                'servico_id' => $request->servico_id,
+                'servico_id' => $servicosIds[0],
                 'data_hora_inicio' => $data_hora,
                 'data_hora_fim' => $data_hora_fim,
                 'status' => 'confirmado',
@@ -1010,10 +1181,7 @@ class AgendamentoController extends Controller
                 'motivo_acrescimo' => $dadosValor['motivo_acrescimo'],
             ]);
 
-            $agendamento->servicos()->attach($request->servico_id, [
-                'duracao' => $servico->duracao,
-                'preco' => $servico->preco
-            ]);
+            $agendamento->servicos()->attach($servicosParaAnexar);
 
             return 'sucesso';
         });
@@ -1048,7 +1216,9 @@ class AgendamentoController extends Controller
         $query = Agendamento::where('cliente_id', auth()->id())
             ->with(['profissional', 'servico', 'servicos']);
 
-        if ($filtro !== 'todos') {
+        if ($filtro === 'hoje') {
+            $query->whereDate('data_hora_inicio', Carbon::today());
+        } elseif ($filtro !== 'todos') {
             $dias = (int) $filtro;
             $dataLimite = Carbon::now()->addDays($dias);
 
@@ -1058,20 +1228,9 @@ class AgendamentoController extends Controller
             ]);
         }
 
-        $query->orderByRaw(
-            "CASE WHEN data_hora_inicio >= ? THEN 0 ELSE 1 END ASC",
-            [$agora->toDateTimeString()]
-        );
-
-        $query->orderByRaw(
-            "CASE WHEN data_hora_inicio >= ? THEN data_hora_inicio END ASC",
-            [$agora->toDateTimeString()]
-        );
-
-        $query->orderByRaw(
-            "CASE WHEN data_hora_inicio < ? THEN data_hora_inicio END DESC",
-            [$agora->toDateTimeString()]
-        );
+        $query
+            ->orderByRaw("CASE WHEN status IN ('pendente', 'confirmado') THEN 0 ELSE 1 END ASC")
+            ->orderBy('data_hora_inicio');
 
         $agendamentos = $query->get();
 
@@ -1081,13 +1240,13 @@ class AgendamentoController extends Controller
     public function agendaProfissional(Request $request)
     {
         $filtro = $request->get('filtro', '7');
-        $agora = Carbon::now(   );
-
         $query = Agendamento::where('profissional_id', auth()->id())
             ->with(['cliente.pacotesAtivos.pacote.servicos', 'servico', 'servicos']);
 
         // Aplicar filtro de período
-        if ($filtro !== 'todos') {
+        if ($filtro === 'hoje') {
+            $query->whereDate('data_hora_inicio', Carbon::today());
+        } elseif ($filtro !== 'todos') {
             $dias = (int) $filtro;
             $dataLimite = Carbon::now()->addDays($dias);
 
@@ -1101,20 +1260,9 @@ class AgendamentoController extends Controller
         // 1. Agendamentos que ainda não passaram ficam primeiro
         // 2. Os futuros ficam do mais próximo para o mais distante
         // 3. Os passados descem para o final, do mais recente para o mais antigo
-        $query->orderByRaw(
-            "CASE WHEN data_hora_inicio >= ? THEN 0 ELSE 1 END ASC",
-            [$agora->toDateTimeString()]
-        );
-
-        $query->orderByRaw(
-            "CASE WHEN data_hora_inicio >= ? THEN data_hora_inicio END ASC",
-            [$agora->toDateTimeString()]
-        );
-
-        $query->orderByRaw(
-            "CASE WHEN data_hora_inicio < ? THEN data_hora_inicio END DESC",
-            [$agora->toDateTimeString()]
-        );
+        $query
+            ->orderByRaw("CASE WHEN status IN ('pendente', 'confirmado') THEN 0 ELSE 1 END ASC")
+            ->orderBy('data_hora_inicio');
 
         $agendamentos = $query->get()
             ->groupBy(fn($data) => Carbon::parse($data->data_hora_inicio)->format('d/m/Y'));
@@ -1227,9 +1375,12 @@ class AgendamentoController extends Controller
 
         // Iniciamos uma transação para garantir que ou faz TUDO ou não faz NADA
         $request->validate([
-            'forma_pagamento' => ['required_without:usar_pacote', 'nullable', 'in:' . implode(',', $formasPagamento)],
+            'forma_pagamento' => ['nullable', 'in:' . implode(',', $formasPagamento)],
+            'pagamentos' => ['nullable', 'array'],
+            'pagamentos.*.forma_pagamento' => ['nullable', 'in:' . implode(',', $formasPagamento)],
+            'pagamentos.*.valor' => ['nullable'],
         ], [
-            'forma_pagamento.required_without' => 'Selecione a forma de pagamento antes de finalizar o atendimento.',
+            'pagamentos.required_without' => 'Informe o pagamento antes de finalizar o atendimento.',
         ]);
 
         return DB::transaction(function () use ($request, $agendamento, $cliente) { 
@@ -1287,6 +1438,17 @@ class AgendamentoController extends Controller
             // Descontos dados pelo salão (fidelidade, pacotes, etc.) não afetam a comissão do profissional.
             // O profissional recebe sua comissão sobre o preço original, não sobre o valor com desconto.
             
+            $pagamentoService = app(PagamentoService::class);
+            $pagamentos = [];
+
+            if (! ($request->has('usar_pacote') && $request->usar_pacote != null)) {
+                $pagamentos = $pagamentoService->normalizar(
+                    $request->input('pagamentos', []),
+                    (float) $agendamento->valor_total,
+                    $request->input('forma_pagamento')
+                );
+            }
+
             $financeiroService = app(FinanceiroService::class);
             $porcentagemComissao = FinanceiroService::COMISSAO_SERVICO_PERCENTUAL;
             
@@ -1305,9 +1467,13 @@ class AgendamentoController extends Controller
             $agendamento->status_pagamento = 'pago';
             $agendamento->forma_pagamento = $request->has('usar_pacote') && $request->usar_pacote != null
                 ? 'pacote'
-                : $request->input('forma_pagamento');
+                : $pagamentoService->formaResumo($pagamentos, $request->input('forma_pagamento'));
             $agendamento->pago_em = now();
             $agendamento->save();
+
+            if ($pagamentos) {
+                $pagamentoService->registrar($agendamento, $pagamentos, auth()->id());
+            }
 
             // 4. Registrar as Vendas e Baixar Estoque
             if ($request->has('produtos')) {
@@ -1337,8 +1503,7 @@ class AgendamentoController extends Controller
             ]);
         }
 
-        // Se o status for 'confirmado', mudamos para 'presente'
-        if ($agendamento->status == 'confirmado') {
+        if (in_array($agendamento->status, ['pendente', 'confirmado'], true)) {
             $agendamento->status = 'presente';
             $agendamento->save();
         }

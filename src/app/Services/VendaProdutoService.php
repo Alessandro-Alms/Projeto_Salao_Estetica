@@ -33,7 +33,9 @@ class VendaProdutoService
         bool $geraComissao = true,
         string $statusPagamento = 'pago',
         ?string $formaPagamento = null,
-        ?int $confirmadoPorId = null
+        ?int $confirmadoPorId = null,
+        ?array $pagamentos = null,
+        ?string $codigoPedido = null
     ): Venda
     {
         $produto = Produto::lockForUpdate()->findOrFail($produtoId);
@@ -78,7 +80,22 @@ class VendaProdutoService
             $dadosVenda['confirmado_por_id'] = $statusPagamento === 'pago' ? $confirmadoPorId : null;
         }
 
-        return Venda::create($dadosVenda);
+        if (Schema::hasColumn('vendas', 'codigo_pedido')) {
+            $dadosVenda['codigo_pedido'] = $codigoPedido;
+        }
+
+        $venda = Venda::create($dadosVenda);
+
+        if ($statusPagamento === 'pago') {
+            $pagamentoService = app(PagamentoService::class);
+            $pagamentoService->registrar(
+                $venda,
+                $pagamentos ?: $pagamentoService->normalizar([], (float) $valorVenda, $formaPagamento ?? 'dinheiro'),
+                $confirmadoPorId
+            );
+        }
+
+        return $venda;
     }
 
     public function registrarVendas(int $vendedorId, array $itens, bool $geraComissao = true): void

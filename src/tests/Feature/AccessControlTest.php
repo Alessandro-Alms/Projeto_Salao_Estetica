@@ -301,6 +301,7 @@ class AccessControlTest extends TestCase
     public function test_venda_de_produto_por_recepcionista_gera_comissao_de_produto(): void
     {
         $recepcionista = User::factory()->create(['cargo' => User::ROLE_RECEPCIONISTA]);
+        $cliente = User::factory()->create(['cargo' => User::ROLE_CLIENTE]);
         $produto = Produto::create([
             'nome' => 'Oleo capilar',
             'descricao' => 'Produto para teste de venda.',
@@ -311,17 +312,19 @@ class AccessControlTest extends TestCase
 
         $this->actingAs($recepcionista)
             ->post(route('admin.vendas.produtos.store'), [
+                'cliente_id' => $cliente->id,
                 'produto_id' => $produto->id_produto,
                 'quantidade' => 1,
             ])
             ->assertRedirect(route('admin.vendas.produtos.create'));
 
         $this->assertDatabaseHas('vendas', [
-            'profissional_id' => $recepcionista->id,
+            'profissional_id' => $cliente->id,
             'produto_id' => $produto->id_produto,
             'valor_venda' => 80,
             'valor_comissao' => 8,
             'comissao_paga_percentual' => FinanceiroService::COMISSAO_PRODUTO_PERCENTUAL,
+            'confirmado_por_id' => $recepcionista->id,
         ]);
 
         $comissoes = app(FinanceiroService::class)->resumoComissoesPeriodo(now()->toDateString(), now()->toDateString());

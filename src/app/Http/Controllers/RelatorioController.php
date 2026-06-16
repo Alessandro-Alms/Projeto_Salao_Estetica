@@ -214,7 +214,8 @@ class RelatorioController extends Controller
                 DB::raw('SUM(vendas.valor_venda) as receita_gerada')
             )
             ->whereNotNull('vendas.produto_id') // Garante que são vendas de PRODUTOS e não de serviços
-            ->whereBetween('vendas.created_at', [$inicioQuery, $fimQuery])
+            ->where('vendas.status_pagamento', 'pago')
+            ->whereBetween('vendas.pago_em', [$inicioQuery, $fimQuery])
             ->groupBy('produtos.id_produto', 'produtos.nome', 'produtos.quantidade_estoque')
             ->orderByDesc('total_vendido') // Ordena pelo "Giro" (os que saíram mais)
             ->get();
@@ -676,7 +677,8 @@ class RelatorioController extends Controller
                 DB::raw('SUM(vendas.valor_venda) as receita_gerada')
             )
             ->whereNotNull('vendas.produto_id')
-            ->whereBetween('vendas.created_at', [$inicioQuery, $fimQuery])
+            ->where('vendas.status_pagamento', 'pago')
+            ->whereBetween('vendas.pago_em', [$inicioQuery, $fimQuery])
             ->groupBy('produtos.id_produto', 'produtos.nome', 'produtos.quantidade_estoque')
             ->orderByDesc('total_vendido')
             ->get();

@@ -17,7 +17,10 @@
             'cartao_debito' => 'Cartão de débito',
             'cartao_credito' => 'Cartão de crédito',
             'pacote' => 'Pacote',
+            'dividido' => 'Pagamento dividido',
         ];
+
+        $pagamentoService = app(\App\Services\PagamentoService::class);
     @endphp
 
     <div class="py-12 relative">
@@ -65,7 +68,7 @@
                                 </div>
                                 <div>
                                     <p class="text-gray-500">Pagamento</p>
-                                    <p class="font-bold text-[#4A00B9]">{{ $formaLabel[$agendamento->forma_pagamento] ?? ucfirst($agendamento->forma_pagamento ?? '-') }}</p>
+                                    <p class="font-bold text-[#4A00B9]">{{ $pagamentoService->descricao($agendamento->pagamentos, $formaLabel[$agendamento->forma_pagamento] ?? ucfirst($agendamento->forma_pagamento ?? '-')) }}</p>
                                 </div>
                                 <div>
                                     <p class="text-gray-500">Pago em</p>
@@ -105,7 +108,7 @@
                                     </div>
                                     <div>
                                         <p class="text-gray-500">Pagamento</p>
-                                        <p class="font-bold text-[#4A00B9]">{{ $formaLabel[$venda->forma_pagamento] ?? 'Presencial' }}</p>
+                                        <p class="font-bold text-[#4A00B9]">{{ $pagamentoService->descricao($venda->pagamentos, $formaLabel[$venda->forma_pagamento] ?? 'Presencial') }}</p>
                                     </div>
                                     <div>
                                         <p class="text-gray-500">Pago em</p>
@@ -146,7 +149,7 @@
                                     </div>
                                     <div>
                                         <p class="text-gray-500">Pagamento</p>
-                                        <p class="font-bold text-[#4A00B9]">{{ $formaLabel[$clientePacote->forma_pagamento] ?? '-' }}</p>
+                                        <p class="font-bold text-[#4A00B9]">{{ $pagamentoService->descricao($clientePacote->pagamentos, $formaLabel[$clientePacote->forma_pagamento] ?? '-') }}</p>
                                     </div>
                                     <div>
                                         <p class="text-gray-500">Pago em</p>

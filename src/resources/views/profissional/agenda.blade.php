@@ -31,9 +31,22 @@
             @endif
 
             <!-- FILTRO DE PERÍODO -->
+            @if($errors->any())
+                <div class="mb-6 p-4 rounded-lg bg-red-50/80 border border-red-200 text-red-700">
+                    @foreach($errors->all() as $error)
+                        <p>{{ $error }}</p>
+                    @endforeach
+                </div>
+            @endif
+
             <div class="mb-6 flex gap-3 flex-wrap">
                 <form method="GET" action="{{ route('profissional.agenda') }}" class="flex gap-2">
                     <input type="hidden" name="filtro" id="filtro_input" value="{{ request('filtro', '7') }}">
+
+                    <button type="button" onclick="filtrarAgendamentos('hoje')"
+                            class="px-4 py-2 rounded-full text-sm font-medium transition-all {{ request('filtro') == 'hoje' ? 'bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white shadow-md' : 'bg-white/70 border border-[#FFD6F4] text-[#4A00B9] hover:bg-gradient-to-r hover:from-[#7B19E5] hover:to-[#FF2EB6] hover:text-white' }}">
+                        Hoje
+                    </button>
                     
                     <button type="button" onclick="filtrarAgendamentos(7)" 
                             class="px-4 py-2 rounded-full text-sm font-medium transition-all {{ request('filtro', '7') == '7' ? 'bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white shadow-md' : 'bg-white/70 border border-[#FFD6F4] text-[#4A00B9] hover:bg-gradient-to-r hover:from-[#7B19E5] hover:to-[#FF2EB6] hover:text-white' }}">
@@ -101,7 +114,65 @@
                                     <div class="mt-4 pt-4 border-t border-[#FFD6F4]">
                                         
                                         @if($agenda->status == 'confirmado' || $agenda->status == 'pendente')
-                                            <div class="flex flex-col sm:flex-row gap-3">
+                                            <div class="rounded-xl bg-white/70 border border-[#FFD6F4] p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                                                <div>
+                                                    <p class="font-bold text-[#4A00B9]">Agendamento aguardando analise</p>
+                                                    <p class="text-sm text-gray-600">Confira os dados antes de confirmar presenca ou marcar falta.</p>
+                                                </div>
+                                                <button type="button" data-schedule-open="schedule-{{ $agenda->id_agendamento }}" class="px-5 py-3 rounded-full bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white font-bold shadow-lg hover:shadow-xl transition-all">
+                                                    Analisar agendamento
+                                                </button>
+                                            </div>
+
+                                            <div data-schedule-modal="schedule-{{ $agenda->id_agendamento }}" class="hidden fixed inset-0 z-[100] items-center justify-center p-4 sm:p-6">
+                                                <div class="absolute inset-0 bg-[#14001F]/75 backdrop-blur-sm" data-schedule-close></div>
+                                                <div class="relative w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-[30px] bg-white shadow-[0_32px_120px_rgba(20,0,31,0.42)] border border-white/80">
+                                                    <div class="absolute inset-x-0 top-0 h-2 bg-gradient-to-r from-[#7B19E5] via-[#FF2EB6] to-[#FFD6F4]"></div>
+                                                    <div class="max-h-[90vh] overflow-y-auto p-6 md:p-8">
+                                                        <div class="flex items-start justify-between gap-4 mb-5">
+                                                            <div>
+                                                                <p class="text-xs uppercase tracking-[0.2em] text-[#FF2EB6] font-bold">agendamento</p>
+                                                                <h3 class="text-3xl font-title text-[#4A00B9] mt-1">Analisar agendamento</h3>
+                                                                <p class="text-sm text-gray-600 mt-1">{{ $agenda->servico->nome }} - {{ $agenda->cliente->name }}</p>
+                                                            </div>
+                                                            <button type="button" data-schedule-close class="w-10 h-10 rounded-full bg-[#7B19E5]/10 text-[#7B19E5] font-black">x</button>
+                                                        </div>
+
+                                                        <div class="rounded-2xl border border-[#FFD6F4] bg-white/80 p-4 space-y-3 mb-5">
+                                                            <div class="flex items-center justify-between gap-3">
+                                                                <span class="text-sm text-gray-500">Horario</span>
+                                                                <span class="font-bold text-[#4A00B9]">{{ \Carbon\Carbon::parse($agenda->data_hora_inicio)->format('d/m/Y H:i') }}</span>
+                                                            </div>
+                                                            <div class="flex items-center justify-between gap-3">
+                                                                <span class="text-sm text-gray-500">Status</span>
+                                                                <span class="font-bold text-[#4A00B9]">{{ $agenda->status }}</span>
+                                                            </div>
+                                                            <div class="flex items-center justify-between gap-3">
+                                                                <span class="text-sm text-gray-500">Cliente</span>
+                                                                <span class="font-bold text-[#4A00B9]">{{ $agenda->cliente->name }}</span>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                            <form action="{{ route('agendamentos.falta', $agenda->id_agendamento) }}" method="POST">
+                                                                @csrf
+                                                                @method('PATCH')
+                                                                <button type="submit" class="w-full text-[#FF2EB6] border border-[#FF2EB6] hover:bg-[#FF2EB6] hover:text-white font-bold py-3 px-4 rounded-full transition">
+                                                                    Marcar falta
+                                                                </button>
+                                                            </form>
+                                                            <form action="{{ route('agendamento.presenca', $agenda->id_agendamento) }}" method="POST">
+                                                                @csrf
+                                                                <button type="submit" class="w-full bg-gradient-to-r from-[#7B19E5] to-[#A855F7] hover:from-[#FF2EB6] hover:to-[#FF69B4] text-white font-bold py-3 px-4 rounded-full transition">
+                                                                    Confirmar presenca
+                                                                </button>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="hidden">
                                                 <form action="{{ route('agendamentos.falta', $agenda->id_agendamento) }}" method="POST" class="flex-1">
                                                     @csrf
                                                     @method('PATCH')
@@ -118,6 +189,30 @@
                                             </div>
 
                                         @elseif($agenda->status == 'presente')
+                                            <div class="rounded-xl bg-green-50/80 border border-green-200 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                                                <div>
+                                                    <p class="font-bold text-green-700">Cliente presente</p>
+                                                    <p class="text-sm text-green-700/80">Abra a finalizacao para registrar observacoes, produtos e pagamento.</p>
+                                                </div>
+                                                <button type="button" data-attendance-open="attendance-{{ $agenda->id_agendamento }}" class="px-5 py-3 rounded-full bg-gradient-to-r from-green-500 to-green-600 text-white font-bold shadow-lg hover:shadow-xl transition-all">
+                                                    Finalizar atendimento
+                                                </button>
+                                            </div>
+
+                                            <div data-attendance-modal="attendance-{{ $agenda->id_agendamento }}" class="hidden fixed inset-0 z-[100] items-center justify-center p-4 sm:p-6">
+                                                <div class="absolute inset-0 bg-[#14001F]/75 backdrop-blur-sm" data-attendance-close></div>
+                                                <div class="relative w-full max-w-4xl max-h-[90vh] overflow-hidden rounded-[30px] bg-white shadow-[0_32px_120px_rgba(20,0,31,0.42)] border border-white/80">
+                                                    <div class="absolute inset-x-0 top-0 h-2 bg-gradient-to-r from-[#7B19E5] via-[#FF2EB6] to-[#FFD6F4]"></div>
+                                                    <div class="max-h-[90vh] overflow-y-auto p-6 md:p-8">
+                                                        <div class="flex items-start justify-between gap-4 mb-5">
+                                                            <div>
+                                                                <p class="text-xs uppercase tracking-[0.2em] text-[#FF2EB6] font-bold">atendimento</p>
+                                                                <h3 class="text-3xl font-title text-[#4A00B9] mt-1">Finalizar atendimento</h3>
+                                                                <p class="text-sm text-gray-600 mt-1">{{ $agenda->servico->nome }} - {{ $agenda->cliente->name }}</p>
+                                                            </div>
+                                                            <button type="button" data-attendance-close class="w-10 h-10 rounded-full bg-[#7B19E5]/10 text-[#7B19E5] font-black">x</button>
+                                                        </div>
+
                                             <form action="{{ route('profissional.agendamento.executado', $agenda->id_agendamento) }}" method="POST" class="space-y-4">
                                                 @csrf
                                                 
@@ -126,10 +221,10 @@
                                                     <textarea name="observacao" rows="2" class="w-full px-4 py-3 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all" placeholder="Ex: Cabelo seco, usado shampoo hidratante..."></textarea>
                                                 </div>
 
-                                                <div class="bg-white/50 rounded-xl p-4 border border-[#FFD6F4]">
+                                                <div class="bg-white/50 rounded-xl p-4 border border-[#FFD6F4]" data-service-payment-box>
                                                     <h4 class="font-title text-[#4A00B9] text-sm mb-2">Produtos Vendidos (Opcional)</h4>
                                                     
-                                                    <div id="lista-produtos">
+                                                    <div data-products-list>
                                                         <div class="flex gap-2 mb-2 items-center">
                                                             <select name="produtos[0][id]" data-searchable-select data-searchable-compact="true" data-searchable-placeholder="Digite o nome do produto..." class="flex-1 px-4 py-2 bg-white/50 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all text-sm">
                                                                 <option value="">Selecione um produto...</option>
@@ -141,7 +236,7 @@
                                                         </div>
                                                     </div>
 
-                                                    <button type="button" onclick="addProduto()" class="text-xs bg-[#FF2EB6]/20 text-[#FF2EB6] px-3 py-1 rounded-full hover:bg-[#FF2EB6] hover:text-white transition">
+                                                    <button type="button" onclick="addProduto(this)" class="text-xs bg-[#FF2EB6]/20 text-[#FF2EB6] px-3 py-1 rounded-full hover:bg-[#FF2EB6] hover:text-white transition">
                                                         + Adicionar outro produto
                                                     </button>
                                                 </div>
@@ -152,6 +247,7 @@
                                                     $valorBaseServico = $agenda->valor_base ?? ($agenda->servico->preco ?? 0);
                                                     $acrescimoServico = $agenda->acrescimo_especial ?? 0;
                                                     $valorServico = $valorBaseServico + $acrescimoServico;
+                                                    $valorCobrarServico = $agenda->cliente->contador_fidelidade == 5 ? $agenda->valor_total * 0.5 : $agenda->valor_total;
                                                     $valorReceber = $valorServico * $taxaMatematica;
                                                 @endphp
 
@@ -214,13 +310,10 @@
 
                                                 <div class="bg-white/50 rounded-xl p-4 border border-[#FFD6F4]">
                                                     <label class="block text-xs font-medium text-[#4A00B9] uppercase mb-2">Forma de pagamento do serviço</label>
-                                                    <select name="forma_pagamento" data-forma-pagamento required class="w-full px-4 py-3 bg-white/70 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all">
-                                                        <option value="">Selecione como foi pago...</option>
-                                                        <option value="dinheiro">Dinheiro</option>
-                                                        <option value="pix">PIX</option>
-                                                        <option value="cartao_debito">Cartão de débito</option>
-                                                        <option value="cartao_credito">Cartão de crédito</option>
-                                                    </select>
+                                                    <x-payment-fields
+                                                        :formas-pagamento="['dinheiro', 'pix', 'cartao_debito', 'cartao_credito']"
+                                                        :total="$valorCobrarServico"
+                                                    />
                                                     <p class="text-xs text-gray-500 mt-2">O valor do serviço só entra no financeiro depois desta seleção.</p>
                                                 </div>
 
@@ -228,6 +321,9 @@
                                                     ✧ Finalizar e Baixar Estoque
                                                 </button>
                                             </form>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         @else
                                             <p class="text-center text-gray-400 italic text-sm">✧ Atendimento finalizado.</p>
                                         @endif
@@ -250,8 +346,11 @@
 
 <script>
     let produtoIndex = 1;
-    function addProduto() {
-        const container = document.getElementById('lista-produtos');
+    function addProduto(button) {
+        const container = button.closest('form')?.querySelector('[data-products-list]');
+        if (!container) {
+            return;
+        }
         const novoItem = container.firstElementChild.cloneNode(true);
         novoItem.querySelector('[data-searchable-wrapper]')?.remove();
         
@@ -278,23 +377,84 @@
         window.location.href = url.toString();
     }
 
+    document.addEventListener('click', (event) => {
+        const scheduleOpenButton = event.target.closest('[data-schedule-open]');
+        const scheduleCloseButton = event.target.closest('[data-schedule-close]');
+        const openButton = event.target.closest('[data-attendance-open]');
+        const closeButton = event.target.closest('[data-attendance-close]');
+
+        if (scheduleOpenButton) {
+            const modal = document.querySelector(`[data-schedule-modal="${scheduleOpenButton.dataset.scheduleOpen}"]`);
+            if (modal && modal.parentElement !== document.body) {
+                document.body.appendChild(modal);
+            }
+            modal?.classList.remove('hidden');
+            modal?.classList.add('flex');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        if (scheduleCloseButton) {
+            const modal = scheduleCloseButton.closest('[data-schedule-modal]');
+            modal?.classList.add('hidden');
+            modal?.classList.remove('flex');
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        if (openButton) {
+            const modal = document.querySelector(`[data-attendance-modal="${openButton.dataset.attendanceOpen}"]`);
+            if (modal && modal.parentElement !== document.body) {
+                document.body.appendChild(modal);
+            }
+            modal?.classList.remove('hidden');
+            modal?.classList.add('flex');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        if (closeButton) {
+            const modal = closeButton.closest('[data-attendance-modal]');
+            modal?.classList.add('hidden');
+            modal?.classList.remove('flex');
+            document.body.classList.remove('overflow-hidden');
+        }
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape') {
+            return;
+        }
+
+        document.querySelectorAll('[data-attendance-modal]').forEach((modal) => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        });
+        document.querySelectorAll('[data-schedule-modal]').forEach((modal) => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        });
+        document.body.classList.remove('overflow-hidden');
+    });
+
     document.addEventListener('change', (event) => {
         if (!event.target.matches('input[name="usar_pacote"]')) {
             return;
         }
 
         const form = event.target.closest('form');
-        const select = form?.querySelector('[data-forma-pagamento]');
+        const payment = form?.querySelector('[data-service-payment-box]');
+        const fields = payment ? Array.from(payment.querySelectorAll('select, input, button')) : [];
 
-        if (!select) {
+        if (!payment) {
             return;
         }
 
-        select.required = !event.target.checked;
-        select.disabled = event.target.checked;
-        if (event.target.checked) {
-            select.value = '';
-        }
+        fields.forEach((field) => {
+            field.disabled = event.target.checked;
+            if (field.matches('select, input')) {
+                field.required = !event.target.checked && (field.hasAttribute('data-payment-forma') || field.hasAttribute('data-payment-valor'));
+            }
+        });
+
+        payment.classList.toggle('opacity-50', event.target.checked);
     });
 </script>
 

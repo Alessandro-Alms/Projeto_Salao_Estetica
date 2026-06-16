@@ -41,4 +41,9 @@ class ClientePacote extends Model
     {
         return $this->belongsTo(User::class, 'confirmado_por_id');
     }
+
+    public function pagamentos()
+    {
+        return $this->morphMany(Pagamento::class, 'pagavel');
+    }
 }

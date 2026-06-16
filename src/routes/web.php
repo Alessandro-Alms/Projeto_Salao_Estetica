@@ -252,6 +252,8 @@ Route::middleware(['auth', 'role:gerente,recepcionista'])->prefix('admin')->name
     Route::get('/vendas/produtos', [VendaProdutoController::class, 'create'])->name('vendas.produtos.create');
     Route::post('/vendas/produtos', [VendaProdutoController::class, 'store'])->name('vendas.produtos.store');
     Route::get('/vendas/pendentes', [VendaProdutoController::class, 'pendentes'])->name('vendas.pendentes');
+    Route::patch('/vendas/comandas/{cliente}/{pedido}/confirmar-pagamento', [VendaProdutoController::class, 'confirmarComanda'])->name('vendas.comandas.confirmar-pagamento');
+    Route::patch('/vendas/comandas/{cliente}/{pedido}/cancelar-pendente', [VendaProdutoController::class, 'cancelarComanda'])->name('vendas.comandas.cancelar-pendente');
     Route::patch('/vendas/{venda}/confirmar-pagamento', [VendaProdutoController::class, 'confirmarVenda'])->name('vendas.confirmar-pagamento');
     Route::patch('/vendas/{venda}/cancelar-pendente', [VendaProdutoController::class, 'cancelarVenda'])->name('vendas.cancelar-pendente');
     Route::patch('/cliente-pacotes/{clientePacote}/confirmar-pagamento', [ClientePacoteController::class, 'confirmarPagamento'])->name('cliente-pacotes.confirmar-pagamento');

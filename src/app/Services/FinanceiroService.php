@@ -62,6 +62,15 @@ class FinanceiroService
         return $query;
     }
 
+    private function colunaResponsavelComissaoProduto(): string
+    {
+        if (Schema::hasColumn('vendas', 'confirmado_por_id')) {
+            return 'COALESCE(vendas.confirmado_por_id, vendas.profissional_id)';
+        }
+
+        return 'vendas.profissional_id';
+    }
+
     private function aplicarPacotesPagos($query)
     {
         if (Schema::hasColumn('cliente_pacotes', 'status_pagamento')) {
@@ -299,12 +308,12 @@ class FinanceiroService
             ->whereNotNull('vendas.produto_id')
             ->whereBetween('vendas.' . $this->colunaDataVendaPaga(), [$inicioQuery, $fimQuery])
             ->select(
-                'vendas.profissional_id',
+                DB::raw($this->colunaResponsavelComissaoProduto() . ' as profissional_id'),
                 DB::raw('COUNT(vendas.id_venda) as total_vendas_produtos'),
                 DB::raw('SUM(vendas.valor_venda) as receita_produtos'),
                 DB::raw('SUM(' . $this->expressaoComissaoProdutos() . ') as comissao_produtos')
             )
-            ->groupBy('vendas.profissional_id')
+            ->groupBy(DB::raw($this->colunaResponsavelComissaoProduto()))
             ->get()
             ->keyBy('profissional_id');
 

@@ -62,6 +62,10 @@ class Agendamento extends Model
         );
     }
 
+    public function pagamentos() {
+        return $this->morphMany(Pagamento::class, 'pagavel');
+    }
+
     // app/Models/Agendamento.php
 
     public function avaliacao()

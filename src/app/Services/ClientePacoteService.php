@@ -15,7 +15,8 @@ class ClientePacoteService
         ?int $vendedorId = null,
         string $statusPagamento = 'pago',
         ?string $formaPagamento = null,
-        ?int $confirmadoPorId = null
+        ?int $confirmadoPorId = null,
+        ?array $pagamentos = null
     ): ClientePacote
     {
         $pacote = Pacote::findOrFail($pacoteId);
@@ -52,7 +53,18 @@ class ClientePacoteService
             $dados['confirmado_por_id'] = $statusPagamento === 'pago' ? $confirmadoPorId : null;
         }
 
-        return ClientePacote::create($dados);
+        $clientePacote = ClientePacote::create($dados);
+
+        if ($statusPagamento === 'pago') {
+            $pagamentoService = app(PagamentoService::class);
+            $pagamentoService->registrar(
+                $clientePacote,
+                $pagamentos ?: $pagamentoService->normalizar([], (float) $pacote->valor_total, $formaPagamento ?? 'dinheiro'),
+                $confirmadoPorId
+            );
+        }
+
+        return $clientePacote;
     }
 
     public function consumirSessao(int $clientePacoteId, int $clienteId, int $servicoId): ClientePacote

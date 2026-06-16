@@ -1,5 +1,5 @@
 <x-app-layout>
-<div class="py-12 relative">
+<div class="py-6 sm:py-12 relative">
     <div class="fixed inset-0 -z-10 overflow-hidden">
         <div class="absolute top-0 -left-20 w-[600px] h-[600px] bg-[#7B19E5]/20 rounded-full blur-3xl"></div>
         <div class="absolute bottom-0 -right-20 w-[700px] h-[700px] bg-[#FF2EB6]/20 rounded-full blur-3xl"></div>
@@ -7,20 +7,20 @@
         <div class="absolute inset-0 bg-gradient-to-br from-[#7B19E5]/5 via-white/30 to-[#FF2EB6]/5"></div>
     </div>
 
-    <div class="max-w-6xl mx-auto px-4">
-        <div class="glass-card rounded-3xl shadow-xl overflow-hidden">
-            <div class="p-8 bg-white/70 backdrop-blur-sm">
-                <div class="flex items-center gap-3 mb-8 pb-4 border-b border-[#FFD6F4]">
-                    <div class="w-12 h-12 bg-gradient-to-br from-[#7B19E5] to-[#FF2EB6] rounded-2xl flex items-center justify-center shadow-md">
+    <div class="max-w-6xl mx-auto px-3 sm:px-4">
+        <div class="glass-card rounded-2xl sm:rounded-3xl shadow-xl overflow-hidden">
+            <div class="p-4 sm:p-8 bg-white/70 backdrop-blur-sm">
+                <div class="flex items-start sm:items-center gap-3 mb-6 sm:mb-8 pb-4 border-b border-[#FFD6F4]">
+                    <div class="w-12 h-12 shrink-0 bg-gradient-to-br from-[#7B19E5] to-[#FF2EB6] rounded-2xl flex items-center justify-center shadow-md">
                         <span class="text-white text-xl">✧</span>
                     </div>
                     <div>
                         <h2 class="text-2xl font-title text-[#4A00B9]">Disponibilidade dos Profissionais</h2>
-                        <p class="text-sm text-gray-500 mt-0.5">Escolha a data, depois o horário e veja quem está livre.</p>
+                        <p class="text-sm text-gray-500 mt-0.5">Escolha a data para ver o dia todo ou selecione um horário para filtrar.</p>
                     </div>
                 </div>
 
-                <div class="flex justify-between mb-10 flex-wrap gap-3">
+                <div class="flex justify-start sm:justify-between mb-8 sm:mb-10 flex-wrap gap-3">
                     <div id="indicador-1" class="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-[#7B19E5] to-[#A855F7] text-white shadow-md">
                         <span class="text-sm">✧</span>
                         <span class="text-sm font-medium">Data</span>
@@ -45,7 +45,7 @@
                     </div>
 
                     <div class="mt-8 flex justify-end">
-                        <button type="button" onclick="irParaPasso(2)" class="btn-primary bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white px-8 py-3 rounded-xl font-medium shadow-md hover:shadow-lg transition-all">Continuar →</button>
+                        <button type="button" onclick="irParaPasso(2)" class="btn-primary w-full sm:w-auto bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white px-8 py-3 rounded-xl font-medium shadow-md hover:shadow-lg transition-all">Continuar →</button>
                     </div>
                 </div>
 
@@ -64,9 +64,9 @@
 
                     <div id="resumo-consulta" class="hidden mt-4 p-4 rounded-xl bg-[#7B19E5]/5 border border-[#FFD6F4] text-sm text-[#1A002B]"></div>
 
-                    <div class="mt-8 flex justify-between">
-                        <button type="button" onclick="irParaPasso(1)" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-2 rounded-xl font-medium transition-all">← Voltar</button>
-                        <button type="button" onclick="irParaPasso(3)" class="btn-primary bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white px-8 py-2 rounded-xl font-medium shadow-md hover:shadow-lg transition-all">Continuar →</button>
+                    <div class="mt-8 flex flex-col-reverse sm:flex-row sm:justify-between gap-3">
+                        <button type="button" onclick="irParaPasso(1)" class="w-full sm:w-auto bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-2 rounded-xl font-medium transition-all">← Voltar</button>
+                        <button type="button" onclick="irParaPasso(3)" class="btn-primary w-full sm:w-auto bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white px-8 py-2 rounded-xl font-medium shadow-md hover:shadow-lg transition-all">Ver disponibilidade →</button>
                     </div>
                 </div>
 
@@ -75,8 +75,8 @@
                         <div class="flex items-start gap-3">
                             <span class="text-2xl">✧</span>
                             <div>
-                                <p class="text-[#1A002B] font-medium">Profissionais disponíveis para esta consulta</p>
-                                <p class="text-sm text-gray-500 mt-1">Use a busca para filtrar a lista se necessário.</p>
+                                <p id="titulo-lista-profissionais" class="text-[#1A002B] font-medium">Profissionais disponíveis para esta consulta</p>
+                                <p id="subtitulo-lista-profissionais" class="text-sm text-gray-500 mt-1">Use a busca para filtrar a lista se necessário.</p>
                             </div>
                         </div>
                     </div>
@@ -87,7 +87,7 @@
                     </div>
 
                     <div id="estado-disponibilidade" class="text-center text-gray-500 py-10">
-                        Selecione um horário para consultar os profissionais.
+                        Selecione uma data para consultar os profissionais.
                     </div>
 
                     <div id="lista-profissionais" class="hidden mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
@@ -96,9 +96,9 @@
                         Nenhum profissional encontrado nessa pesquisa.
                     </div>
 
-                    <div class="mt-8 flex justify-between">
-                        <button type="button" onclick="irParaPasso(2)" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-2 rounded-xl font-medium transition-all">← Voltar</button>
-                        <a href="{{ route('dashboard') }}" class="btn-primary bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white px-8 py-2 rounded-xl font-medium shadow-md hover:shadow-lg transition-all inline-flex items-center justify-center">Voltar ao painel</a>
+                    <div class="mt-8 flex flex-col-reverse sm:flex-row sm:justify-between gap-3">
+                        <button type="button" onclick="irParaPasso(2)" class="w-full sm:w-auto bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-2 rounded-xl font-medium transition-all">← Voltar</button>
+                        <a href="{{ route('dashboard') }}" class="btn-primary w-full sm:w-auto bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white px-8 py-2 rounded-xl font-medium shadow-md hover:shadow-lg transition-all inline-flex items-center justify-center">Voltar ao painel</a>
                     </div>
                 </div>
             </div>
@@ -171,6 +171,8 @@
     const filtro = document.getElementById('filtro-profissionais');
     const busca = document.getElementById('busca-profissional');
     const semResultadosFiltro = document.getElementById('sem-resultados-filtro');
+    const tituloListaProfissionais = document.getElementById('titulo-lista-profissionais');
+    const subtituloListaProfissionais = document.getElementById('subtitulo-lista-profissionais');
     const infoDataSelecionada = document.getElementById('info-data-selecionada');
     const dataSelecionadaTexto = document.getElementById('data-selecionada-texto');
     const infoHoraSelecionada = document.getElementById('info-hora-selecionada');
@@ -221,7 +223,7 @@
         avisoHorarioEspecial.classList.add('hidden');
         resumoConsulta.classList.add('hidden');
         limparProfissionais();
-        mostrarEstado('Selecione um horário para consultar os profissionais.');
+        mostrarEstado('Selecione um horário para filtrar ou continue para ver o dia todo.');
     }
 
     function construirCalendario() {
@@ -350,14 +352,12 @@
                 horarios.forEach((horario) => {
                     const botao = document.createElement('button');
                     botao.type = 'button';
-                    botao.className = `horario-option ${horario.ocupado ? 'ocupado' : ''}`;
+                    botao.className = 'horario-option';
                     botao.innerHTML = horario.atendimento_especial
                         ? `<div>${horario.hora}</div><div class="badge">+${horario.percentual_acrescimo}%</div>`
                         : `<div>${horario.hora}</div>`;
 
-                    if (!horario.ocupado) {
-                        botao.onclick = () => selecionarHora(horario);
-                    }
+                    botao.onclick = () => selecionarHora(horario);
 
                     gradeHorarios.appendChild(botao);
                 });
@@ -401,7 +401,7 @@
         busca.value = '';
 
         if (!profissionais.length) {
-            mostrarEstado('Nenhum profissional disponivel nesse dia e horario.');
+            mostrarEstado(estadoConsulta.horaSelecionada ? 'Nenhum profissional disponivel nesse dia e horario.' : 'Nenhum profissional disponivel nesse dia.');
             return;
         }
 
@@ -411,6 +411,11 @@
 
         profissionais.forEach((profissional) => {
             const servicos = profissional.servicos?.length ? profissional.servicos.join(', ') : 'Sem servicos vinculados';
+            const horarios = Array.isArray(profissional.horarios_disponiveis) ? profissional.horarios_disponiveis : [];
+            const horariosTexto = horarios.map((item) => item.hora).join(' ');
+            const horariosHtml = horarios.length
+                ? `<div class="mt-4 flex flex-wrap gap-2">${horarios.map((item) => `<span class="rounded-full border border-[#FFD6F4] bg-[#7B19E5]/5 px-3 py-1 text-xs font-bold text-[#4A00B9]">${item.hora}${item.atendimento_especial ? ` +${item.percentual_acrescimo}%` : ''}</span>`).join('')}</div>`
+                : '';
             const especial = profissional.atendimento_especial
                 ? `<span class="inline-flex mt-3 rounded-full bg-yellow-100 px-3 py-1 text-xs font-bold text-yellow-700">+${profissional.percentual_acrescimo}% especial</span>`
                 : '';
@@ -418,7 +423,7 @@
             const card = document.createElement('article');
             card.className = 'profissional-card';
             card.dataset.profissionalCard = 'true';
-            card.dataset.filterText = `${profissional.name} ${profissional.email || ''} ${profissional.telefone || ''} ${servicos}`;
+            card.dataset.filterText = `${profissional.name} ${profissional.email || ''} ${profissional.telefone || ''} ${servicos} ${horariosTexto}`;
             card.innerHTML = `
                 <div class="flex items-start justify-between gap-3">
                     <div>
@@ -429,6 +434,7 @@
                     <span class="rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700">Livre</span>
                 </div>
                 <p class="mt-4 text-sm text-gray-600 line-clamp-3">${servicos}</p>
+                ${horariosHtml}
                 ${especial}
             `;
 
@@ -439,17 +445,26 @@
     }
 
     function carregarProfissionais() {
-        if (!estadoConsulta.dataSelecionada || !estadoConsulta.horaSelecionada) {
+        if (!estadoConsulta.dataSelecionada) {
             return;
         }
 
         mostrarEstado('Buscando profissionais disponiveis...');
+        tituloListaProfissionais.textContent = estadoConsulta.horaSelecionada
+            ? 'Profissionais disponiveis no horario selecionado'
+            : 'Profissionais disponiveis no dia selecionado';
+        subtituloListaProfissionais.textContent = estadoConsulta.horaSelecionada
+            ? 'Use a busca para filtrar a lista se necessario.'
+            : 'Cada card mostra os horarios livres encontrados nesse dia.';
 
         const params = new URLSearchParams({
             data: formatarDataLocal(estadoConsulta.dataSelecionada),
-            hora: estadoConsulta.horaSelecionada,
             duracao: duracaoPadrao,
         });
+
+        if (estadoConsulta.horaSelecionada) {
+            params.set('hora', estadoConsulta.horaSelecionada);
+        }
 
         fetch(`${urlProfissionaisDisponiveis}?${params.toString()}`, {
             headers: { Accept: 'application/json' },
@@ -475,8 +490,8 @@
             return;
         }
 
-        if (passo === 3 && !estadoConsulta.horaSelecionada) {
-            alert('Selecione um horário');
+        if (passo === 3 && !estadoConsulta.dataSelecionada) {
+            alert('Selecione uma data');
             return;
         }
 
