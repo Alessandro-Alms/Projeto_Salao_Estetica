@@ -116,14 +116,12 @@
                                         @if($agenda->status == 'confirmado' || $agenda->status == 'pendente')
                                             <div class="rounded-xl bg-white/70 border border-[#FFD6F4] p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                                                 <div>
-                                                    <p class="font-bold text-[#4A00B9]">Agendamento aguardando analise</p>
-                                                    <p class="text-sm text-gray-600">Confira os dados antes de confirmar presenca ou marcar falta.</p>
+                                                    <p class="font-bold text-[#4A00B9]">Aguardando chegada na recepcao</p>
+                                                    <p class="text-sm text-gray-600">A recepcao registra a presenca do cliente no salao.</p>
                                                 </div>
-                                                <button type="button" data-schedule-open="schedule-{{ $agenda->id_agendamento }}" class="px-5 py-3 rounded-full bg-gradient-to-r from-[#7B19E5] to-[#FF2EB6] text-white font-bold shadow-lg hover:shadow-xl transition-all">
-                                                    Analisar agendamento
-                                                </button>
                                             </div>
 
+                                            @if(false)
                                             <div data-schedule-modal="schedule-{{ $agenda->id_agendamento }}" class="hidden fixed inset-0 z-[100] items-center justify-center p-4 sm:p-6">
                                                 <div class="absolute inset-0 bg-[#14001F]/75 backdrop-blur-sm" data-schedule-close></div>
                                                 <div class="relative w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-[30px] bg-white shadow-[0_32px_120px_rgba(20,0,31,0.42)] border border-white/80">
@@ -187,12 +185,27 @@
                                                     </button>
                                                 </form>
                                             </div>
+                                            @endif
 
                                         @elseif($agenda->status == 'presente')
                                             <div class="rounded-xl bg-green-50/80 border border-green-200 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                                                 <div>
-                                                    <p class="font-bold text-green-700">Cliente presente</p>
-                                                    <p class="text-sm text-green-700/80">Abra a finalizacao para registrar observacoes, produtos e pagamento.</p>
+                                                    <p class="font-bold text-green-700">Cliente chegou</p>
+                                                    <p class="text-sm text-green-700/80">Cliente aguardando para iniciar o atendimento.</p>
+                                                </div>
+                                                <form action="{{ route('profissional.agendamento.iniciar', $agenda->id_agendamento) }}" method="POST">
+                                                    @csrf
+                                                    <button type="submit" class="px-5 py-3 rounded-full bg-gradient-to-r from-green-500 to-green-600 text-white font-bold shadow-lg hover:shadow-xl transition-all">
+                                                        Iniciar atendimento
+                                                    </button>
+                                                </form>
+                                            </div>
+
+                                        @elseif($agenda->status == 'em_atendimento')
+                                            <div class="rounded-xl bg-green-50/80 border border-green-200 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                                                <div>
+                                                    <p class="font-bold text-green-700">Atendimento em andamento</p>
+                                                    <p class="text-sm text-green-700/80">Finalize com observacoes e produtos usados. O pagamento fica na recepcao.</p>
                                                 </div>
                                                 <button type="button" data-attendance-open="attendance-{{ $agenda->id_agendamento }}" class="px-5 py-3 rounded-full bg-gradient-to-r from-green-500 to-green-600 text-white font-bold shadow-lg hover:shadow-xl transition-all">
                                                     Finalizar atendimento
@@ -222,7 +235,7 @@
                                                 </div>
 
                                                 <div class="bg-white/50 rounded-xl p-4 border border-[#FFD6F4]" data-service-payment-box>
-                                                    <h4 class="font-title text-[#4A00B9] text-sm mb-2">Produtos Vendidos (Opcional)</h4>
+                                                    <h4 class="font-title text-[#4A00B9] text-sm mb-2">Produtos usados no atendimento (Opcional)</h4>
                                                     
                                                     <div data-products-list>
                                                         <div class="flex gap-2 mb-2 items-center">
@@ -241,12 +254,13 @@
                                                     </button>
                                                 </div>
 
+                                                @if(false)
                                                 @php
                                                     $porcentagemComissao = 50;
                                                     $taxaMatematica = $porcentagemComissao / 100;
                                                     $valorBaseServico = $agenda->valor_base ?? ($agenda->servico->preco ?? 0);
                                                     $acrescimoServico = $agenda->acrescimo_especial ?? 0;
-                                                    $valorServico = $valorBaseServico + $acrescimoServico;
+                                                    $valorServico = $valorBaseServico;
                                                     $valorCobrarServico = $agenda->cliente->contador_fidelidade == 5 ? $agenda->valor_total * 0.5 : $agenda->valor_total;
                                                     $valorReceber = $valorServico * $taxaMatematica;
                                                 @endphp
@@ -265,7 +279,7 @@
                                                             <span class="font-semibold text-yellow-700">+ R$ {{ number_format($acrescimoServico, 2, ',', '.') }}</span>
                                                         </div>
                                                         <p class="text-xs text-yellow-700 mb-2">
-                                                            {{ $agenda->motivo_acrescimo }}. Sua comissão também considera este valor maior.
+                                                            {{ $agenda->motivo_acrescimo }}. A comissão permanece calculada sobre o valor base do serviço.
                                                         </p>
                                                     @endif
 
@@ -279,7 +293,7 @@
                                                     </div>
                                                     
                                                     <p class="text-xs text-gray-400 mt-2 italic">
-                                                        *Se adicionar produtos, ganhará mais comissão!
+                                                        *Produtos indicados aqui serao cobrados pela recepcao na saida.
                                                     </p>
                                                 </div>
                                                 
@@ -317,12 +331,19 @@
                                                     <p class="text-xs text-gray-500 mt-2">O valor do serviço só entra no financeiro depois desta seleção.</p>
                                                 </div>
 
+                                                @endif
+
                                                 <button type="submit" class="w-full bg-gradient-to-r from-green-500 to-green-600 text-white font-bold py-3 px-4 rounded-full shadow-lg hover:shadow-xl transition-all">
-                                                    ✧ Finalizar e Baixar Estoque
+                                                    Finalizar atendimento
                                                 </button>
                                             </form>
                                                     </div>
                                                 </div>
+                                            </div>
+                                        @elseif($agenda->status == 'atendimento_finalizado')
+                                            <div class="rounded-xl bg-blue-50/80 border border-blue-200 p-4">
+                                                <p class="font-bold text-blue-700">Atendimento finalizado</p>
+                                                <p class="text-sm text-blue-700/80">Aguardando a recepcao registrar saida e pagamento.</p>
                                             </div>
                                         @else
                                             <p class="text-center text-gray-400 italic text-sm">✧ Atendimento finalizado.</p>

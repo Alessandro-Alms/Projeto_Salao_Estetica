@@ -7,6 +7,7 @@ use App\Models\Agendamento;
 use App\Models\BloqueioHorario;
 use App\Models\ClientePacote;
 use App\Models\HorarioTrabalho;
+use App\Models\Produto;
 use App\Models\Servico;
 use App\Models\User;
 use App\Rules\Cpf;
@@ -22,6 +23,7 @@ class UserController extends Controller
 {
     private const MOTIVO_INDISPONIBILIDADE_PROFISSIONAL = 'Indisponibilidade informada pelo profissional';
     private const PREFIXO_MOTIVO_FERIADO_PROFISSIONAL = 'Indisponibilidade em feriado: ';
+    private const TOLERANCIA_PRESENCA_MINUTOS = 20;
 
     public function dashboard(Request $request): View
     {
@@ -39,6 +41,10 @@ class UserController extends Controller
         $contatoMensagensLidasCliente = collect();
         $pagamentosPendentesProdutos = 0;
         $pagamentosPendentesPacotes = 0;
+        $chegadasPendentes = collect();
+        $saidasPendentes = collect();
+        $clientesAguardandoProfissional = collect();
+        $produtosAtendimento = collect();
 
         if ($user && $user->isGerente() && DB::getSchemaBuilder()->hasTable('contato_mensagens')) {
             $contatoMensagens = DB::table('contato_mensagens')
@@ -63,7 +69,33 @@ class UserController extends Controller
                 ->count();
         }
 
+        if ($user && in_array($user->cargo, ['gerente', 'recepcionista'], true)) {
+            $this->marcarFaltasPorToleranciaExpirada();
+
+            $chegadasPendentes = Agendamento::with(['cliente', 'profissional', 'servico'])
+                ->whereIn('status', ['pendente', 'confirmado'])
+                ->whereDate('data_hora_inicio', today())
+                ->orderBy('data_hora_inicio')
+                ->get();
+
+            $saidasPendentes = Agendamento::with(['cliente', 'profissional', 'servico', 'vendas.produto'])
+                ->where('status', 'atendimento_finalizado')
+                ->orderBy('atendimento_finalizado_em')
+                ->get();
+        }
+
         if ($user && $user->isProfissional()) {
+            $clientesAguardandoProfissional = Agendamento::with(['cliente', 'servico'])
+                ->where('profissional_id', $user->id)
+                ->whereIn('status', ['presente', 'em_atendimento'])
+                ->orderByRaw("CASE WHEN status = 'em_atendimento' THEN 0 ELSE 1 END")
+                ->orderBy('chegada_em')
+                ->get();
+
+            $produtosAtendimento = Produto::where('quantidade_estoque', '>', 0)
+                ->orderBy('nome')
+                ->get();
+
             $mediaAvaliacao = DB::table('avaliacoes')
                 ->where('profissional_id', $user->id)
                 ->avg('nota');
@@ -172,8 +204,34 @@ class UserController extends Controller
             'contatoMensagensNaoLidas',
             'contatoMensagensLidasCliente',
             'pagamentosPendentesProdutos',
-            'pagamentosPendentesPacotes'
+            'pagamentosPendentesPacotes',
+            'chegadasPendentes',
+            'saidasPendentes',
+            'clientesAguardandoProfissional',
+            'produtosAtendimento'
         ));
+    }
+
+    private function marcarFaltasPorToleranciaExpirada(): void
+    {
+        Agendamento::with('cliente')
+            ->whereIn('status', ['pendente', 'confirmado'])
+            ->where('data_hora_inicio', '<=', now()->subMinutes(self::TOLERANCIA_PRESENCA_MINUTOS))
+            ->get()
+            ->each(function (Agendamento $agendamento) {
+                $agendamento->update(['status' => 'falta']);
+
+                if (!$agendamento->cliente) {
+                    return;
+                }
+
+                $agendamento->cliente->increment('faltas');
+                $agendamento->cliente->refresh();
+
+                if ($agendamento->cliente->faltas >= 3) {
+                    $agendamento->cliente->update(['status' => 'bloqueado']);
+                }
+            });
     }
 
     public function index(Request $request)

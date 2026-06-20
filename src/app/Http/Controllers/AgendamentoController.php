@@ -19,6 +19,8 @@ use App\Services\VendaProdutoService;
 
 class AgendamentoController extends Controller
 {
+    private const TOLERANCIA_PRESENCA_MINUTOS = 20;
+
     public function index(Request $request)
     {
         // Filtro de período (padrão: mês atual)
@@ -1239,6 +1241,8 @@ class AgendamentoController extends Controller
 
     public function agendaProfissional(Request $request)
     {
+        $this->marcarFaltasPorToleranciaExpirada(auth()->id());
+
         $filtro = $request->get('filtro', '7');
         $query = Agendamento::where('profissional_id', auth()->id())
             ->with(['cliente.pacotesAtivos.pacote.servicos', 'servico', 'servicos']);
@@ -1369,11 +1373,43 @@ class AgendamentoController extends Controller
             abort(403, 'Você não tem permissão para finalizar este agendamento.');
         }
 
-        if (in_array($agendamento->status, ['executado', 'cancelado', 'falta'], true)) {
+        if ($agendamento->status !== 'em_atendimento') {
             return back()->withErrors(['status' => 'Este agendamento não pode ser finalizado no status atual.']);
         }
 
         // Iniciamos uma transação para garantir que ou faz TUDO ou não faz NADA
+        return DB::transaction(function () use ($request, $agendamento) {
+            $vendaProdutoService = app(VendaProdutoService::class);
+
+            if ($request->has('produtos')) {
+                $erroEstoque = $vendaProdutoService->validarEstoque($request->produtos);
+
+                if ($erroEstoque) {
+                    return back()->withErrors(['estoque' => $erroEstoque])->withInput();
+                }
+            }
+
+            $agendamento->status = 'atendimento_finalizado';
+            $agendamento->obs = $request->input('observacao');
+            $agendamento->atendimento_finalizado_em = now();
+            $agendamento->save();
+
+            if ($request->has('produtos')) {
+                $vendaProdutoService->registrarVendas(
+                    auth()->id(),
+                    $request->produtos,
+                    false,
+                    'pendente',
+                    null,
+                    null,
+                    $agendamento->id_agendamento,
+                    0.10
+                );
+            }
+
+            return redirect()->route('profissional.agenda')->with('status', 'Atendimento finalizado. A recepcao foi avisada para registrar a saida e o pagamento.');
+        });
+
         $request->validate([
             'forma_pagamento' => ['nullable', 'in:' . implode(',', $formasPagamento)],
             'pagamentos' => ['nullable', 'array'],
@@ -1485,26 +1521,131 @@ class AgendamentoController extends Controller
         });
     }
 
+    public function iniciarAtendimento($id_agendamento)
+    {
+        $agendamento = Agendamento::findOrFail($id_agendamento);
+
+        if (!$this->usuarioPodeGerenciarAgendamento($agendamento)) {
+            abort(403, 'Voce nao tem permissao para iniciar este atendimento.');
+        }
+
+        if ($agendamento->status !== 'presente') {
+            return back()->withErrors(['status' => 'O atendimento so pode ser iniciado depois que a recepcao registrar a chegada.']);
+        }
+
+        $agendamento->update([
+            'status' => 'em_atendimento',
+            'atendimento_iniciado_em' => now(),
+        ]);
+
+        return back()->with('status', 'Atendimento iniciado.');
+    }
+
+    public function registrarSaida(Request $request, $id_agendamento)
+    {
+        $agendamento = Agendamento::with(['cliente', 'servico', 'vendas'])->findOrFail($id_agendamento);
+
+        if (!$this->usuarioPodeGerenciarAgendamento($agendamento)) {
+            abort(403, 'Voce nao tem permissao para registrar a saida deste cliente.');
+        }
+
+        if ($agendamento->status !== 'atendimento_finalizado') {
+            return back()->withErrors(['status' => 'A saida so pode ser registrada depois que o profissional finalizar o atendimento.']);
+        }
+
+        $formasPagamento = ['dinheiro', 'pix', 'cartao_debito', 'cartao_credito'];
+        $dados = $request->validate([
+            'forma_pagamento' => ['required', 'in:' . implode(',', $formasPagamento)],
+            'pagamentos' => ['nullable', 'array'],
+            'pagamentos.*.forma_pagamento' => ['nullable', 'in:' . implode(',', $formasPagamento)],
+            'pagamentos.*.valor' => ['nullable'],
+        ]);
+
+        return DB::transaction(function () use ($agendamento, $dados) {
+            $agendamento = Agendamento::with(['cliente', 'servico', 'vendas'])->lockForUpdate()->findOrFail($agendamento->id_agendamento);
+            $cliente = $agendamento->cliente;
+            $valorServico = (float) $agendamento->valor_total;
+            $mensagemFidelidade = '';
+
+            if ($cliente->contador_fidelidade == 5) {
+                $valorServico = round($valorServico * 0.5, 2);
+                $agendamento->valor_total = $valorServico;
+                $cliente->contador_fidelidade = 0;
+                $cliente->save();
+                $mensagemFidelidade = ' Cliente recebeu 50% de desconto pela fidelidade.';
+            } else {
+                $cliente->increment('contador_fidelidade');
+            }
+
+            $produtosPendentes = $agendamento->vendas
+                ->where('status_pagamento', 'pendente')
+                ->whereNotNull('produto_id');
+            $valorProdutos = (float) $produtosPendentes->sum('valor_venda');
+            $valorTotal = round($valorServico + $valorProdutos, 2);
+
+            $pagamentoService = app(PagamentoService::class);
+            $pagamentos = $pagamentoService->normalizar($dados['pagamentos'] ?? [], $valorTotal, $dados['forma_pagamento']);
+            $formaResumo = $pagamentoService->formaResumo($pagamentos, $dados['forma_pagamento']);
+            $financeiroService = app(FinanceiroService::class);
+            $baseComissao = (float) ($agendamento->valor_base ?? $agendamento->servico->preco ?? 0);
+
+            $agendamento->status = 'executado';
+            $agendamento->valor_comissao = $financeiroService->calcularComissaoServico($baseComissao);
+            $agendamento->comissao_paga_percentual = FinanceiroService::COMISSAO_SERVICO_PERCENTUAL;
+            $agendamento->status_pagamento = 'pago';
+            $agendamento->forma_pagamento = $formaResumo;
+            $agendamento->pago_em = now();
+            $agendamento->saida_em = now();
+            $agendamento->save();
+
+            $pagamentoService->registrar(
+                $agendamento,
+                $this->distribuirPagamentos($pagamentos, $valorServico, $valorTotal),
+                auth()->id()
+            );
+
+            foreach ($produtosPendentes as $venda) {
+                $venda->update([
+                    'status_pagamento' => 'pago',
+                    'forma_pagamento' => $formaResumo,
+                    'pago_em' => now(),
+                    'confirmado_por_id' => auth()->id(),
+                ]);
+
+                $pagamentoService->registrar(
+                    $venda,
+                    $this->distribuirPagamentos($pagamentos, (float) $venda->valor_venda, $valorTotal),
+                    auth()->id()
+                );
+            }
+
+            return back()->with('status', 'Saida e pagamento registrados com sucesso.' . $mensagemFidelidade);
+        });
+    }
+
     public function confirmarPresenca($id)
     {
         $agendamento = Agendamento::findOrFail($id);
 
-        if (!$this->usuarioPodeAlterarAgendamento($agendamento)) {
+        if (!$this->usuarioPodeGerenciarAgendamento($agendamento)) {
             abort(403, 'Você não tem permissão para confirmar presença neste agendamento.');
         }
 
-        $toleranciaMinutos = 15;
+        $toleranciaMinutos = self::TOLERANCIA_PRESENCA_MINUTOS;
         $inicio = Carbon::parse($agendamento->data_hora_inicio);
         $limiteCheckin = $inicio->copy()->addMinutes($toleranciaMinutos);
 
-        if (now()->greaterThan($limiteCheckin)) {
+        if (now()->greaterThanOrEqualTo($limiteCheckin)) {
+            $this->registrarFalta($agendamento);
+
             return back()->withErrors([
-                'presenca' => "Confirmação de presença indisponível: tolerância de {$toleranciaMinutos} minutos excedida."
+                'presenca' => "Confirmação de presença indisponível: tolerância de {$toleranciaMinutos} minutos excedida. O agendamento foi marcado como falta."
             ]);
         }
 
         if (in_array($agendamento->status, ['pendente', 'confirmado'], true)) {
             $agendamento->status = 'presente';
+            $agendamento->chegada_em = now();
             $agendamento->save();
         }
 
@@ -1523,16 +1664,9 @@ class AgendamentoController extends Controller
             return back()->withErrors(['status' => 'Não é possível marcar falta em um agendamento executado ou cancelado.']);
         }
 
-        $agendamento->update(['status' => 'falta']);
+        $this->registrarFalta($agendamento);
 
-        $cliente = $agendamento->cliente; 
-        $cliente->increment('faltas');
-
-        if ($cliente->faltas >= 3) {
-            $cliente->update(['status' => 'bloqueado']);
-        }
-
-        return back()->with('success', 'Falta registrada. Cliente bloqueado se atingiu 3 faltas.');
+        return back()->with('status', 'Falta registrada. Cliente bloqueado se atingiu 3 faltas.');
     }
 
     public function salvarAvaliacao(Request $request)
@@ -1589,5 +1723,76 @@ class AgendamentoController extends Controller
         }
 
         return $usuario->cargo === 'profissional' && $agendamento->profissional_id === $usuario->id;
+    }
+
+    private function marcarFaltasPorToleranciaExpirada(int $profissionalId): void
+    {
+        Agendamento::with('cliente')
+            ->where('profissional_id', $profissionalId)
+            ->whereIn('status', ['pendente', 'confirmado'])
+            ->where('data_hora_inicio', '<=', now()->subMinutes(self::TOLERANCIA_PRESENCA_MINUTOS))
+            ->get()
+            ->each(fn (Agendamento $agendamento) => $this->registrarFalta($agendamento));
+    }
+
+    private function registrarFalta(Agendamento $agendamento): void
+    {
+        if ($agendamento->status === 'falta') {
+            return;
+        }
+
+        if (in_array($agendamento->status, ['executado', 'cancelado'], true)) {
+            return;
+        }
+
+        $agendamento->update(['status' => 'falta']);
+
+        $cliente = $agendamento->cliente;
+
+        if (!$cliente) {
+            return;
+        }
+
+        $cliente->increment('faltas');
+        $cliente->refresh();
+
+        if ($cliente->faltas >= 3) {
+            $cliente->update(['status' => 'bloqueado']);
+        }
+    }
+
+    private function distribuirPagamentos(array $pagamentos, float $valorItem, float $valorTotal): array
+    {
+        if ($valorItem <= 0 || $valorTotal <= 0) {
+            return [];
+        }
+
+        if (count($pagamentos) === 1) {
+            return [[
+                'forma_pagamento' => $pagamentos[0]['forma_pagamento'],
+                'valor' => round($valorItem, 2),
+            ]];
+        }
+
+        $distribuidos = [];
+        $restante = round($valorItem, 2);
+        $ultimoIndice = array_key_last($pagamentos);
+
+        foreach ($pagamentos as $indice => $pagamento) {
+            $valor = $indice === $ultimoIndice
+                ? $restante
+                : round(((float) $pagamento['valor'] / $valorTotal) * $valorItem, 2);
+
+            $restante = round($restante - $valor, 2);
+
+            if ($valor > 0) {
+                $distribuidos[] = [
+                    'forma_pagamento' => $pagamento['forma_pagamento'],
+                    'valor' => $valor,
+                ];
+            }
+        }
+
+        return $distribuidos;
     }
 }

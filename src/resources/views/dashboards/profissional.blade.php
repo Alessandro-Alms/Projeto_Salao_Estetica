@@ -43,6 +43,94 @@
 </div>
 
 @if($user->cargo === 'profissional')
+    @if(($clientesAguardandoProfissional ?? collect())->isNotEmpty())
+        <div class="glass-card rounded-2xl shadow-xl overflow-hidden mb-6">
+            <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="text-[#FF2EB6] text-xl">!</span>
+                    <h3 class="text-lg font-title text-[#4A00B9]">Clientes aguardando atendimento</h3>
+                </div>
+
+                <div class="space-y-3">
+                    @foreach($clientesAguardandoProfissional as $agendamento)
+                        <div class="p-4 rounded-xl bg-white/60 border border-[#FFD6F4]">
+                            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                            <div>
+                                <p class="font-bold text-[#1A002B]">{{ $agendamento->cliente->name }}</p>
+                                <p class="text-sm text-gray-600">{{ $agendamento->servico->nome }} - chegou {{ optional($agendamento->chegada_em)->format('H:i') }}</p>
+                                <p class="text-xs font-bold {{ $agendamento->status === 'em_atendimento' ? 'text-green-700' : 'text-[#FF2EB6]' }}">
+                                    {{ $agendamento->status === 'em_atendimento' ? 'Atendimento em andamento' : 'Aguardando inicio' }}
+                                </p>
+                            </div>
+                            @if($agendamento->status === 'presente')
+                                <form action="{{ route('profissional.agendamento.iniciar', $agendamento->id_agendamento) }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="px-4 py-2 rounded-full bg-gradient-to-r from-green-500 to-green-600 text-white font-bold text-sm">Iniciar atendimento</button>
+                                </form>
+                            @endif
+                            </div>
+
+                            @if($agendamento->status === 'em_atendimento')
+                                <form action="{{ route('profissional.agendamento.executado', $agendamento->id_agendamento) }}" method="POST" class="mt-4 space-y-3">
+                                    @csrf
+                                    <textarea name="observacao" rows="2" class="w-full px-4 py-3 bg-white/70 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all text-sm" placeholder="Observacoes do atendimento"></textarea>
+
+                                    <div data-dashboard-products-list class="space-y-2">
+                                        <div class="flex flex-col sm:flex-row gap-2">
+                                            <select name="produtos[0][id]" class="flex-1 px-4 py-2 bg-white/70 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all text-sm">
+                                                <option value="">Produto usado...</option>
+                                                @foreach(($produtosAtendimento ?? collect()) as $produto)
+                                                    <option value="{{ $produto->id_produto }}">{{ $produto->nome }} (Disp: {{ $produto->quantidade_estoque }})</option>
+                                                @endforeach
+                                            </select>
+                                            <input type="number" name="produtos[0][quantidade]" value="1" min="1" class="sm:w-24 px-3 py-2 bg-white/70 border border-[#FFD6F4] rounded-lg focus:outline-none focus:border-[#7B19E5] focus:ring-2 focus:ring-[#7B19E5]/20 transition-all text-sm">
+                                        </div>
+                                    </div>
+
+                                    <div class="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
+                                        <button type="button" data-dashboard-add-product class="text-xs bg-[#FF2EB6]/20 text-[#FF2EB6] px-3 py-2 rounded-full hover:bg-[#FF2EB6] hover:text-white transition">
+                                            + Adicionar produto usado
+                                        </button>
+                                        <button type="submit" class="px-4 py-2 rounded-full bg-gradient-to-r from-green-500 to-green-600 text-white font-bold text-sm">
+                                            Finalizar atendimento
+                                        </button>
+                                    </div>
+                                    <p class="text-xs text-gray-500">Produtos usados serao cobrados na recepcao por 10% do valor do produto.</p>
+                                </form>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+        <script>
+            let dashboardProdutoIndex = 1;
+            document.addEventListener('click', (event) => {
+                const button = event.target.closest('[data-dashboard-add-product]');
+                if (!button) {
+                    return;
+                }
+
+                const form = button.closest('form');
+                const list = form?.querySelector('[data-dashboard-products-list]');
+                const first = list?.firstElementChild;
+                if (!list || !first) {
+                    return;
+                }
+
+                const clone = first.cloneNode(true);
+                const select = clone.querySelector('select');
+                const input = clone.querySelector('input');
+                select.name = `produtos[${dashboardProdutoIndex}][id]`;
+                select.value = '';
+                input.name = `produtos[${dashboardProdutoIndex}][quantidade]`;
+                input.value = 1;
+                list.appendChild(clone);
+                dashboardProdutoIndex++;
+            });
+        </script>
+    @endif
+
     <div class="glass-card rounded-2xl shadow-xl overflow-hidden mb-6">
         <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
             <div class="flex items-center gap-2 mb-4">
@@ -52,7 +140,7 @@
 
             <div class="space-y-3 text-sm text-[#1A002B]">
                 <p>Quando você bloquear um dia, sua agenda fica indisponível nesse período mesmo que o cliente aceite pagar mais.</p>
-                <p>Atendimentos aos sábados e domingos têm acréscimo de 25% e aumentam sua comissão. Almoço padrão, feriados e bloqueios gerais também podem gerar acréscimos; quando acontecem juntos, os percentuais são somados.</p>
+                <p>Atendimentos aos sábados, domingos, almoço padrão, feriados e bloqueios gerais podem gerar acréscimos para o cliente. Sua comissão permanece calculada sobre o valor base do serviço.</p>
             </div>
 
             <div class="mt-4 space-y-2">

@@ -35,7 +35,9 @@ class VendaProdutoService
         ?string $formaPagamento = null,
         ?int $confirmadoPorId = null,
         ?array $pagamentos = null,
-        ?string $codigoPedido = null
+        ?string $codigoPedido = null,
+        ?int $agendamentoId = null,
+        float $percentualValor = 1.0
     ): Venda
     {
         $produto = Produto::lockForUpdate()->findOrFail($produtoId);
@@ -45,7 +47,7 @@ class VendaProdutoService
         }
 
         $produto->decrement('quantidade_estoque', $quantidade);
-        $valorVenda = $produto->valor_unitario * $quantidade;
+        $valorVenda = round(($produto->valor_unitario * $quantidade) * $percentualValor, 2);
         $financeiroService = app(FinanceiroService::class);
 
         $dadosVenda = [
@@ -84,6 +86,10 @@ class VendaProdutoService
             $dadosVenda['codigo_pedido'] = $codigoPedido;
         }
 
+        if (Schema::hasColumn('vendas', 'agendamento_id')) {
+            $dadosVenda['agendamento_id'] = $agendamentoId;
+        }
+
         $venda = Venda::create($dadosVenda);
 
         if ($statusPagamento === 'pago') {
@@ -98,7 +104,16 @@ class VendaProdutoService
         return $venda;
     }
 
-    public function registrarVendas(int $vendedorId, array $itens, bool $geraComissao = true): void
+    public function registrarVendas(
+        int $vendedorId,
+        array $itens,
+        bool $geraComissao = true,
+        string $statusPagamento = 'pago',
+        ?string $formaPagamento = null,
+        ?int $confirmadoPorId = null,
+        ?int $agendamentoId = null,
+        float $percentualValor = 1.0
+    ): void
     {
         foreach ($itens as $item) {
             if (empty($item['id'])) {
@@ -109,7 +124,14 @@ class VendaProdutoService
                 $vendedorId,
                 (int) $item['id'],
                 (int) ($item['quantidade'] ?? 1),
-                $geraComissao
+                $geraComissao,
+                $statusPagamento,
+                $formaPagamento,
+                $confirmadoPorId,
+                null,
+                $agendamentoId ? 'ATEND-' . $agendamentoId : null,
+                $agendamentoId,
+                $percentualValor
             );
         }
     }

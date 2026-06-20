@@ -1,4 +1,114 @@
 {{-- Recepcao --}}
+@if(($chegadasPendentes ?? collect())->isNotEmpty() || ($saidasPendentes ?? collect())->isNotEmpty())
+    <div class="glass-card rounded-2xl shadow-xl overflow-hidden mb-6">
+        <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
+            <div class="flex items-center gap-2 mb-5">
+                <span class="text-[#FF2EB6] text-xl">!</span>
+                <h3 class="text-lg font-title text-[#4A00B9]">Fluxo de Atendimento</h3>
+            </div>
+
+            @if(($chegadasPendentes ?? collect())->isNotEmpty())
+                <div class="mb-6">
+                    <h4 class="text-sm font-bold uppercase text-[#4A00B9] mb-3">Clientes para registrar chegada</h4>
+                    <div class="space-y-3">
+                        @foreach($chegadasPendentes as $agendamento)
+                            @php
+                                $inicioAgendamento = \Carbon\Carbon::parse($agendamento->data_hora_inicio);
+                                $limiteChegada = \Carbon\Carbon::parse($agendamento->data_hora_inicio)->addMinutes(20);
+                                $estaAdiantado = now()->lt($inicioAgendamento);
+                            @endphp
+                            <div class="p-4 rounded-xl bg-white/60 border border-[#FFD6F4] flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+                                <div>
+                                    <p class="font-bold text-[#1A002B]">{{ $agendamento->cliente->name }} <span class="text-sm text-gray-500">com {{ $agendamento->profissional->name }}</span></p>
+                                    <p class="text-sm text-gray-600">{{ $agendamento->servico->nome }} - {{ $inicioAgendamento->format('H:i') }}</p>
+                                    @if($estaAdiantado)
+                                        <p class="text-sm font-bold text-[#4A00B9]">
+                                            Agendamento futuro. Pode registrar chegada antecipada.
+                                        </p>
+                                    @else
+                                        <p class="text-sm font-bold text-[#FF2EB6]">
+                                            Chegada em ate <span data-countdown="{{ $limiteChegada->toIso8601String() }}">--:--</span>
+                                        </p>
+                                    @endif
+                                </div>
+                                <div class="flex flex-wrap gap-2">
+                                    <form action="{{ route('admin.agendamento.presenca', $agendamento->id_agendamento) }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="px-4 py-2 rounded-full bg-gradient-to-r from-[#7B19E5] to-[#A855F7] text-white font-bold text-sm">Registrar chegada</button>
+                                    </form>
+                                    <form action="{{ route('admin.agendamentos.falta', $agendamento->id_agendamento) }}" method="POST">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit" class="px-4 py-2 rounded-full border border-[#FF2EB6] text-[#FF2EB6] font-bold text-sm">Marcar falta</button>
+                                    </form>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            @if(($saidasPendentes ?? collect())->isNotEmpty())
+                <div>
+                    <h4 class="text-sm font-bold uppercase text-[#4A00B9] mb-3">Atendimentos aguardando pagamento e saida</h4>
+                    <div class="space-y-4">
+                        @foreach($saidasPendentes as $agendamento)
+                            @php
+                                $valorProdutos = $agendamento->vendas->where('status_pagamento', 'pendente')->sum('valor_venda');
+                                $valorTotalSaida = (float) $agendamento->valor_total + (float) $valorProdutos;
+                            @endphp
+                            <div class="p-4 rounded-xl bg-white/60 border border-[#FFD6F4]">
+                                <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                                    <div>
+                                        <p class="font-bold text-[#1A002B]">{{ $agendamento->cliente->name }}</p>
+                                        <p class="text-sm text-gray-600">{{ $agendamento->servico->nome }} com {{ $agendamento->profissional->name }}</p>
+                                        <p class="text-sm text-[#4A00B9] font-bold mt-1">Total: R$ {{ number_format($valorTotalSaida, 2, ',', '.') }}</p>
+                                        @if($valorProdutos > 0)
+                                            <p class="text-xs text-gray-500">Inclui produtos usados: R$ {{ number_format($valorProdutos, 2, ',', '.') }}</p>
+                                        @endif
+                                    </div>
+                                    <form action="{{ route('admin.agendamento.saida', $agendamento->id_agendamento) }}" method="POST" class="w-full lg:max-w-md">
+                                        @csrf
+                                        <x-payment-fields
+                                            :formas-pagamento="['dinheiro', 'pix', 'cartao_debito', 'cartao_credito']"
+                                            :total="$valorTotalSaida"
+                                        />
+                                        <button type="submit" class="mt-3 w-full px-4 py-2 rounded-full bg-gradient-to-r from-green-500 to-green-600 text-white font-bold text-sm">Registrar saida e pagamento</button>
+                                    </form>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+        </div>
+    </div>
+
+    <script>
+        document.querySelectorAll('[data-countdown]').forEach((item) => {
+            const tick = () => {
+                const diff = new Date(item.dataset.countdown).getTime() - Date.now();
+                if (diff <= 0) {
+                    item.textContent = '00:00';
+                    if (!item.dataset.expired) {
+                        item.dataset.expired = 'true';
+                        setTimeout(() => window.location.reload(), 1000);
+                    }
+                    return;
+                }
+
+                const totalSeconds = Math.floor(diff / 1000);
+                const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+                const seconds = String(totalSeconds % 60).padStart(2, '0');
+                item.textContent = `${minutes}:${seconds}`;
+            };
+
+            tick();
+            setInterval(tick, 1000);
+        });
+    </script>
+@endif
+
 <div class="glass-card rounded-2xl shadow-xl overflow-hidden mb-6">
     <div class="p-6 bg-white/70 backdrop-blur-sm border border-white/40">
         <div class="flex items-center gap-2 mb-5">

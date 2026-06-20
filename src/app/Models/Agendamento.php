@@ -28,11 +28,20 @@ class Agendamento extends Model
         'status_pagamento',
         'forma_pagamento',
         'pago_em',
+        'chegada_em',
+        'atendimento_iniciado_em',
+        'atendimento_finalizado_em',
+        'saida_em',
     ];
 
     protected $casts = [
         'data_hora_inicio' => 'datetime',
         'data_hora_fim' => 'datetime',
+        'pago_em' => 'datetime',
+        'chegada_em' => 'datetime',
+        'atendimento_iniciado_em' => 'datetime',
+        'atendimento_finalizado_em' => 'datetime',
+        'saida_em' => 'datetime',
     ];
 
     // Relacionamento: O agendamento pertence a um cliente
@@ -64,6 +73,10 @@ class Agendamento extends Model
 
     public function pagamentos() {
         return $this->morphMany(Pagamento::class, 'pagavel');
+    }
+
+    public function vendas() {
+        return $this->hasMany(Venda::class, 'agendamento_id', 'id_agendamento');
     }
 
     // app/Models/Agendamento.php

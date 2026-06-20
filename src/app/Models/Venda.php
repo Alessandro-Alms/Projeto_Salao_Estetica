@@ -11,6 +11,7 @@ class Venda extends Model
         'profissional_id',
         'produto_id',
         'servico_id',
+        'agendamento_id',
         'codigo_pedido',
         'quantidade',
         'valor_venda',
@@ -50,5 +51,9 @@ class Venda extends Model
 
     public function servico() {
         return $this->belongsTo(Servico::class, 'servico_id', 'id_servico');
+    }
+
+    public function agendamento() {
+        return $this->belongsTo(Agendamento::class, 'agendamento_id', 'id_agendamento');
     }
 }

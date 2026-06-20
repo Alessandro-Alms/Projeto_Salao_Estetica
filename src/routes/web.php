@@ -217,8 +217,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/agendamento/{id}/cancelar', [AgendamentoController::class, 'cancelarCliente'])
         ->middleware('cliente_redirect:agendamentos')
         ->name('cliente.agendamento.cancelar');
-    Route::post('/agendamentos/{id}/presenca', [AgendamentoController::class, 'confirmarPresenca'])->name('agendamento.presenca');
-    Route::patch('/agendamentos/{id}/falta', [AgendamentoController::class, 'marcarFalta'])->name('agendamentos.falta');
     Route::post('/avaliar-agendamento', [AgendamentoController::class, 'salvarAvaliacao'])
         ->middleware('cliente_redirect:agendamentos')
         ->name('cliente.avaliar.salvar');
@@ -240,6 +238,9 @@ Route::middleware(['auth', 'role:gerente,recepcionista'])->prefix('admin')->name
     Route::get('profissionais', [UserController::class, 'index'])->name('profissionais.index');
     Route::get('agenda', [AgendamentoController::class, 'index'])->name('agenda.index');
     Route::post('agenda', [AgendamentoController::class, 'store'])->name('agenda.store');
+    Route::post('/agendamentos/{id}/presenca', [AgendamentoController::class, 'confirmarPresenca'])->name('agendamento.presenca');
+    Route::patch('/agendamentos/{id}/falta', [AgendamentoController::class, 'marcarFalta'])->name('agendamentos.falta');
+    Route::post('/agendamentos/{id_agendamento}/saida', [AgendamentoController::class, 'registrarSaida'])->name('agendamento.saida');
     Route::get('/agendar-cliente', [AgendamentoController::class, 'agendarGerencial'])->name('agendar.cliente');
     Route::post('/agendar-cliente', [AgendamentoController::class, 'salvarAgendamentoGerencial'])->name('agendar.cliente.salvar');
 
@@ -362,6 +363,7 @@ Route::middleware(['auth', 'role:profissional'])->prefix('profissional')->name('
     Route::post('/configuracoes/bloqueios', [UserController::class, 'bloquearDiaDisponibilidade'])->name('servicos.bloqueios.store');
     Route::delete('/configuracoes/bloqueios/{bloqueio}', [UserController::class, 'removerBloqueioDisponibilidade'])->name('servicos.bloqueios.destroy');
     Route::patch('/configuracoes/feriados/{feriado}', [UserController::class, 'atualizarFeriadoDisponibilidade'])->name('servicos.feriados.status');
+    Route::post('/agendamento/{id_agendamento}/iniciar', [AgendamentoController::class, 'iniciarAtendimento'])->name('agendamento.iniciar');
     Route::post('/agendamento/{id_agendamento}/executado', [AgendamentoController::class, 'marcarComoExecutado'])->name('agendamento.executado');
     Route::get('/minha-agenda', [AgendamentoController::class, 'agendaProfissional'])->name('agenda');
     Route::get('/extrato', [UserController::class, 'extrato'])->name('extrato');
